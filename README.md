@@ -1,4 +1,4 @@
 sandbox
 =======
 
-Graphics and physics research, snippets, demos
+Graphics and physics research, snippets, demos.
