@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FogVolumes", "FogVolumes.vcxproj", "{2BB0ABBF-95C3-48A2-BDE3-1E2B78FA338D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4368AE29-D362-42ED-9813-3308CBD66512} = {4368AE29-D362-42ED-9813-3308CBD66512}
+		{81732CB7-6059-4E5C-8B57-5576137CE73D} = {81732CB7-6059-4E5C-8B57-5576137CE73D}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "..\..\Core\Core.vcxproj", "{81732CB7-6059-4E5C-8B57-5576137CE73D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Engine", "..\..\Engine\Engine.vcxproj", "{4368AE29-D362-42ED-9813-3308CBD66512}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Graphics", "..\..\Graphics\Graphics.vcxproj", "{D7C9E3BF-2BC5-48BB-A6DA-A420EC96F10C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2BB0ABBF-95C3-48A2-BDE3-1E2B78FA338D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2BB0ABBF-95C3-48A2-BDE3-1E2B78FA338D}.Debug|Win32.Build.0 = Debug|Win32
+		{2BB0ABBF-95C3-48A2-BDE3-1E2B78FA338D}.Release|Win32.ActiveCfg = Release|Win32
+		{2BB0ABBF-95C3-48A2-BDE3-1E2B78FA338D}.Release|Win32.Build.0 = Release|Win32
+		{81732CB7-6059-4E5C-8B57-5576137CE73D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{81732CB7-6059-4E5C-8B57-5576137CE73D}.Release|Win32.ActiveCfg = Release|Win32
+		{4368AE29-D362-42ED-9813-3308CBD66512}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4368AE29-D362-42ED-9813-3308CBD66512}.Debug|Win32.Build.0 = Debug|Win32
+		{4368AE29-D362-42ED-9813-3308CBD66512}.Release|Win32.ActiveCfg = Release|Win32
+		{4368AE29-D362-42ED-9813-3308CBD66512}.Release|Win32.Build.0 = Release|Win32
+		{D7C9E3BF-2BC5-48BB-A6DA-A420EC96F10C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D7C9E3BF-2BC5-48BB-A6DA-A420EC96F10C}.Release|Win32.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4368AE29-D362-42ED-9813-3308CBD66512} = {10828EE5-E458-47C0-9935-C3023CAB6138}
+		{D7C9E3BF-2BC5-48BB-A6DA-A420EC96F10C} = {10828EE5-E458-47C0-9935-C3023CAB6138}
+		{81732CB7-6059-4E5C-8B57-5576137CE73D} = {10828EE5-E458-47C0-9935-C3023CAB6138}
+	EndGlobalSection
+EndGlobal

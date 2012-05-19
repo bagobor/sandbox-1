@@ -1,0 +1,427 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 8.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     16984,        418]
+NotebookOptionsPosition[     16420,        394]
+NotebookOutlinePosition[     16774,        410]
+CellTagsIndexPosition[     16731,        407]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[
+ RowBox[{"\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"k", " ", "=", " ", "12"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"h", " ", "=", " ", "0.16"}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"df", "[", "x_", "]"}], " ", ":=", " ", 
+    RowBox[{
+     RowBox[{"-", "k"}], "*", "x"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"f", "[", "0.0", "]"}], " ", "=", " ", "1"}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"f", "[", "t_", "]"}], " ", ":=", " ", 
+    RowBox[{
+     RowBox[{"f", "[", 
+      RowBox[{"t", "-", "h"}], "]"}], " ", "+", " ", 
+     RowBox[{
+      RowBox[{"df", "[", 
+       RowBox[{"f", "[", 
+        RowBox[{"t", "-", "h"}], "]"}], "]"}], "*", "h"}]}]}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"g", "[", "0.0", "]"}], " ", "=", " ", "1"}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"g", "[", "t_", "]"}], " ", ":=", " ", 
+    RowBox[{
+     RowBox[{"g", "[", 
+      RowBox[{"t", "-", "h"}], "]"}], " ", "/", " ", 
+     RowBox[{"(", 
+      RowBox[{"1", " ", "+", " ", 
+       RowBox[{"h", "*", "k"}]}], ")"}]}]}], "\n", "\[IndentingNewLine]", 
+   RowBox[{"Slider", "[", 
+    RowBox[{
+     RowBox[{"Dynamic", "[", "k", "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", " ", "50"}], "}"}]}], "]"}], "\[IndentingNewLine]", 
+   RowBox[{"Slider", "[", 
+    RowBox[{
+     RowBox[{"Dynamic", "[", "h", "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"0.05", ",", " ", "1"}], "}"}]}], "]"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"Dynamic", "[", 
+    RowBox[{"Show", "[", 
+     RowBox[{
+      RowBox[{"Plot", "[", 
+       RowBox[{
+        RowBox[{"E", "^", 
+         RowBox[{"(", 
+          RowBox[{
+           RowBox[{"-", "k"}], "*", "t"}], ")"}]}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"t", ",", " ", "0", ",", " ", "1"}], "}"}], ",", " ", 
+        RowBox[{"PlotRange", "\[Rule]", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"-", "1"}], ",", " ", "1"}], "}"}]}]}], "]"}], ",", " ", 
+      RowBox[{"DiscretePlot", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"f", "[", "t", "]"}], ",", " ", 
+          RowBox[{"g", "[", "t", "]"}]}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"t", ",", " ", "0", ",", " ", "1", ",", " ", "h"}], "}"}], 
+        ",", " ", 
+        RowBox[{"Joined", "\[Rule]", "True"}], ",", " ", 
+        RowBox[{"PlotRange", "\[Rule]", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"-", "1"}], ",", " ", "1"}], "}"}]}]}], "]"}]}], "]"}], 
+    "]"}], "\[IndentingNewLine]", "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->{{3.545110279958736*^9, 3.545110298192618*^9}, {
+   3.5451103289443617`*^9, 3.5451104843938007`*^9}, 3.545110668341175*^9, {
+   3.545110715845047*^9, 3.545110735610168*^9}, {3.545110825742426*^9, 
+   3.545110863043558*^9}, 3.5451109648866997`*^9, {3.54511102591555*^9, 
+   3.5451111575157137`*^9}, {3.545111240431036*^9, 3.5451112636120663`*^9}, {
+   3.545111353219845*^9, 3.545111421589499*^9}, {3.5451114692034683`*^9, 
+   3.54511150824889*^9}, {3.545111643168723*^9, 3.5451116489195747`*^9}, {
+   3.545111681735175*^9, 3.545111818919779*^9}, {3.54511225237656*^9, 
+   3.545112301620492*^9}, {3.545112373489914*^9, 3.545112387209877*^9}, {
+   3.545112427903893*^9, 3.545112447159322*^9}, {3.54511254772641*^9, 
+   3.545112838356863*^9}, {3.5451128737023563`*^9, 3.545112963896628*^9}, {
+   3.5451129970508738`*^9, 3.5451131460587606`*^9}, {3.545113176442225*^9, 
+   3.545113191305155*^9}, {3.545113226232771*^9, 3.545113230663063*^9}, {
+   3.545113267710207*^9, 3.545113325946389*^9}, {3.545113407135252*^9, 
+   3.545113419854186*^9}, {3.5451134503331757`*^9, 3.545113498840979*^9}, {
+   3.54511365832323*^9, 3.545113748601306*^9}, {3.545113806836681*^9, 
+   3.545113876273964*^9}, {3.545113919195119*^9, 3.545113997966042*^9}, {
+   3.54511412882723*^9, 3.545114299220694*^9}, {3.545114957748069*^9, 
+   3.545114980704899*^9}, {3.545115099509665*^9, 3.5451151180492487`*^9}, {
+   3.54511516858585*^9, 3.5451152681787567`*^9}, {3.545115401224723*^9, 
+   3.545115553144754*^9}, {3.545115632580887*^9, 3.545115632677294*^9}, {
+   3.5451156633223467`*^9, 3.5451156687869577`*^9}, {3.545115706132083*^9, 
+   3.54511570837064*^9}}],
+
+Cell[BoxData[
+ SliderBox[Dynamic[$CellContext`k], {0, 50}]], "Output",
+ CellChangeTimes->{
+  3.5451156335229816`*^9, 3.545115671388918*^9, {3.5451157101444683`*^9, 
+   3.5451157327156477`*^9}, 3.545977262553774*^9}],
+
+Cell[BoxData[
+ SliderBox[Dynamic[$CellContext`h], {0.05, 1}]], "Output",
+ CellChangeTimes->{
+  3.5451156335229816`*^9, 3.545115671388918*^9, {3.5451157101444683`*^9, 
+   3.5451157327156477`*^9}, 3.545977262557325*^9}],
+
+Cell[BoxData[
+ DynamicBox[ToBoxes[
+   Show[
+    Plot[E^((-$CellContext`k) $CellContext`t), {$CellContext`t, 0, 1}, 
+     PlotRange -> {-1, 1}], 
+    DiscretePlot[{
+      $CellContext`f[$CellContext`t], 
+      $CellContext`g[$CellContext`t]}, {$CellContext`t, 0, 1, $CellContext`h},
+      Joined -> True, PlotRange -> {-1, 1}]], StandardForm],
+  ImageSizeCache->{58., {2., 8.}}]], "Output",
+ CellChangeTimes->{
+  3.5451156335229816`*^9, 3.545115671388918*^9, {3.5451157101444683`*^9, 
+   3.5451157327156477`*^9}, 3.5459772625596447`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"apex", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"1", "/", "2"}], ",", " ", 
+       RowBox[{
+        RowBox[{"Sqrt", "[", "3", "]"}], "/", "2"}]}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"tri", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"0", ",", "0"}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", "0"}], "}"}], ",", " ", "apex"}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"style", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"FaceForm", "[", "None", "]"}], ",", 
+       RowBox[{"EdgeForm", "[", "Blue", "]"}], ",", 
+       RowBox[{"AbsolutePointSize", "[", "8", "]"}]}], "}"}]}], ";"}], "\n", 
+   "\[IndentingNewLine]", 
+   RowBox[{"fig", " ", "=", " ", 
+    RowBox[{"GraphicsRow", "[", 
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"Graphics", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"Polygon", "[", "tri", "]"}], ",", " ", 
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", " ", 
+             RowBox[{"180", "Degree"}], ",", " ", "apex"}], "]"}], ",", 
+           RowBox[{"Point", "[", "apex", "]"}]}], "}"}], ",", 
+         RowBox[{"PlotLabel", "\[Rule]", "\"\<Singular\>\""}], ",", " ", 
+         RowBox[{"BaseStyle", "\[Rule]", "style"}]}], "]"}], ",", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"Graphics", "[", 
+        RowBox[{
+         RowBox[{"{", "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"0", "Degree"}]}], "]"}], ",", "\[IndentingNewLine]", 
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"60", "Degree"}], ",", " ", "apex"}], "]"}], ",", 
+           "\[IndentingNewLine]", 
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"120", "Degree"}], ",", " ", "apex"}], "]"}], ",", " ", 
+           RowBox[{"Point", "[", "apex", "]"}]}], "}"}], ",", 
+         RowBox[{"PlotLabel", "\[Rule]", "\"\<Boundary\>\""}], ",", 
+         RowBox[{"BaseStyle", "->", "style"}]}], "]"}], ",", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"Graphics", "[", 
+        RowBox[{
+         RowBox[{"{", "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"0", "Degree"}]}], "]"}], ",", "\[IndentingNewLine]", 
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"60", "Degree"}], ",", " ", "apex"}], "]"}], ",", 
+           "\[IndentingNewLine]", 
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"120", "Degree"}], ",", " ", "apex"}], "]"}], ",", 
+           "\[IndentingNewLine]", 
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"180", "Degree"}], ",", " ", "apex"}], "]"}], ",", 
+           "\[IndentingNewLine]", 
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"240", "Degree"}], ",", " ", "apex"}], "]"}], ",", 
+           "\[IndentingNewLine]", 
+           RowBox[{"Rotate", "[", 
+            RowBox[{
+             RowBox[{"Polygon", "[", "tri", "]"}], ",", 
+             RowBox[{"300", "Degree"}], ",", " ", "apex"}], "]"}], " ", ",", 
+           RowBox[{"Point", "[", "apex", "]"}]}], "}"}], ",", 
+         RowBox[{"PlotLabel", "\[Rule]", "\"\<Interior\>\""}], ",", " ", 
+         RowBox[{"BaseStyle", "->", "style"}]}], "]"}]}], "}"}], "]"}]}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"Export", "[", 
+    RowBox[{
+     RowBox[{"FileNameJoin", "[", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"NotebookDirectory", "[", "]"}], ",", " ", 
+        "\"\<Figures.pdf\>\""}], "}"}], "]"}], ",", "fig"}], 
+    "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.5459772760526237`*^9, 3.545977279536824*^9}, {
+   3.5459774035501757`*^9, 3.545977411473515*^9}, {3.545977454313778*^9, 
+   3.54597752057409*^9}, {3.545977666246786*^9, 3.545977728298539*^9}, {
+   3.54597781687153*^9, 3.545977883177505*^9}, {3.545977968967794*^9, 
+   3.545978011141226*^9}, {3.545978052067477*^9, 3.5459781680134563`*^9}, 
+   3.545979039240906*^9, {3.545979107134241*^9, 3.545979249060412*^9}, {
+   3.545979313212858*^9, 3.545979422437258*^9}, {3.545979936836182*^9, 
+   3.545980249105147*^9}, {3.545980567691945*^9, 3.5459806242400713`*^9}, {
+   3.545980685737561*^9, 3.54598071424214*^9}, {3.545980814471547*^9, 
+   3.545980846660657*^9}, {3.545981232209897*^9, 3.545981319090659*^9}, {
+   3.545981414727171*^9, 3.545981415595686*^9}, {3.545981455806637*^9, 
+   3.5459814561469088`*^9}, {3.545981520193952*^9, 3.54598154435003*^9}}],
+
+Cell[BoxData[
+ GraphicsBox[{{}, {InsetBox[
+     GraphicsBox[{
+       PolygonBox[
+        NCache[{{0, 0}, {1, 0}, {
+          Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+          0}, {0.5, 0.8660254037844386}}]], 
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{-1, 0}, {0, -1}}, {
+         1, 1.7320508075688772`}}], 
+       PointBox[
+        NCache[{Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}, {0.5, 
+         0.8660254037844386}]]},
+      BaseStyle->{
+        FaceForm[None], 
+        EdgeForm[
+         RGBColor[0, 0, 1]], 
+        AbsolutePointSize[8]},
+      PlotLabel->FormBox["\"Singular\"", TraditionalForm]], {193.5, -189.}, 
+     ImageScaled[{0.5, 0.5}], {360., 360.}], InsetBox[
+     GraphicsBox[{
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{1, 0}, {0, 1}}, Center}], 
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{0.5, -0.8660254037844386}, {
+         0.8660254037844386, 0.5}}, {1, 0}}], 
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{-0.5, -0.8660254037844386}, {
+         0.8660254037844386, -0.5}}, {1.5, 0.8660254037844386}}], 
+       PointBox[
+        NCache[{Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}, {0.5, 
+         0.8660254037844386}]]},
+      BaseStyle->{
+        FaceForm[None], 
+        EdgeForm[
+         RGBColor[0, 0, 1]], 
+        AbsolutePointSize[8]},
+      PlotLabel->FormBox["\"Boundary\"", TraditionalForm]], {580.5, -189.}, 
+     ImageScaled[{0.5, 0.5}], {360., 360.}], InsetBox[
+     GraphicsBox[{
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{1, 0}, {0, 1}}, Center}], 
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{0.5, -0.8660254037844386}, {
+         0.8660254037844386, 0.5}}, {1, 0}}], 
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{-0.5, -0.8660254037844386}, {
+         0.8660254037844386, -0.5}}, {1.5, 0.8660254037844386}}], 
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{-1, 0}, {0, -1}}, {
+         1, 1.7320508075688772`}}], 
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{-0.5, 
+         0.8660254037844386}, {-0.8660254037844386, -0.5}}, {
+         0, 1.7320508075688772`}}], 
+       GeometricTransformationBox[
+        PolygonBox[
+         NCache[{{0, 0}, {1, 0}, {
+           Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}}, {{0, 0}, {1, 
+           0}, {0.5, 0.8660254037844386}}]], {{{0.5, 
+         0.8660254037844386}, {-0.8660254037844386, 0.5}}, {-0.5, 
+         0.8660254037844386}}], 
+       PointBox[
+        NCache[{Rational[1, 2], Rational[1, 2] 3^Rational[1, 2]}, {0.5, 
+         0.8660254037844386}]]},
+      BaseStyle->{
+        FaceForm[None], 
+        EdgeForm[
+         RGBColor[0, 0, 1]], 
+        AbsolutePointSize[8]},
+      PlotLabel->FormBox["\"Interior\"", TraditionalForm]], {967.5, -189.}, 
+     ImageScaled[{0.5, 0.5}], {360., 360.}]}, {}},
+  ContentSelectable->True,
+  ImageSize->{1173., 465.6},
+  PlotRangePadding->{6, 5}]], "Output",
+ CellChangeTimes->{
+  3.5459805746169767`*^9, {3.545980606798848*^9, 3.545980624869442*^9}, {
+   3.54598069092549*^9, 3.545980714875008*^9}, 3.545980847904044*^9, 
+   3.5459812381494226`*^9, {3.545981302381198*^9, 3.545981320001463*^9}, 
+   3.545981419555138*^9, {3.545981522058812*^9, 3.545981546185227*^9}}],
+
+Cell[BoxData["\<\"/Users/miles/Foundry/trunk/Apps/FEM/Figures.pdf\"\>"], \
+"Output",
+ CellChangeTimes->{
+  3.5459805746169767`*^9, {3.545980606798848*^9, 3.545980624869442*^9}, {
+   3.54598069092549*^9, 3.545980714875008*^9}, 3.545980847904044*^9, 
+   3.5459812381494226`*^9, {3.545981302381198*^9, 3.545981320001463*^9}, 
+   3.545981419555138*^9, {3.545981522058812*^9, 3.545981546557095*^9}}]
+}, Open  ]]
+},
+WindowSize->{740, 652},
+WindowMargins->{{7, Automatic}, {Automatic, 24}},
+FrontEndVersion->"8.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 5, \
+2011)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 4408, 101, 283, "Input"],
+Cell[4990, 125, 215, 4, 40, "Output"],
+Cell[5208, 131, 217, 4, 40, "Output"],
+Cell[5428, 137, 536, 12, 27, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[6001, 154, 5329, 121, 388, "Input"],
+Cell[11333, 277, 4674, 106, 481, "Output"],
+Cell[16010, 385, 394, 6, 27, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
