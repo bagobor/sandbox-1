@@ -2,7 +2,7 @@
 
 #include "Core/Core.h"
 #include "Core/Maths.h"
-#include "Graphics/SkyLight.h"
+#include "Core/SkyLight.h"
 
 #include "Primitives.h"
 

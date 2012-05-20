@@ -6,11 +6,9 @@
 #include <algorithm>
 #include <iostream>
 
-//#include "glut.h"
-
 using namespace std;
 
-#if __WIN32
+#if _WIN32
 _declspec (thread) uint32 AABBTree::s_traceDepth;
 #endif
 
@@ -63,8 +61,8 @@ namespace
 
 		const Point3* m_vertices;
 		const uint32* m_indices;
-		const uint32 m_numIndices;
-		const uint32 m_axis;
+		uint32 m_numIndices;
+		uint32 m_axis;
 	};
 	
 	inline uint32 LongestAxis(const Vector3& v)
@@ -170,7 +168,7 @@ void AABBTree::Build()
 		}
     }
 
-	m_nodes.reserve(numFaces*1.5f);
+	m_nodes.reserve(unsigned int(numFaces*1.5f));
 
     // allocate space for all the nodes
 	m_freeNode = 1;
@@ -349,7 +347,7 @@ struct StackEntry
 
 bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, float& outU, float& outV, float& outW, float& outSign, uint32& outIndex) const
 {
-#if __WIN32
+#if _WIN32
     // reset stats
     s_traceDepth = 0;
 #endif
@@ -396,7 +394,7 @@ filth:
             ++g_nodesChecked;
 #endif
 
-#if __WIN32
+#if _WIN32
 			++s_traceDepth;
 #endif
             // find closest node
@@ -486,7 +484,7 @@ void AABBTree::TraceRecursive(uint32 nodeIndex, const Point3& start, const Vecto
 
     if (node.m_faces == NULL)
     {
-#if __WIN32
+#if _WIN32
         ++s_traceDepth;
 #endif
 		
@@ -501,8 +499,8 @@ void AABBTree::TraceRecursive(uint32 nodeIndex, const Point3& start, const Vecto
 
         float dist[2] = {FLT_MAX, FLT_MAX};
 
-        bool hitLeft = IntersectRayAABB(start, dir, leftChild.m_minExtents, leftChild.m_maxExtents, dist[0], NULL);
-        bool hitRight = IntersectRayAABB(start, dir, rightChild.m_minExtents, rightChild.m_maxExtents, dist[1], NULL);
+        IntersectRayAABB(start, dir, leftChild.m_minExtents, leftChild.m_maxExtents, dist[0], NULL);
+        IntersectRayAABB(start, dir, rightChild.m_minExtents, rightChild.m_maxExtents, dist[1], NULL);
         
         uint32 closest = 0;
         uint32 furthest = 1;
@@ -672,10 +670,11 @@ void AABBTree::DebugDrawRecursive(uint32 nodeIndex, uint32 depth)
     if (depth > kMaxDepth)
         return;
 
-    Node& n = m_nodes[nodeIndex];
 
     /*
-    Vector3 minExtents = FLT_MAX;
+    Node& n = m_nodes[nodeIndex];
+
+	Vector3 minExtents = FLT_MAX;
     Vector3 maxExtents = -FLT_MAX;
 
     // calculate face bounds

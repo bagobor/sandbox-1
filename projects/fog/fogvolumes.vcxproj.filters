@@ -8,25 +8,10 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{b8fd1b71-a455-46db-bcdb-16bb55614225}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Particles">
-      <UniqueIdentifier>{a9948003-fa3e-4467-bff7-f552568bb317}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="FogVolumes.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Graphics\RenderGL\GLUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Graphics\ParticleContainer.cpp">
-      <Filter>Source Files\Particles</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Graphics\ParticleEmitter.cpp">
-      <Filter>Source Files\Particles</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Graphics\ParticleUtilities.cpp">
-      <Filter>Source Files\Particles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -42,25 +27,5 @@
     <None Include="Data\Common.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Data\SpotLightParticle.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Data\PointLightParticle.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\Graphics\RenderGL\GLUtil.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Graphics\ParticleContainer.h">
-      <Filter>Source Files\Particles</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Graphics\ParticleEmitter.h">
-      <Filter>Source Files\Particles</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Graphics\ParticleUtilities.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

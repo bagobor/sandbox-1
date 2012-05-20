@@ -3,14 +3,7 @@
 #include <Core/Platform.h>
 #include <Core/HashGrid.h>
 #include <Core/Maths.h>
-
-#define WITH_GLEW
-
-#include <Graphics/RenderGL/GLUtil.h>
-
-#ifndef WIN32
-#include <OpenGL/OpenGL.h>
-#endif
+#include <Core/Shader.h>
 
 #include <iostream>
 
@@ -31,9 +24,9 @@ const float kRadius = 0.1f;
 GrainSystem* g_grains;
 GrainParams g_params;
 
-std::vector<Vec3> g_positions;
-std::vector<Vec3> g_velocities;
-std::vector<float> g_radii;
+vector<Vec3> g_positions;
+vector<Vec3> g_velocities;
+vector<float> g_radii;
 
 Vec3 g_camPos(0.0f, 10.0f,  20.0f);
 Vec3 g_camAngle(0.0f, -kPi/6.0f, 0.0f);
@@ -45,7 +38,6 @@ static int lasty;
 // render funcs
 void DrawPoints(float* positions, int n, float radius, float screenWidth, float screenAspect);
 void DrawPlane(const Vec4& p);
-void DrawString(int x, int y, const char* s);
 
 // size of initial grid of particles
 const int kParticleHeight = 128;
@@ -178,41 +170,21 @@ void GLUTUpdate()
 	int x = 10;
 	int y = 15;
 	
-	char line[1024];
-
 	glColor3f(1.0f, 1.0f, 1.0f);
-	sprintf(line, "Draw time: %.2fms", (drawEnd-drawStart)*1000.0f);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Create Cell Indices: %.2fms", timers.mCreateCellIndices);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Sort Cell Indices: %.2fms", timers.mSortCellIndices);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Create Grid: %.2fms", timers.mCreateGrid);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Collide: %.2fms", timers.mCollide);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Integrate: %.2fms", timers.mIntegrate);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Reorder: %.2fms", timers.mReorder);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Particles: %d", kParticleHeight*kParticleWidth*kParticleLength, kNumIterations);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Iterations: %d", kNumIterations);
-	DrawString(x, y, line); y += 26;
+	DrawString(x, y, "Draw time: %.2fms", (drawEnd-drawStart)*1000.0f); y += 13;
+	DrawString(x, y, "Create Cell Indices: %.2fms", timers.mCreateCellIndices); y += 13;
+	DrawString(x, y, "Sort Cell Indices: %.2fms", timers.mSortCellIndices); y += 13;
+	DrawString(x, y, "Create Grid: %.2fms", timers.mCreateGrid); y += 13;
+	DrawString(x, y, "Collide: %.2fms", timers.mCollide); y += 13;
+	DrawString(x, y, "Integrate: %.2fms", timers.mIntegrate); y += 13;
+	DrawString(x, y, "Reorder: %.2fms", timers.mReorder); y += 13;
+	DrawString(x, y, "Particles: %d", kParticleHeight*kParticleWidth*kParticleLength, kNumIterations); y += 13;
+	DrawString(x, y, "Iterations: %d", kNumIterations); y += 26;
 
 	DrawString(x, y, "t - Remove plane"); y += 13;
 	DrawString(x, y, "u - Move plane"); y += 13;
 	DrawString(x, y, "r - Reset"); y += 13;
-	
-	
+		
 	glutSwapBuffers();
 	
 }

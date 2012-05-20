@@ -32,7 +32,7 @@ Mesh* g_mesh;
 
 Vec3 g_camPos(0.0f, 0.0f, 7.0f);
 Vec3 g_camVel(0.0f);
-Vec3 g_camAngle(0.0f);
+Vec3 g_camAngle(0.0f, -kPi/12.0f, 0.0f);
 Vec3 g_shDiffuse[9];
 Vec3 g_shPhong[9];
 float g_exposure = 0.175f;
@@ -212,7 +212,7 @@ void shTests()
 	shProject(lambert, lmax, lambertCoefficients); 
 	shProject(phong, lmax, phongCoefficients);
 
-	ProbeSampler sampler("probes/beach_probe.pfm");
+	ProbeSampler sampler("../../data/beach.pfm");
 
 	Colour probeCoefficients[lmax*lmax];
 	shProject(sampler, lmax, probeCoefficients);
@@ -444,16 +444,18 @@ int main(int argc, char* argv[])
 	if (g_shader == 0)
 		return 0;
 
-	g_mesh = ImportMeshFromObj("happy.obj");
+	g_mesh = ImportMeshFromObj("../../data/happy.obj");
 
 	Vec3 minExtents, maxExtents;
 	g_mesh->GetBounds(minExtents, maxExtents);
 	
-	g_camPos = Vec3(0.0f, maxExtents.y, 2.0f*maxExtents.z); 
-	
+	Vec3 center = 0.5f*(maxExtents+minExtents);
 	float scale = 10.0f / (maxExtents.y-minExtents.y);
-	g_mesh->Transform(ScaleMatrix(Vector3(scale, scale, scale)));
 
+	g_mesh->Transform(ScaleMatrix(Vector3(scale, scale, scale))*TranslationMatrix(Point3(-center)));	
+
+	// center camera
+	g_camPos = Vec3(0.0f, 5.0f, 20.0f); 
 
 	shTests();
 

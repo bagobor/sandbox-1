@@ -2,8 +2,8 @@
 
 #if _WIN32
 
-#include <External/glew/include/gl/glew.h>
-#include <External/freeglut-2.6.0/include/gl/glut.h>
+#include <external/glew/include/gl/glew.h>
+#include <external/glut/glut.h>
 
 #elif __APPLE__
 
@@ -28,8 +28,11 @@
 #define glVerify(x) {x; glAssert(#x, __LINE__, __FILE__);}
 void glAssert(const char* msg, long line, const char* file);
 
+GLuint CompileProgramFromFile(const char *vertexPath, const char *fragmentPath);
 GLuint CompileProgram(const char *vsource, const char *fsource);
 
 void DrawPlane(const Vec4& p);
 //void DrawString(int x, int y, const char* s);
 void DrawString(int x, int y, const char* s, ...);
+
+GLuint CreateTextureFromFile(const char* path, float* width=0, float* height=0, bool clamp=true);

@@ -4,16 +4,16 @@
 #include "Core/Maths.h"
 #include "Core/Mesh.h"
 #include "Core/AABBTree.h"
-//#include "Core/AABBTreeQuantized.h"
 #include "Core/ThreadGroup.h"
+#include "core/platform.h"
+
+#include "External/glut/glut.h"
 
 #include "Scene.h"
 #include "Camera.h"
 #include "Integrators.h"
 
 #include "Memory.h"
-
-#include "glut.h"
 
 float g_statLightSampleTime;
 float g_statLightGenSampleTime;
@@ -43,7 +43,7 @@ uint32 g_height = 360;
 uint32 g_windowWidth = g_width;
 uint32 g_windowHeight = g_height;
 
-float g_exposure = 1.0f;
+float g_exposure = 0.1f;
 float g_zoom = 1.0f;
 float g_sunTheta = 0.41389135;
 float g_sunPhi = 0.95993042;
@@ -140,6 +140,7 @@ uint32 RayTraceThreadFunc(void* data)
                     }
                     break;
                 }
+#if _WIN32				
                 case eComplexity:
                 {
 					job.m_camera.GenerateRayNoJitter(i, j, origin, dir);
@@ -152,6 +153,7 @@ uint32 RayTraceThreadFunc(void* data)
 
                     break;
                 }
+#endif				
             }
         }
     }
@@ -279,7 +281,7 @@ void Init()
 	//Material* checker = new MatteMaterial(new CheckerboardTexture(0.1f*edgeLength.x, Colour(0.2f, 0.2f, 0.2f), Colour(0.5f, 0.5f, 0.5f)));
 
 
-    Mesh* mesh = ImportMeshFromObj("models/sponza.obj");
+    Mesh* mesh = ImportMeshFromObj("../../data/happy.obj");
     //Mesh* mesh = ImportMeshFromPly("models/bunny/reconstruction/bun_zipper_res4.ply");
     //Mesh* mesh = ImportMeshFromPly("models/happy_recon/happy_vrip_res3.ply");
     //Mesh* mesh = ImportMeshFromPly("models/dragon/xyzrgb_dragon.ply"); yoffset = 22.1f;

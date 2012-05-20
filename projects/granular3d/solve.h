@@ -7,8 +7,6 @@
 
 struct GrainSystem;
 
-//C:/p4/physx/../tools/sdk/CUDA/4.0/4.0.17/bin32\nvcc.exe -m32 --ptxas-options=-v -use_fast_math -ftz=true -prec-div=false -prec-sqrt=false -gencode=arch=compute_11,code=sm_11 -gencode=arch=compute_12,code=sm_12 -gencode=arch=compute_20,code=sm_20 --compiler-bindir="$(VCInstallDir)bin" --compile -D_DEBUG -DWIN32 -D_CONSOLE -D_WIN32_WINNT=0x0500 --compiler-options=/EHsc,/W3,/nologo,/Ot,/Ox,/Zi,/MTd,/Fd./Win32/PhysXGpu/debug/CUDA_src/PackParticleShapes.obj.pdb -IC:/p4/physx/PhysXSDK/3.2/trunk/Include/foundation -IC:/p4/physx/PhysXSDK/3.2/trunk/Source/foundation/include -I../../../Source/PhysXGpu/src/common -I../../../Source/LowLevel/common/include/math -I../../../Include/geometry -I../../../Source/GeomUtils/headers -I../../../Source/GeomUtils/src -I../../../Source/LowLevel/API/include -I../../../Include/common  -I../../../Source/Common/src -I../../../Include -I../../../pxtask/CUDA -o ./Win32/PhysXGpu/debug/CUDA_src/PackParticleShapes.obj ..\..\PhysXGpu\src\CUDA\PackParticleShapes.cu
-
 struct GrainParams
 {
 	float3 mGravity;

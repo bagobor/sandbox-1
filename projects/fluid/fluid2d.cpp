@@ -18,14 +18,9 @@
 #include <vector>
 
 #include <Core/Maths.h>
+#include <Core/Shader.h>
 
 using namespace std;
-
-#if WIN32
-#include "glut.h"
-#else
-#include <GLUT/GLUT.h>
-#endif
 
 #include "BlackBody.h"
 
@@ -952,29 +947,8 @@ void GLUTMotionFunc(int x, int y)
 }
 
 
-/*
-void Application::JoystickFunc(int x, int y, int z, unsigned long buttons)
-{
-g_app->JoystickFunc(x, y, z, buttons);
-}
-*/
-
-
 int main(int argc, char* argv[])
 {	
-	union
-	{
-		__m128 f;
-		unsigned int ui[4];
-	};
-
-	ui[0] = 0xffffffff;
-
-	float one = 1.0f;
-	__m128 i = _mm_load_ss(&one);
-
-	__m128 x = _mm_mul_ps(f, i);
-
 	RandInit();
 	
 	// init gl

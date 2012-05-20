@@ -2,7 +2,6 @@
 
 #define STRINGIFY(A) #A
 
-
 // vertex shader
 const char *vertexShader = STRINGIFY(
 

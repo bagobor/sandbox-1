@@ -1428,8 +1428,6 @@ inline bool IntersectRayAABB(const Point3& start, const Vector3& dir, const Vect
 			
 	return true;
 }
-namespace Foundry
-{
 	
 // 2d rectangle class
 class Rect
@@ -1472,8 +1470,6 @@ public:
 	uint32 m_bottom;
 };
 
-} // namespace Foundry
-	
 // doesn't really belong here but efficient (and I believe correct) in place random shuffle based on the Fisher-Yates / Knuth algorithm
 template <typename T>
 void RandomShuffle(T begin, T end)

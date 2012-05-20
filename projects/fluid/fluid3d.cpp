@@ -22,7 +22,7 @@ using namespace std;
 #include "Core/Platform.h"
 #include "Core/Maths.h"
 #include "Core/Tga.h"
-#include "Graphics/RenderGL/GLUtil.h"
+#include "Core/Shader.h"
 
 #include "Grid3D.h"
 #include "BlackBody.h"
@@ -279,7 +279,7 @@ void FluidUpdateParticles(Grid3D& newu, Grid3D& newv, Grid3D& neww, const Grid3D
 	std::vector<Particle> newParticles;
 	newParticles.reserve(g_particles.size());
 	
-	for (int i=0; i < g_particles.size(); ++i)
+	for (size_t i=0; i < g_particles.size(); ++i)
 	{
 		Particle& p = g_particles[i];
 
@@ -536,16 +536,16 @@ GLuint CreateBlackBodyTexture(float minT, float maxT)
 	GLuint texid;
 	glGenTextures(1, &texid);
 	
-	GlVerify(glBindTexture(GL_TEXTURE_2D, texid));
+	glVerify(glBindTexture(GL_TEXTURE_2D, texid));
 	
-	GlVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-	GlVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+	glVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	glVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 	
-	GlVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-	GlVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-	GlVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+	glVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+	glVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+	glVerify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
 	
-	GlVerify(glTexImage2D(GL_TEXTURE_2D,
+	glVerify(glTexImage2D(GL_TEXTURE_2D,
 				 0,
 				 GL_RGBA32F_ARB,
 				 kWidth,
@@ -567,7 +567,7 @@ GLuint CreateVolumeTexture(int width, int height, int depth)
 	glGenTextures(1, &texid);
 	GLenum target = GL_TEXTURE_3D;
 
-	GlVerify(glBindTexture(target, texid));
+	glVerify(glBindTexture(target, texid));
 
 	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -580,7 +580,7 @@ GLuint CreateVolumeTexture(int width, int height, int depth)
 	glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 	//glTexParameteri(target, GL_GENERATE_MIPMAP, GL_TRUE);
 
-	GlVerify(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));	
+	glVerify(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));	
 	
 	return texid;
 }
@@ -591,7 +591,7 @@ GLuint CreateNoiseTexture(int width, int height, int depth)
 	glGenTextures(1, &texid);
 	GLenum target = GL_TEXTURE_3D;
 	
-	GlVerify(glBindTexture(target, texid));
+	glVerify(glBindTexture(target, texid));
 	
 	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -604,7 +604,7 @@ GLuint CreateNoiseTexture(int width, int height, int depth)
 	glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_REPEAT);
 	//glTexParameteri(target, GL_GENERATE_MIPMAP, GL_TRUE);
 	
-	GlVerify(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));	
+	glVerify(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));	
 
 	// update texture
 	byte *data = new byte[width*height*depth];
@@ -716,34 +716,34 @@ void DrawVolumeTexture(GLuint texid)
 	glEnable(GL_TEXTURE_3D);
 	glEnable(GL_TEXTURE_2D);
 	
-	GlVerify(glActiveTexture(GL_TEXTURE0));
-	GlVerify(glBindTexture(GL_TEXTURE_3D, g_densityTexture));
+	glVerify(glActiveTexture(GL_TEXTURE0));
+	glVerify(glBindTexture(GL_TEXTURE_3D, g_densityTexture));
 
-	GlVerify(glActiveTexture(GL_TEXTURE1));
-	GlVerify(glBindTexture(GL_TEXTURE_3D, g_temperatureTexture));
+	glVerify(glActiveTexture(GL_TEXTURE1));
+	glVerify(glBindTexture(GL_TEXTURE_3D, g_temperatureTexture));
 	
-	GlVerify(glActiveTexture(GL_TEXTURE2));
-	GlVerify(glBindTexture(GL_TEXTURE_2D, g_blackBodyTexture));
+	glVerify(glActiveTexture(GL_TEXTURE2));
+	glVerify(glBindTexture(GL_TEXTURE_2D, g_blackBodyTexture));
 	
-	GlVerify(glActiveTexture(GL_TEXTURE3));
-	GlVerify(glBindTexture(GL_TEXTURE_3D, g_noiseTexture));
+	glVerify(glActiveTexture(GL_TEXTURE3));
+	glVerify(glBindTexture(GL_TEXTURE_3D, g_noiseTexture));
 
-	GlVerify(glUseProgram(g_shadowShader));	
+	glVerify(glUseProgram(g_shadowShader));	
 	{
 		GLuint paramDensityTex = glGetUniformLocation(g_shadowShader, "g_densityTexture");
-		GlVerify(glUniform1i(paramDensityTex, (GLint)0)); // texunit 0
+		glVerify(glUniform1i(paramDensityTex, (GLint)0)); // texunit 0
 		
 		GLuint paramLightPos = glGetUniformLocation(g_shadowShader, "g_lightPos");
-		GlVerify(glUniform3fv(paramLightPos, 1, lightPos));
+		glVerify(glUniform3fv(paramLightPos, 1, lightPos));
 		
 		GLuint paramLightIntensity = glGetUniformLocation(g_shadowShader, "g_lightIntensity");
-		GlVerify(glUniform3fv(paramLightIntensity, 1, kLightIntensity));
+		glVerify(glUniform3fv(paramLightIntensity, 1, kLightIntensity));
 		
 		GLuint paramAbsorption = glGetUniformLocation(g_shadowShader, "g_absorption");
-		GlVerify(glUniform3fv(paramAbsorption, 1, kAbsorption));
+		glVerify(glUniform3fv(paramAbsorption, 1, kAbsorption));
 		
 		GLuint paramScatter = glGetUniformLocation(g_shadowShader, "g_scatter");
-		GlVerify(glUniform3fv(paramScatter, 1, kScatter));
+		glVerify(glUniform3fv(paramScatter, 1, kScatter));
 	}
 	
 	const float kQuadSize = 20.0f;
@@ -761,31 +761,31 @@ void DrawVolumeTexture(GLuint texid)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	
-	GlVerify(glUseProgram(g_volumeShader));
+	glVerify(glUseProgram(g_volumeShader));
 	{
 		GLuint paramTex = glGetUniformLocation(g_volumeShader, "g_densityTexture");
-		GlVerify(glUniform1i(paramTex, (GLint)0)); // texunit 0
+		glVerify(glUniform1i(paramTex, (GLint)0)); // texunit 0
 		
 		GLuint paramTemperatureTex = glGetUniformLocation(g_volumeShader, "g_temperatureTexture");
-		GlVerify(glUniform1i(paramTemperatureTex, (GLint)1)); // texunit 1
+		glVerify(glUniform1i(paramTemperatureTex, (GLint)1)); // texunit 1
 		
 		GLuint paramBlackBodyTex = glGetUniformLocation(g_volumeShader, "g_blackBodyTexture");
-		GlVerify(glUniform1i(paramBlackBodyTex, (GLint)2)); // texunit 2
+		glVerify(glUniform1i(paramBlackBodyTex, (GLint)2)); // texunit 2
 		
 		GLuint paramNoiseTex = glGetUniformLocation(g_volumeShader, "g_noiseTexture");
-		GlVerify(glUniform1i(paramNoiseTex, (GLint)3)); // texuint 3
+		glVerify(glUniform1i(paramNoiseTex, (GLint)3)); // texuint 3
 		
 		GLuint paramLightPos = glGetUniformLocation(g_volumeShader, "g_lightPos");
-		GlVerify(glUniform3fv(paramLightPos, 1, lightPos));
+		glVerify(glUniform3fv(paramLightPos, 1, lightPos));
 		
 		GLuint paramLightIntensity = glGetUniformLocation(g_volumeShader, "g_lightIntensity");
-		GlVerify(glUniform3fv(paramLightIntensity, 1, kLightIntensity));
+		glVerify(glUniform3fv(paramLightIntensity, 1, kLightIntensity));
 		
 		GLuint paramAbsorption = glGetUniformLocation(g_volumeShader, "g_absorption");
-		GlVerify(glUniform3fv(paramAbsorption, 1, kAbsorption));
+		glVerify(glUniform3fv(paramAbsorption, 1, kAbsorption));
 		
 		GLuint paramScatter = glGetUniformLocation(g_volumeShader, "g_scatter");
-		GlVerify(glUniform3fv(paramScatter, 1, kScatter));
+		glVerify(glUniform3fv(paramScatter, 1, kScatter));
 	}
 	
 	glPushMatrix();
@@ -808,23 +808,23 @@ void DrawParticles(const std::vector<Particle>& particles)
 	glDisable(GL_TEXTURE_3D);
 	glDisable(GL_TEXTURE_2D);
 
-	GlVerify(glActiveTexture(GL_TEXTURE0));
-	GlVerify(glBindTexture(GL_TEXTURE_3D, 0));
+	glVerify(glActiveTexture(GL_TEXTURE0));
+	glVerify(glBindTexture(GL_TEXTURE_3D, 0));
 
-	GlVerify(glActiveTexture(GL_TEXTURE1));
-	GlVerify(glBindTexture(GL_TEXTURE_3D, 0));
+	glVerify(glActiveTexture(GL_TEXTURE1));
+	glVerify(glBindTexture(GL_TEXTURE_3D, 0));
 	
-	GlVerify(glActiveTexture(GL_TEXTURE2));
-	GlVerify(glBindTexture(GL_TEXTURE_2D, 0));
+	glVerify(glActiveTexture(GL_TEXTURE2));
+	glVerify(glBindTexture(GL_TEXTURE_2D, 0));
 	
-	GlVerify(glActiveTexture(GL_TEXTURE3));
-	GlVerify(glBindTexture(GL_TEXTURE_3D, 0));
+	glVerify(glActiveTexture(GL_TEXTURE3));
+	glVerify(glBindTexture(GL_TEXTURE_3D, 0));
 
 
 	glBegin(GL_POINTS);
 	glColor3f(0.0f, 1.0f, 0.0f);
 
-	for (int i=0; i < particles.size(); ++i)
+	for (size_t i=0; i < particles.size(); ++i)
 	{
 		glVertex3fv(Vec3(2.0f/kWidth, 2.0f/kHeight, 2.0f/kDepth)*particles[i].p - Vec3(1.0f, 1.0f, 1.0f));
 	}
@@ -835,8 +835,8 @@ void DrawParticles(const std::vector<Particle>& particles)
 
 void InitShaders()
 {
-	g_volumeShader = GlslCreateProgramFromFiles("RayMarchVolumeVS.glsl", "RayMarchVolumePS.glsl");
-	g_shadowShader = GlslCreateProgramFromFiles("RayMarchVolumeVS.glsl", "RayMarchShadowPS.glsl");	
+	g_volumeShader = CompileProgramFromFile("RayMarchVolumeVS.glsl", "RayMarchVolumePS.glsl");
+	g_shadowShader = CompileProgramFromFile("RayMarchVolumeVS.glsl", "RayMarchShadowPS.glsl");	
 }
 
 void Init()

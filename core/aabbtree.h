@@ -7,6 +7,9 @@
 
 class AABBTree
 {
+	AABBTree(const AABBTree&);
+	AABBTree& operator=(const AABBTree&);
+
 public:
 
     AABBTree(Point3* vertices, uint32 numVerts, uint32* indices, uint32 numFaces);
@@ -20,7 +23,7 @@ public:
     Vector3 GetMinExtents() const { return m_nodes[0].m_minExtents; }
     Vector3 GetMaxExtents() const { return m_nodes[0].m_maxExtents; }
 	
-#if __WIN32
+#if _WIN32
     // stats (reset each trace)
     static uint32 GetTraceDepth() { return s_traceDepth; }
 #endif
@@ -119,7 +122,7 @@ private:
     uint32 m_innerNodes;
     uint32 m_leafNodes; 
 	
-#if __WIN32
-    static uint32 s_traceDepth;
+#if _WIN32
+   _declspec (thread) static uint32 s_traceDepth;
 #endif
 };

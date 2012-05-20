@@ -2,27 +2,13 @@
 #include <Core/Maths.h>
 #include <Core/Platform.h>
 #include <Core/HashGrid.h>
+#include <Core/Shader.h>
 
-#include <Graphics/RenderGL/GLUtil.h>
-
-#ifndef WIN32
-#include <OpenGL/OpenGL.h>
-#endif
+#include "solve.h"
 
 #include <iostream>
 
 using namespace std;
-
-#include <Core/Maths.h>
-
-//#include <cuda.h>
-//#include <cuda_runtime.h>  
-
-#include "solve.h"
-
-// cuda interface needs these types defined
-//typedef Vec2 float2;
-//typedef Vec3 float3;
 
 const uint32 kWidth = 800;
 const uint32 kHeight = 600;
@@ -36,9 +22,9 @@ const float kRadius = 0.05f;
 GrainSystem* g_grains;
 GrainParams g_params;
 
-std::vector<Vec2> g_positions;
-std::vector<Vec2> g_velocities;
-std::vector<float> g_radii;
+vector<Vec2> g_positions;
+vector<Vec2> g_velocities;
+vector<float> g_radii;
 
 // mouse
 static int lastx;
@@ -159,12 +145,6 @@ bool g_step = false;
 
 void GLUTUpdate()
 {
-	//glEnable(GL_LINE_SMOOTH);
-	//glEnable(GL_BLEND); 
-	//glLineWidth(1.0f);
-	//glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);	
-	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
-
 	GrainTimers timers;
 
 	grainSetParams(g_grains, &g_params);
@@ -201,24 +181,15 @@ void GLUTUpdate()
 	
 	glColor3f(0.7f, 0.7f, 0.8f);
 
-	float hue = 0.2f;
-	float kGoldenRatioConjugate = 0.61803398874989f;
-
 	double drawStart = GetSeconds();
 
 	glPointSize(kRadius*kWidth/viewWidth);
 	glEnable(GL_BLEND);
-	//glEnable(GL_POINT_SMOOTH);
 
 	glBegin(GL_POINTS);
 
 	for (int i=0; i < kNumParticles; ++i)
 	{
-		hue = hue+kGoldenRatioConjugate;
-		hue -= int(hue);
-
-		//DrawCircle(g_positions[i], g_radii[i], HSVToRGB(hue, 0.6f, 0.9f));
-		//glColor3fv(HSVToRGB(hue, 0.6f, 0.9f));
 		glColor3f(0.5f, 0.5f, 0.8f);
 		glVertex2fv(g_positions[i]);
 	}
@@ -231,32 +202,23 @@ void GLUTUpdate()
 	Vec2 mouse = ScreenToScene(lastx, lasty);
 	DrawCircle(mouse, 0.2f, Colour(1.0f, 0.0f, 0.0f));
 		
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, kWidth, kHeight, 0);
+
 	int x = 10;
 	int y = 15;
 	
-	char line[1024];
-
 	glColor3f(1.0f, 1.0f, 1.0f);
-	sprintf(line, "Draw time: %.2fms", (drawEnd-drawStart)*1000.0f);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Create Cell Indices: %.2fms", timers.mCreateCellIndices);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Sort Cell Indices: %.2fms", timers.mSortCellIndices);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Create Grid: %.2fms", timers.mCreateGrid);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Collide: %.2fms", timers.mCollide);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Integrate: %.2fms", timers.mIntegrate);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Reorder: %.2fms", timers.mReorder);
-	DrawString(x, y, line); y += 13;
+	DrawString(x, y, "Draw time: %.2fms", (drawEnd-drawStart)*1000.0f); y += 13;
+	DrawString(x, y, "Create Cell Indices: %.2fms", timers.mCreateCellIndices); y += 13;
+	DrawString(x, y, "Sort Cell Indices: %.2fms", timers.mSortCellIndices); y += 13;
+	DrawString(x, y, "Create Grid: %.2fms", timers.mCreateGrid); y += 13;
+	DrawString(x, y, "Collide: %.2fms", timers.mCollide); y += 13;
+	DrawString(x, y, "Integrate: %.2fms", timers.mIntegrate); y += 13;
+	DrawString(x, y, "Reorder: %.2fms", timers.mReorder); y += 13;
 
 	glutSwapBuffers();
 	

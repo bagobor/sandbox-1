@@ -1,12 +1,7 @@
 #include <Core/Types.h>
 #include <Core/Maths.h>
 #include <Core/Platform.h>
-
-#include <Graphics/RenderGL/GLUtil.h>
-
-#ifndef WIN32
-#include <OpenGL/OpenGL.h>
-#endif
+#include <Core/Shader.h>
 
 #include <iostream>
 
@@ -331,7 +326,7 @@ public:
 	{
 		if (0)
 		{
-			for (int i=0; i < g_forces.size(); ++i)
+			for (size_t  i=0; i < g_forces.size(); ++i)
 			{
 				LinearSpring* s = dynamic_cast<LinearSpring*>(g_forces[i]);
 				if (s)
@@ -378,7 +373,7 @@ public:
 			}
 		}
 		
-		for (int i=0; i < out.size(); ++i)
+		for (size_t i=0; i < out.size(); ++i)
 			out[i]->mVisited = false;
 	}
 	
@@ -504,7 +499,7 @@ void AddPlane(const Vec2r& p, const Vec2r& n)
 					   
 void DrawPlanes()
 {
-	for (int i=0; i < g_planes.size(); ++i)
+	for (size_t i=0; i < g_planes.size(); ++i)
 	{
 		Vec2r p = -g_planes[i].z * Vec2r(g_planes[i].x, g_planes[i].y);
 		Vec2r d = Vec2r(-g_planes[i].y, g_planes[i].x);
@@ -621,7 +616,7 @@ void Reset()
 void ApplyForces()
 {
 	// apply gravity and damping
-	for (int i=0; i < g_particles.size(); ++i)
+	for (size_t  i=0; i < g_particles.size(); ++i)
 	{
 		Particle& p = *g_particles[i];
 
@@ -632,7 +627,7 @@ void ApplyForces()
 			p.ApplyForce(g_gravity/p.mInvMass);
 	}
 	
-	for (int i=0; i < g_forces.size(); ++i)
+	for (size_t  i=0; i < g_forces.size(); ++i)
 	{
 		g_forces[i]->ApplyForce();
 	}
@@ -640,11 +635,11 @@ void ApplyForces()
 
 bool TestIntersections(real dt)
 {
-	for (int j=0; j < g_particles.size(); ++j)
+	for (size_t  j=0; j < g_particles.size(); ++j)
 	{
 		Particle* particle = g_particles[j];
 		
-		for (int i=0; i < g_forces.size(); ++i)
+		for (size_t  i=0; i < g_forces.size(); ++i)
 		{
 			LinearSpring* spring = dynamic_cast<LinearSpring*>(g_forces[i]);
 			
@@ -676,7 +671,7 @@ void UpdateGrid(real dt)
 	delete g_grid;
 	g_grid = new SpringGrid(-kWorldSize, kWorldSize, -kWorldSize, kWorldSize*2.0f, 0.1f, g_forces.size()*10);
 	
-	for (int i=0; i < g_forces.size(); ++i)
+	for (size_t  i=0; i < g_forces.size(); ++i)
 	{
 		LinearSpring* spring = dynamic_cast<LinearSpring*>(g_forces[i]);
 		
@@ -696,7 +691,7 @@ void ApplyPenaltyForces(real dt);
 void IntegrateSymEuler(real dt)
 {
 	// apply gravity and damping
-	for (int i=0; i < g_particles.size(); ++i)
+	for (size_t  i=0; i < g_particles.size(); ++i)
 	{
 		Particle& p = *g_particles[i];
 		
@@ -719,7 +714,7 @@ void IntegrateSymEuler(real dt)
 	//assert(TestIntersections(dt) == false);
 		
 
-	for (int i=0; i < g_particles.size(); ++i)
+	for (size_t  i=0; i < g_particles.size(); ++i)
 	{
 		Particle& p = *g_particles[i];
 		
@@ -757,13 +752,13 @@ bool TestOverlap(const Vec2r& a, const Vec2r& b, const Vec2r& c, const Vec2r& d,
 void TestOverlaps()
 {
 	
-	for (int i=0; i < g_forces.size(); ++i)
+	for (size_t  i=0; i < g_forces.size(); ++i)
 	{
 		LinearSpring* a = dynamic_cast<LinearSpring*>(g_forces[i]);
 		
 		if (a)
 		{
-			for (int j=i+1; j < g_forces.size(); ++j)
+			for (size_t  j=i+1; j < g_forces.size(); ++j)
 			{
 				LinearSpring* b = dynamic_cast<LinearSpring*>(g_forces[j]);
 
@@ -796,11 +791,11 @@ void ApplyPenaltyForces(real dt)
 
 	
 	// check each particle against the collision planes
-	for (int i=0; i < g_particles.size(); ++i)
+	for (size_t  i=0; i < g_particles.size(); ++i)
 	{
 		Particle& p = *g_particles[i];
 		
-		for (int j=0; j < g_planes.size(); ++j)
+		for (size_t  j=0; j < g_planes.size(); ++j)
 		{
 			Vec2r n(g_planes[j].x, g_planes[j].y);
 			real d = Dot(p.mX, n) + g_planes[j].z;
@@ -829,7 +824,7 @@ void ApplyPenaltyForces(real dt)
 	
 	std::vector<LinearSpring*> overlaps;
 	
-	for (int j=0; j < g_particles.size(); ++j)
+	for (size_t  j=0; j < g_particles.size(); ++j)
 	{
 		Particle* particle = g_particles[j];
 	
@@ -838,7 +833,7 @@ void ApplyPenaltyForces(real dt)
 		overlaps.resize(0);
 		g_grid->Query(b.lower.x-h, b.upper.x+h, b.lower.y-h, b.upper.y+h, overlaps);
 		
-		for (int i=0; i < overlaps.size(); ++i)
+		for (size_t  i=0; i < overlaps.size(); ++i)
 		{
 			LinearSpring* spring = (overlaps[i]);
 			
@@ -906,11 +901,11 @@ bool Collide(real dt)
 	const real kRestitution = 0.01;
 	
 	// check each particle against the collision planes
-	for (int i=0; i < g_particles.size(); ++i)
+	for (size_t  i=0; i < g_particles.size(); ++i)
 	{
 		Particle& p = *g_particles[i];
 
-		for (int j=0; j < g_planes.size(); ++j)
+		for (size_t  j=0; j < g_planes.size(); ++j)
 		{
 			Vec2r n(g_planes[j].x, g_planes[j].y);
 			real d = Dot(p.mX, n);
@@ -939,7 +934,7 @@ bool Collide(real dt)
 		
 	std::vector<LinearSpring*> overlaps;
 	
-	for (int j=0; j < g_particles.size(); ++j)
+	for (size_t  j=0; j < g_particles.size(); ++j)
 	{
 		Particle* particle = g_particles[j];
 
@@ -949,7 +944,7 @@ bool Collide(real dt)
 		overlaps.resize(0);
 		g_grid->Query(b.lower.x, b.upper.x, b.lower.y, b.upper.y, overlaps);
 				
-		for (int i=0; i < overlaps.size(); ++i)
+		for (size_t  i=0; i < overlaps.size(); ++i)
 		{						
 			//LinearSpring* spring = dynamic_cast<LinearSpring*>(overlaps[i]);
 			LinearSpring* spring = (overlaps[i]);
@@ -1046,7 +1041,7 @@ Particle* GetClosestParticle(const Vec2r& p)
 	Particle* closest = NULL;
 	real closestDistSq = std::numeric_limits<real>::max();
 	
-	for (int i=0; i < g_particles.size(); ++i)
+	for (size_t  i=0; i < g_particles.size(); ++i)
 	{
 		real d = LengthSq(g_particles[i]->mX-p);
 		
@@ -1079,21 +1074,6 @@ void TickSim(real dt)
 	}
 	
 	AddSpaghetti(1.0f / 60.0f);
-}
-void DrawString(int x, int y, const char* s)
-{
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0, kWidth, kHeight, 0);
-	
-	glRasterPos2d(x, y);
-	while (*s)
-	{
-		glutBitmapCharacter(GLUT_BITMAP_8_BY_13, *s);
-		++s;
-	}
 }
 
 void DrawGrid()
@@ -1176,7 +1156,7 @@ void GLUTUpdate()
 	glBegin(GL_POINTS);
 	glColor3f(1.0f, 1.0f, 1.0f);
 	
-	for (int i=0; i < g_particles.size(); ++i)
+	for (size_t  i=0; i < g_particles.size(); ++i)
 	{
 	//	glVertex2x(g_particles[i]->mX);
 	}
@@ -1188,7 +1168,7 @@ void GLUTUpdate()
 	//DrawGrid();
 	
 	// draw forces
-	for (int i=0; i < g_forces.size(); ++i)
+	for (size_t  i=0; i < g_forces.size(); ++i)
 	{
 		g_forces[i]->Draw();
 	}
@@ -1202,7 +1182,7 @@ void GLUTUpdate()
 	Vec2r r(1.0f, 0.0f);
 	Vec2r rv(0.0f, 0.0f);
 	
-	real toi, s;
+	//real toi, s;
 	//IntersectPointLineSegmentContinuous(p, pv, q, qv, r, rv, toi, s);
 	
 	int x = 10;

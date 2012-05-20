@@ -87,6 +87,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="aabbtree.cpp" />
     <ClCompile Include="Assertion.cpp" />
     <ClCompile Include="Bounds.cpp" />
     <ClCompile Include="Core.cpp" />
@@ -101,12 +102,14 @@
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="Png.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="skylight.cpp" />
     <ClCompile Include="Stream.cpp" />
     <ClCompile Include="Tga.cpp" />
     <ClCompile Include="ThreadGroup.cpp" />
     <ClCompile Include="Threading.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="aabbtree.h" />
     <ClInclude Include="Assertion.h" />
     <ClInclude Include="Bounds.h" />
     <ClInclude Include="Containers.h" />
@@ -125,6 +128,7 @@
     <ClInclude Include="Point3.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Singleton.h" />
+    <ClInclude Include="skylight.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="Tga.h" />
     <ClInclude Include="ThreadGroup.h" />
