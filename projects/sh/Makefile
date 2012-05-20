@@ -5,7 +5,7 @@ CFLAGS = -g -Wall -I"../.."
 LDFLAGS = -g -framework GLUT -framework OpenGL -framework Cocoa
 
 TARGET  = SHTest 
-SOURCES = $(wildcard *.cpp) ../../Core/Pfm.cpp ../../Core/Mesh.cpp ../../Core/Shader.cpp
+SOURCES = $(wildcard *.cpp) ../../core/platform.cpp ../../core/maths.cpp ../../core/pfm.cpp ../../core/mesh.cpp ../../core/shader.cpp
 HEADERS = $(wildcard *.h)
 
 OBJECTS = $(SOURCES:.cpp=.o)

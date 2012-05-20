@@ -641,7 +641,7 @@ void Update()
 		const float speed = 0.15f;
 		const float alpha = sinf(t*speed)*kPi*0.18f;		
 
-		Vec3 eye = gTagCenter + Vec3(sinf(alpha)*radius, 50.0f, -cosf(alpha)*radius);
+		Vec3 eye = Vec3(gTagCenter) + Vec3(sinf(alpha)*radius, 50.0f, -cosf(alpha)*radius);
 		gluLookAt(eye.x, eye.y, eye.z, gTagCenter.x, gTagCenter.y, gTagCenter.z, 0.0f, 1.0f, 0.0f);
 
 		gCamPos = eye;

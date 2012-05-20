@@ -5,7 +5,7 @@ CFLAGS = -g -Wall -I"../.."
 LDFLAGS = -g -framework GLUT -framework OpenGL -framework Cocoa
 
 TARGET  = Dew 
-SOURCES = $(wildcard *.cpp) ../../Core/Platform.cpp ../../Core/Shader.cpp ../../Core/Maths.cpp
+SOURCES = $(wildcard *.cpp) ../../core/platform.cpp ../../core/shader.cpp ../../Core/maths.cpp ../../Core/tga.cpp
 HEADERS = $(wildcard *.h)
 
 OBJECTS = $(SOURCES:.cpp=.o)

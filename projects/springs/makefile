@@ -5,7 +5,7 @@ CFLAGS = -g -Wall -I"../.." -D_DEBUG
 LDFLAGS = -g -framework GLUT -framework OpenGL -framework Cocoa
 
 TARGET  = Springs
-SOURCES = $(wildcard *.cpp) ../../Core/Platform.cpp ../../Core/Shader.cpp
+SOURCES = $(wildcard *.cpp) ../../core/platform.cpp ../../core/shader.cpp
 HEADERS = $(wildcard *.h)
 
 OBJECTS = $(SOURCES:.cpp=.o)

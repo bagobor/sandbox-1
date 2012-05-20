@@ -35,4 +35,3 @@ void DrawPlane(const Vec4& p);
 //void DrawString(int x, int y, const char* s);
 void DrawString(int x, int y, const char* s, ...);
 
-GLuint CreateTextureFromFile(const char* path, float* width=0, float* height=0, bool clamp=true);

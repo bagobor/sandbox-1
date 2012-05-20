@@ -94,7 +94,7 @@ bool TgaLoad(const tchar* filename, TgaImage& image)
 	FILE* aTGAFile = fopen(filename, "rb");
 	if (aTGAFile == NULL)
 	{
-		Log::Warn << "Texture: could not open " << filename << " for reading" << endl;
+		printf("Texture: could not open %s for reading.\n", filename);
 		return NULL;
 	}
 
@@ -157,7 +157,7 @@ bool TgaLoad(const tchar* filename, TgaImage& image)
 
 		if (!fread(&t.u32, numComponents, 1, aTGAFile))
 		{
-			Log::Warn << "Texture: file not fully read, may be corrupt (" << filename << endl;
+			printf("Texture: file not fully read, may be corrupt (%s)\n", filename);
 		}
 
 		// stores it as BGR(A) so we'll have to swap R and B.
