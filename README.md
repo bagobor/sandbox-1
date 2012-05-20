@@ -3,7 +3,7 @@ sandbox
 
 Graphics and physics research, snippets, demos.
 
-Most are described:
+Most are described here:
 
 http://blog.mmacklin.com
 
