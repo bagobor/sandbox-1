@@ -3,7 +3,7 @@ sandbox
 
 Graphics and physics research, snippets, demos.
 
-Most are described here:
+Some are described here:
 
 http://blog.mmacklin.com
 
@@ -11,7 +11,7 @@ Directory Structure:
 
 	core/			- shared foundation code, math lib, etc
 	projects/
-		cloth 	- implementation of CS5643 assignment two (the spaghetti factory)
+		cloth/	 	- implementation of CS5643 assignment two (the spaghetti factory)
 		dew/		- prototype for Mountain Dew 3D graffiti live demo
 		empty/		- base for a new demo
 		fem/		- co-rotational finite element demo with fracture
