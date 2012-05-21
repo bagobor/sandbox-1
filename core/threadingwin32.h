@@ -12,7 +12,7 @@ public:
 	HANDLE m_handle;
 }
 
-void WaitForThreads(Thread* threads, uint32 n)
+void WaitForThreads(Thread* threads, uint32_t n)
 {
 
 }

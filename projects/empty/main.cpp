@@ -8,8 +8,8 @@
 
 using namespace std;
 
-uint32 g_screenWidth = 1280;
-uint32 g_screenHeight = 720;
+uint32_t g_screenWidth = 1280;
+uint32_t g_screenHeight = 720;
 
 void Init()
 {

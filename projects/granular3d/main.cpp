@@ -14,8 +14,8 @@ using namespace std;
 
 #include "solve.h"
 
-const uint32 kWidth = 800;
-const uint32 kHeight = 600;
+const uint32_t kWidth = 800;
+const uint32_t kHeight = 600;
 
 int kNumParticles = 0;
 const int kNumIterations = 5;

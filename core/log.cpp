@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <iostream>
 #include <cassert>
+#include <string>
+
+using namespace std;
 
 Log Log::Info;
 Log Log::Warn;
@@ -31,10 +34,10 @@ void Log::UnRegisterListener(LogListener* l)
 void Log::Flush(void)
 {
 	// get string from string stream
-	tstring d = m_stream.str();
+	string d = m_stream.str();
 	
 	// reset stream
-	m_stream.str(_TS(""));
+	m_stream.str("");
 
 	// send to all listeners
 	for (size_t i=0; i < mListeners.size(); i++)
@@ -64,7 +67,7 @@ public:
 		fclose(m_file);
 	}
 
-	virtual void Output(const tstring& msg)
+	virtual void Output(const string& msg)
 	{	
 		CriticalSectionScopeLock lock(m_mutex);
 
@@ -85,7 +88,7 @@ class LogDebugListener : public LogListener
 {
 public:
 
-	virtual void Output(const tstring& msg)
+	virtual void Output(const string& msg)
 	{
 		OutputDebugString(msg.c_str());
 		std::cout << msg.c_str();
@@ -98,7 +101,7 @@ class LogDebugListener : public LogListener
 {
 public:
 	
-	virtual void Output(const tstring& msg)
+	virtual void Output(const string& msg)
 	{
 		std::cout << msg.c_str();
 	}

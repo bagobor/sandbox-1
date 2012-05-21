@@ -513,11 +513,11 @@ void FluidStep(float dt)
 
 GLuint CreateBlackBodyTexture(float minT, float maxT)
 {
-	const uint32 kWidth = 1024;
+	const uint32_t kWidth = 1024;
 	
 	Colour* data = new Colour[kWidth];
 	
-	for (uint32 i=0; i < kWidth; ++i)
+	for (uint32_t i=0; i < kWidth; ++i)
 	{
 		float T = minT + (maxT-minT)*(float(i)/kWidth);
 		
@@ -607,8 +607,8 @@ GLuint CreateNoiseTexture(int width, int height, int depth)
 	glVerify(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));	
 
 	// update texture
-	byte *data = new byte[width*height*depth];
-	byte *ptr = data;
+	uint8_t *data = new uint8_t[width*height*depth];
+	uint8_t *ptr = data;
 	
 	for (int z=0; z < depth; ++z)
 	{
@@ -631,8 +631,8 @@ GLuint CreateNoiseTexture(int width, int height, int depth)
 void UpdateVolumeTexture(GLuint texid, const Grid3D& g, float scale)
 {
 	// update texture
-	byte *data = new byte[kWidth*kHeight*kDepth];
-	byte *ptr = data;
+	uint8_t *data = new uint8_t[kWidth*kHeight*kDepth];
+	uint8_t *ptr = data;
 	
 	{ ScopedTimer timer("TextureUpdate");
 		
@@ -665,8 +665,8 @@ void UpdateVolumeTexture(GLuint texid, const Grid3D& g, float scale)
 void UpdateSmokeTexture(GLuint texid, const Grid3D& a, Grid3D& b)
 {
 	// update texture
-	byte *data = new byte[kWidth*kHeight*kDepth];
-	byte *ptr = data;
+	uint8_t *data = new uint8_t[kWidth*kHeight*kDepth];
+	uint8_t *ptr = data;
 	
 	{ ScopedTimer timer("TextureUpdate");
 		
@@ -856,7 +856,7 @@ bool g_doCapture = false;
 
 void GLUTUpdate()
 {	
-	static uint32 frameCounter = 0;
+	static uint32_t frameCounter = 0;
 	static double totalSimTime = 0.0;
 	
 	double startTime = GetSeconds();
@@ -867,7 +867,7 @@ void GLUTUpdate()
 	}
 	else
 	{
-		const uint32 kNumSubsteps=1;
+		const uint32_t kNumSubsteps=1;
 		
 		for (int i=0; i < kNumSubsteps; ++i)
 		{
@@ -923,7 +923,7 @@ void GLUTUpdate()
 		TgaImage img;
 		img.m_width = g_screenWidth;
 		img.m_height = g_screenHeight;
-		img.m_data = new uint32[g_screenWidth*g_screenHeight];
+		img.m_data = new uint32_t[g_screenWidth*g_screenHeight];
 		
 		glReadPixels(0, 0, g_screenWidth, g_screenHeight, GL_RGBA, GL_UNSIGNED_BYTE, img.m_data);
 		

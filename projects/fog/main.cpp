@@ -11,8 +11,8 @@
 
 using namespace std;
 
-uint32 g_width = 1280;
-uint32 g_height = 720;
+uint32_t g_width = 1280;
+uint32_t g_height = 720;
 
 GLuint g_staticPrograms[2];
 GLuint g_depthBuffer;

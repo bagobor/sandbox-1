@@ -30,22 +30,22 @@ void GlslPrintShaderLog(GLuint obj)
 #endif
 }
 
-void glAssert(const tchar* msg, long line, const char* file)
+void glAssert(const char* msg, long line, const char* file)
 {
 	struct glError 
 	{
 		GLenum code;
-		const tchar* name;
+		const char* name;
 	};
 
-	static const glError errors[] = {	{GL_NO_ERROR, _TS("No Error")},
-										{GL_INVALID_ENUM, _TS("Invalid Enum")},
-										{GL_INVALID_VALUE, _TS("Invalid Value")},
-										{GL_INVALID_OPERATION, _TS("Invalid Operation")}
+	static const glError errors[] = {	{GL_NO_ERROR, "No Error"},
+										{GL_INVALID_ENUM, "Invalid Enum"},
+										{GL_INVALID_VALUE, "Invalid Value"},
+										{GL_INVALID_OPERATION, "Invalid Operation"}
 #if OGL1
-										,{GL_STACK_OVERFLOW, _TS("Stack Overflow")},
-										{GL_STACK_UNDERFLOW, _TS("Stack Underflow")},
-										{GL_OUT_OF_MEMORY, _TS("Out Of Memory")}
+										,{GL_STACK_OVERFLOW, "Stack Overflow"},
+										{GL_STACK_UNDERFLOW, "Stack Underflow"},
+										{GL_OUT_OF_MEMORY, "Out Of Memory"}
 #endif
 									};
 
@@ -60,7 +60,7 @@ void glAssert(const tchar* msg, long line, const char* file)
 		const char* errorName = "Unknown error";
 
 		// find error message
-		for (uint32 i=0; i < sizeof(errors)/sizeof(glError); i++)
+		for (uint32_t i=0; i < sizeof(errors)/sizeof(glError); i++)
 		{
 			if (errors[i].code == e)
 			{

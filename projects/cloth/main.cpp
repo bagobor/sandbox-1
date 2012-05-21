@@ -11,8 +11,8 @@ typedef float real;
 typedef XVector2<real> Vec2r;
 typedef XVector3<real> Vec3r;
 
-const uint32 kHeight = 600;
-const uint32 kWidth = 600;
+const uint32_t kHeight = 600;
+const uint32_t kWidth = 600;
 const real kWorldSize = 4.0f;
 const real kZoom = kWorldSize + 1.0f;
 
@@ -251,7 +251,7 @@ public:
 		int mNext;
 	};
 	
-	FixedGrid(float left, float right, float bottom, float top, float dx, uint32 maxEntries) :
+	FixedGrid(float left, float right, float bottom, float top, float dx, uint32_t maxEntries) :
 		mLeft(left),
 		mRight(right),
 		mBottom(bottom),
@@ -265,7 +265,7 @@ public:
 		mWidth = int(ceilf((right-left) / dx));
 		mHeight = int(ceilf((top-bottom) / dx));
 		
-		uint32 numCells = mWidth*mHeight;
+		uint32_t numCells = mWidth*mHeight;
 		
 		mGrid.resize(numCells, kNull);
 		mEntries.reserve(maxEntries);

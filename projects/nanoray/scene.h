@@ -24,7 +24,7 @@ struct Light
 	{
 	}
 	
-	Light(Type t, uint32 numSamples=1, const Primitive* primitive=NULL) 
+	Light(Type t, uint32_t numSamples=1, const Primitive* primitive=NULL) 
 		: m_type(t)
 		, m_numSamples(numSamples)
 		, m_primitive(primitive) 
@@ -35,7 +35,7 @@ struct Light
 	// shape to use for emission
 	const Primitive* m_primitive;
 	// number of samples to take
-	uint32 m_numSamples;
+	uint32_t m_numSamples;
 };
 
 class Volume
@@ -48,7 +48,7 @@ public:
 
 };
 
-inline float PowerHeuristic(uint32 nf, float fPdf, uint32 ng, float gPdf)
+inline float PowerHeuristic(uint32_t nf, float fPdf, uint32_t ng, float gPdf)
 {
 	float f = nf*fPdf;
 	float g = ng*gPdf;
@@ -64,7 +64,7 @@ inline float PowerHeuristic(uint32 nf, float fPdf, uint32 ng, float gPdf)
 		return 1.0f;
 }
 
-inline float BalanceHeuristic(uint32 nf, float fPdf, uint32 ng, float gPdf)
+inline float BalanceHeuristic(uint32_t nf, float fPdf, uint32_t ng, float gPdf)
 {
 	float f = nf*fPdf;
 	float g = ng*gPdf;
@@ -111,7 +111,7 @@ class Scene
 {
 public:
 
-	// contiguous buffer for the data + 1 sentinel byte at the end
+	// contiguous buffer for the data + 1 sentinel uint8_t at the end
 	typedef std::vector<const Primitive*> PrimitiveArray;
 	typedef std::vector<const Volume*> VolumeArray;
 	typedef std::vector<const Light*> LightArray;
@@ -197,7 +197,7 @@ public:
 		attenuation = Colour(1.0f, 1.0f, 1.0f, 1.0f);
 		illum = Colour(0.0f, 0.0f, 0.0f, 0.0f);
 
-		for (uint32 i=0; i < m_volumes.size(); ++i)
+		for (uint32_t i=0; i < m_volumes.size(); ++i)
 		{
 			Colour e;
 			Colour s;
@@ -215,7 +215,7 @@ public:
 	{	
 		Colour sum(0.0f);
 
-		for (uint32 i=0; i < m_lights.size(); ++i)
+		for (uint32_t i=0; i < m_lights.size(); ++i)
 		{
 			const Light& l = *m_lights[i];
 					
@@ -226,7 +226,7 @@ public:
 			
 			Colour L(0.0f);
 
-			for (uint32 s=0; s < 1; ++s)
+			for (uint32_t s=0; s < 1; ++s)
 			{
 				// sample light source
 				Point3 lp = shape->Sample(NULL);

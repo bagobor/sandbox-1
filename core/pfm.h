@@ -11,8 +11,8 @@
 
 struct PfmImage
 {
-	uint32 m_width;
-	uint32 m_height;
+	uint32_t m_width;
+	uint32_t m_height;
 	float m_maxDepth;
 	
 	// pixels are always assumed to be 32 bit

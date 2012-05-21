@@ -9,23 +9,23 @@
 
 using namespace std;
 
-const uint32 g_screenWidth = 1024;
-const uint32 g_screenHeight = 512;
+const uint32_t g_screenWidth = 1024;
+const uint32_t g_screenHeight = 512;
 
 Point3 g_camPos;
 Rotation g_camDir;
 
 PfmImage g_probe;
 
-uint32 g_buffer[g_screenWidth*g_screenHeight];
+uint32_t g_buffer[g_screenWidth*g_screenHeight];
 
 Colour SampleProbe(const Vector3& dir, const PfmImage& image)
 {
 	// convert world space dir to probe space
 	float c = (1.0f / kPi) * acosf(dir.z)/sqrt(dir.x*dir.x + dir.y*dir.y);
 	
-	uint32 px = (0.5f + 0.5f*(dir.x*c))*g_probe.m_width;
-	uint32 py = (0.5f + 0.5f*(-dir.y*c))*g_probe.m_height;
+	uint32_t px = (0.5f + 0.5f*(dir.x*c))*g_probe.m_width;
+	uint32_t py = (0.5f + 0.5f*(-dir.y*c))*g_probe.m_height;
 	
 	float r = g_probe.m_data[py*g_probe.m_width*3 + (px*3)+0];
 	float g = g_probe.m_data[py*g_probe.m_width*3 + (px*3)+1];
@@ -76,9 +76,9 @@ void GLUTUpdate()
 	
 	Matrix44 rasterToWorld = cameraToWorld*screenToCamera*rasterToScreen;
 	
-	for (uint32 y=0; y < g_screenHeight; ++y)
+	for (uint32_t y=0; y < g_screenHeight; ++y)
 	{
-		for (uint32 x=0; x < g_screenWidth; ++x)
+		for (uint32_t x=0; x < g_screenWidth; ++x)
 		{
 			Point3 p = rasterToWorld * Point3(float(x) + 0.5f, float(y) + 0.5f, 0.0f);		
 			Vector3 dir = Normalize(p-Point3(0.0f));

@@ -340,7 +340,7 @@ struct AdjFace
 // detects singular vertices and separates by duplicating particles
 uint32_t SeparateSingular(Particle* particles, uint32_t numParticles, Triangle* triangles, uint32_t numTriangles)
 {
-	const uint32 n = numParticles;
+	const uint32_t n = numParticles;
 
 	for (uint32_t p=0; p < n; ++p)
 	{
@@ -365,7 +365,7 @@ uint32_t SeparateSingular(Particle* particles, uint32_t numParticles, Triangle* 
 
 				while (!stack.empty())
 				{
-					const uint32 t = stack.back();
+					const uint32_t t = stack.back();
 					stack.pop_back();
 
 					// try and find a face connected to t
@@ -628,7 +628,7 @@ Scene* CreateScene(
 
 		// add edges
 
-		for (uint32 j=0; j < 3; ++j)
+		for (uint32_t j=0; j < 3; ++j)
 		{
 			Edge e(GetVertex(t, j), GetVertex(t, (j+1)%3));
 		
@@ -665,7 +665,7 @@ Scene* CreateScene(
 	{
 		const Element& e = scene->mElements[i];
 		
-		for (uint32 j=0; j < 3; ++j)
+		for (uint32_t j=0; j < 3; ++j)
 			assert(e.mEdges[j] != kInvalidIndex);
 	}
 

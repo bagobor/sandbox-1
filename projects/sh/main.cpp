@@ -27,7 +27,7 @@ using namespace std;
 const int kWidth = 800;
 const int kHeight = 600;
 
-uint32 g_buffer[kWidth*kHeight];
+uint32_t g_buffer[kWidth*kHeight];
 Mesh* g_mesh;
 
 Vec3 g_camPos(0.0f, 0.0f, 7.0f);

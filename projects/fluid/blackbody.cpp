@@ -413,17 +413,17 @@ void BlackBodyXYZ(float T, float* xyz)
 
 void GenerateBlackBodyTestImage()
 {
-	const uint32 kWidth = 1024;
-	const uint32 kHeight = 1024;
+	const uint32_t kWidth = 1024;
+	const uint32_t kHeight = 1024;
 
-	uint32* image = new uint32[kHeight*kWidth];
+	uint32_t* image = new uint32_t[kHeight*kWidth];
 
 	float d65[3];
 	BlackBodyXYZ(6504.0f, d65);
 
-	for (uint32 y=0; y < kHeight; ++y)
+	for (uint32_t y=0; y < kHeight; ++y)
 	{
-		for (uint32 x=0; x < kWidth; ++x)
+		for (uint32_t x=0; x < kWidth; ++x)
 		{
 			float ty = (float(y) / kHeight);
 			float tx = float(x) / kWidth;
@@ -457,7 +457,7 @@ void GenerateBlackBodyTestImage()
 		}
 	}
 
-	for (uint32 i=0; i < nCIE; ++i)
+	for (uint32_t i=0; i < nCIE; ++i)
 	{
 		float X = CIE_X[i];
 		float Y = CIE_Y[i];

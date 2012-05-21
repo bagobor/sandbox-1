@@ -11,13 +11,13 @@ bool PngLoad(const char* filename, PngImage& image)
 {	
 	int x, y, c;
 	
-	byte* data = stbi_png_load(filename, &x, &y, &c, 4);
+	uint8_t* data = stbi_png_load(filename, &x, &y, &c, 4);
 	
 	if (data)
 	{
 		int s = x*y;
 		
-		image.m_data = new uint32[s];
+		image.m_data = new uint32_t[s];
 		memcpy(image.m_data, data, s*4);
 		
 		image.m_width = (uint16)x;
@@ -85,7 +85,7 @@ bool PngLoad(const char* filename, PngImage& image)
 	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
 		&interlace_type, NULL, NULL);
 	
-	/* Add filler (or alpha) byte (before/after each RGB triplet) */
+	/* Add filler (or alpha) uint8_t (before/after each RGB triplet) */
 	png_set_expand(png_ptr);
 	png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER);
 	//png_set_gray_1_2_4_to_8(png_ptr);
@@ -96,9 +96,9 @@ bool PngLoad(const char* filename, PngImage& image)
 
 	int aNumBytes = png_get_rowbytes(png_ptr, info_ptr) * height;
 
-	uint32* aBits = new uint32[aNumBytes/4];
+	uint32_t* aBits = new uint32_t[aNumBytes/4];
 
-	for (uint32 i = 0; i < height; i++)
+	for (uint32_t i = 0; i < height; i++)
 	{
 		png_bytep anAddr = (png_bytep) &aBits[i*width];
 		png_read_rows(png_ptr, (png_bytepp) &anAddr, NULL, 1);
@@ -106,7 +106,7 @@ bool PngLoad(const char* filename, PngImage& image)
 	
 	std::cout << filename << " " << width << " " << height << " : " << interlace_type << std::endl;
 	
-	image.m_data = (uint32*)aBits;
+	image.m_data = (uint32_t*)aBits;
 	image.m_width = (uint16)width;
 	image.m_height = (uint16)height;
 

@@ -5,30 +5,21 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <string>
+#include <ctype.h>
+#include <stdio.h>
+
+using namespace std;
 
 #ifdef WIN32
 
 #include <windows.h>
 #include <commdlg.h>
 #include <mmsystem.h>
-#include <tchar.h>
-
-using namespace std;
+#include <char.h>
 
 double GetSeconds()
 {
-/*
-	static DWORD  InitialTime = timeGetTime();
-	static double TimeCounter = 0.0;
-
-	// Accumulate difference to prevent wraparound.
-	DWORD NewTime = timeGetTime();
-	TimeCounter += (NewTime - InitialTime) * (1./1000.);
-	InitialTime = NewTime;
-
-	return TimeCounter;
-*/
-
 	static LARGE_INTEGER lastTime;
 	static LARGE_INTEGER freq;
 	static bool first = true;
@@ -64,24 +55,24 @@ void Sleep(double seconds)
 
 
 // helper function to get exe path
-tstring GetExePath()
+string GetExePath()
 {
 	const uint kMaxPathLength = 2048;
 
-	tchar exepath[kMaxPathLength];
+	char exepath[kMaxPathLength];
 
 	// get exe path for file system
-	uint32 i = GetModuleFileName(NULL, exepath, kMaxPathLength);
+	uint32_t i = GetModuleFileName(NULL, exepath, kMaxPathLength);
 
 	// rfind first slash
 	while (i && exepath[i] != '\\' && exepath[i] != '//')
 		i--;
 
 	// insert null terminater to cut off exe name
-	return tstring(&exepath[0], &exepath[i+1]);
+	return string(&exepath[0], &exepath[i+1]);
 }
 
-tstring FileOpenDialog(char *filter)
+string FileOpenDialog(char *filter)
 {
 	HWND owner=NULL;
 
@@ -104,31 +95,6 @@ tstring FileOpenDialog(char *filter)
 	return fileNameStr;
 }
 
-/*
-tstring GetWorkingDirectory()
-{
-	tchar wdir[kMaxPathLength];
-
-	_tgetcwd(wdir, kMaxPathLength);
-
-	return tstring(wdir) + _TS('\\');
-	return tstring();
-}
-
-
-tchar* AsciiToUnicode(const char* in, tchar* out, int count)
-{
-	MultiByteToWideChar(CP_ACP, 0, in, -1, out, count);
-	return out;
-}
-
-char* UnicodeToAscii(const tchar* in, char* out, int count)
-{
-	WideCharToMultiByte(CP_ACP, 0, in, -1, out, count, NULL, NULL);
-	return out;
-}
-
-*/
 bool FileMove(const char* src, const char* dest)
 {
 	BOOL b = MoveFileEx(src, dest, MOVEFILE_REPLACE_EXISTING);
@@ -194,7 +160,7 @@ double GetSeconds()
 #endif
 
 
-byte* LoadFileToBuffer(const char* filename, uint32* sizeRead)
+uint8_t* LoadFileToBuffer(const char* filename, uint32_t* sizeRead)
 {
 	FILE* file = fopen(filename, "rb");
 	if (file)
@@ -202,7 +168,7 @@ byte* LoadFileToBuffer(const char* filename, uint32* sizeRead)
 		fseek(file, 0, SEEK_END);
 		long p = ftell(file);
 		
-		byte* buf = new byte[p];
+		uint8_t* buf = new uint8_t[p];
 		fseek(file, 0, SEEK_SET);
 		fread(buf, 1, p, file);
 		
@@ -222,16 +188,16 @@ byte* LoadFileToBuffer(const char* filename, uint32* sizeRead)
 	}
 }
 
-tstring LoadFileToString(const char* filename)
+string LoadFileToString(const char* filename)
 {
 	//std::ifstream file(filename);
-	//return tstring((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	uint32 size;
-	byte* buf = LoadFileToBuffer(filename, &size);
+	//return string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	uint32_t size;
+	uint8_t* buf = LoadFileToBuffer(filename, &size);
 	
 	if (buf)
 	{
-		tstring s(buf, buf+size);
+		string s(buf, buf+size);
 		delete[] buf;
 		
 		return s;
@@ -260,11 +226,11 @@ bool SaveStringToFile(const char* filename, const char* s)
 }
 
 
-tstring StripFilename(const tchar* path)
+string StripFilename(const char* path)
 {
 	// simply find the last 
-	const tchar* iter=path;
-	const tchar* last=NULL;
+	const char* iter=path;
+	const char* last=NULL;
 	while (*iter)
 	{
 		if (*iter == '\\' || *iter== '/')
@@ -275,19 +241,19 @@ tstring StripFilename(const tchar* path)
 	
 	if (last)
 	{
-		return tstring(path, last+1);
+		return string(path, last+1);
 	}
 	else
-		return tstring();
+		return string();
 	
 }
 
-tstring GetExtension(const tchar* path)
+string GetExtension(const char* path)
 {
-	const tchar* s = strrchr(path, '.');
+	const char* s = strrchr(path, '.');
 	if (s)
 	{
-		return tstring(s+1);
+		return string(s+1);
 	}
 	else
 	{
@@ -295,34 +261,34 @@ tstring GetExtension(const tchar* path)
 	}
 }
 
-tstring StripExtension(const tchar* path)
+string StripExtension(const char* path)
 {
-	const tchar* s = strrchr(path, '.');
+	const char* s = strrchr(path, '.');
 	if (s)
 	{
-		return tstring(path, s);
+		return string(path, s);
 	}
 	else
 	{
-		return tstring(path);
+		return string(path);
 	}
 }
 
-tstring NormalizePath(const tchar* path)
+string NormalizePath(const char* path)
 {
-	tstring p(path);
+	string p(path);
 	replace(p.begin(), p.end(), '\\', '/');
-	transform(p.begin(), p.end(), p.begin(), tolower);
+	transform(p.begin(), p.end(), p.begin(), ::tolower);
 	
 	return p;
 }
 
 // strips the path from a file name
-tstring StripPath(const tchar* path)
+string StripPath(const char* path)
 {
 	// simply find the last 
-	const tchar* iter=path;
-	const tchar* last=NULL;
+	const char* iter=path;
+	const char* last=NULL;
 	while (*iter)
 	{
 		if (*iter == '\\' || *iter== '/')
@@ -333,7 +299,7 @@ tstring StripPath(const tchar* path)
 	
 	if (!last)
 	{
-		return tstring(path);
+		return string(path);
 	}
 	
 	// eat the last slash
@@ -341,11 +307,11 @@ tstring StripPath(const tchar* path)
 	
 	if (*last)
 	{
-		return tstring(last);
+		return string(last);
 	}
 	else
 	{
-		return tstring();	
+		return string();	
 	}
 }
 

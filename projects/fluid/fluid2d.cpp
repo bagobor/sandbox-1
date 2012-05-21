@@ -324,7 +324,7 @@ float g_screen[kHeight][kWidth][4];
 float g_blackBodyMinT = 1000.0f;
 float g_blackBodyMaxT = 4000.0f;
 
-const uint32 kBlackBodySamples = 1024;
+const uint32_t kBlackBodySamples = 1024;
 Colour g_blackBodyTable[kBlackBodySamples];
 
 
@@ -755,7 +755,7 @@ void GLUTUpdate()
 			for (int x=0; x < kWidth; ++x)
 			{
 				//float t = powf(fabsf(g_currentT->Get(x, y)), 1.0f/1.0f);//fabsf(g_currentT->CubicInterp(60 + x*0.05f, 60.0f + y*0.05f));
-				uint32 s = g_currentT->Get(x, y)*kBlackBodySamples;
+				uint32_t s = g_currentT->Get(x, y)*kBlackBodySamples;
 				
 				Colour c = g_blackBodyTable[Clamp(s, 0U, kBlackBodySamples-1)];
 				newMaxI = Max(g_blackBodyTable[300].r, Max(newMaxI, Max(c.r, Max(c.g, c.b))));

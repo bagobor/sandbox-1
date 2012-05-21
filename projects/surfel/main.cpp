@@ -15,8 +15,8 @@ EdgeSet g_edges;
 
 using namespace std;
 
-const uint32 g_screenWidth = 512;
-const uint32 g_screenHeight = 512;
+const uint32_t g_screenWidth = 512;
+const uint32_t g_screenHeight = 512;
 
 Matrix44 g_worldToView;
 Matrix44 g_viewToScreen;
@@ -170,12 +170,12 @@ void RasterizeTriConservative(const float2 p, const float2 q, const float2 r, Ou
 }
 
 
-const uint32 g_bakeSize = 512;
+const uint32_t g_bakeSize = 512;
 
-uint32 g_buffer[g_bakeSize*g_bakeSize];
+uint32_t g_buffer[g_bakeSize*g_bakeSize];
 Face* g_currentFace;
 
-void WritePixel(uint32 x, uint32 y, float a, float b)
+void WritePixel(uint32_t x, uint32_t y, float a, float b)
 {
 	if (x < g_bakeSize && y < g_bakeSize)
 	{
@@ -202,9 +202,9 @@ void WritePixel(uint32 x, uint32 y, float a, float b)
 	}
 }
 
-void Dilate(uint32 width, uint32 height, uint32* tex)
+void Dilate(uint32_t width, uint32_t height, uint32_t* tex)
 {
-	uint32* out = new uint32[width*height];
+	uint32_t* out = new uint32_t[width*height];
 	
 	int offsets[8][2] = { {  0,  1 },
 						  {  0, -1 },
@@ -219,8 +219,8 @@ void Dilate(uint32 width, uint32 height, uint32* tex)
 	{
 		for (int x=0; x < width; ++x)
 		{	
-			uint32& src = tex[y*width + x];
-			uint32& dst = out[y*width + x];
+			uint32_t& src = tex[y*width + x];
+			uint32_t& dst = out[y*width + x];
 			
 			dst = src;
 			
@@ -235,7 +235,7 @@ void Dilate(uint32 width, uint32 height, uint32* tex)
 								
 				if (px > 0 && px < width && py > 0 && py < height)
 				{
-					uint32 tap = tex[py*width + px];
+					uint32_t tap = tex[py*width + px];
 					
 					if (tap&0xff000000)
 					{
@@ -247,7 +247,7 @@ void Dilate(uint32 width, uint32 height, uint32* tex)
 		}
 	}
 						
-	memcpy(tex, out, sizeof(uint32)*width*height);
+	memcpy(tex, out, sizeof(uint32_t)*width*height);
 	
 	delete out;
 }
@@ -373,7 +373,7 @@ void GLUTUpdate()
 	*/
 	
 	
-	const uint32 kPaletteSize = 16;
+	const uint32_t kPaletteSize = 16;
 	Colour palette[kPaletteSize] = { Colour(0x05B0A900u),
 									 Colour(0xC9033700u),
 									 Colour(0xFF4A3500u),
@@ -460,11 +460,11 @@ void GLUTUpdate()
 
 	memset(gBuffer, 0x80808080, sizeof(gBuffer));
 
-	for (uint32 i=0; i < g_mesh->GetNumFaces(); ++i)
+	for (uint32_t i=0; i < g_mesh->GetNumFaces(); ++i)
 	{
-		uint32 a = g_mesh->m_indices[i*3+0];
-		uint32 b = g_mesh->m_indices[i*3+1];
-		uint32 c = g_mesh->m_indices[i*3+2];
+		uint32_t a = g_mesh->m_indices[i*3+0];
+		uint32_t b = g_mesh->m_indices[i*3+1];
+		uint32_t c = g_mesh->m_indices[i*3+2];
 		
 		Vector4 sa = g_worldToRaster*g_mesh->m_positions[a].operator Vec4();
 		Vector4 sb = g_worldToRaster*g_mesh->m_positions[b].operator Vec4();

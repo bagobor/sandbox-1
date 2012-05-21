@@ -9,7 +9,7 @@ void InitScene0(Scene& scene, Camera& camera)
 	d.m_emission = Colour(20.0f, 20.0f, 20.0f);
 	d.m_material = new MatteMaterial(new ConstantTexture(Colour(0.0f, 0.0f, 0.0f)));
 
-	uint32 di = scene.AddPrimitive(d);
+	uint32_t di = scene.AddPrimitive(d);
 
 	// attach area light to the disc
 	Light l(Light::kArea, 1, di);
@@ -63,7 +63,7 @@ void InitScene1(Scene& scene, Camera& camera)
 	d.m_emission = Colour(20.0f, 20.0f, 20.0f);
 	d.m_material = new MatteMaterial(new ConstantTexture(Colour(0.0f, 0.0f, 0.0f)));
 
-	uint32 di = scene.AddPrimitive(d);
+	uint32_t di = scene.AddPrimitive(d);
 
 	// attach area light to the disc
 	Light l(Light::kArea, 1, di);
@@ -135,7 +135,7 @@ void InitScene2(Scene& scene, Camera& camera)
 	d.m_emission = Colour(20.0f, 20.0f, 20.0f);
 	d.m_material = new MatteMaterial(new ConstantTexture(Colour(0.0f, 0.0f, 0.0f)));
 
-	uint32 di = scene.AddPrimitive(d);
+	uint32_t di = scene.AddPrimitive(d);
 
 	// attach area light to the disc
 	Light l(Light::kArea, 4, di);
@@ -160,7 +160,7 @@ void InitScene2(Scene& scene, Camera& camera)
 	scene.AddPrimitive(p);
 }
 
-void InitScene3(Scene& scene, Camera& camera, uint32 width, uint32 height, float time)
+void InitScene3(Scene& scene, Camera& camera, uint32_t width, uint32_t height, float time)
 {
 	camera = Camera(TransformMatrix(Rotation(0.0f, 0.0f, DegToRad(-5.0f)), Point3(0.0f, 8.0f, 0.0f)), DegToRad(55.0f), 1.0f, 10000.0f, width, height);	
 
@@ -256,7 +256,7 @@ void InitScene5(Scene& scene, Camera& camera)
 	d.m_emission = Colour(20.0f, 20.0f, 20.0f);
 	d.m_material = new MatteMaterial(new ConstantTexture(Colour(0.0f, 0.0f, 0.0f)));
 
-	uint32 di = scene.AddPrimitive(d);
+	uint32_t di = scene.AddPrimitive(d);
 
 	// attach area light to the disc
 	Light l(Light::kArea, 4, di);
@@ -337,7 +337,7 @@ void InitScene6(Scene& scene, Camera& camera)
 	d.m_emission = Colour(20.0f, 20.0f, 20.0f);
 	d.m_material = new MatteMaterial(new ConstantTexture(Colour(0.0f, 0.0f, 0.0f)));
 
-	uint32 di = scene.AddPrimitive(d);
+	uint32_t di = scene.AddPrimitive(d);
 
 	// attach area light to the disc
 	Light l(Light::kArea, 1, di);

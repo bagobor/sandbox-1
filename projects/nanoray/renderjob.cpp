@@ -8,7 +8,7 @@ using namespace std;
 
 extern _declspec(thread) MemoryArena* g_memArena;
 
-uint32 RenderTileThreadFunc(void* data)
+uint32_t RenderTileThreadFunc(void* data)
 {
 	RenderJob& job = *(RenderJob*)(data);
 
@@ -19,13 +19,13 @@ uint32 RenderTileThreadFunc(void* data)
 	const Rect rect = job.m_renderRect;
 
 	// take image samples
-	for (uint32 i=rect.Top(); i < rect.Bottom(); ++i)
+	for (uint32_t i=rect.Top(); i < rect.Bottom(); ++i)
 	{
-		for (uint32 j=rect.Left(); j < rect.Right(); ++j)
+		for (uint32_t j=rect.Left(); j < rect.Right(); ++j)
 		{
 			Colour radiance(0.0f);
 
-			for (uint32 s=0; s < job.m_samplesPerPixel; ++s)
+			for (uint32_t s=0; s < job.m_samplesPerPixel; ++s)
 			{
 				Vector3 rayDir;
 				job.m_camera.GenerateRay(j, i, rayDir);			

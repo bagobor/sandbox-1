@@ -9,6 +9,8 @@
 
 #include "pfm.h"
 #include <cassert>
+#include <stdio.h>
+#include <string.h>
 
 bool PfmLoad(const char* filename, PfmImage& image)
 {
@@ -16,7 +18,7 @@ bool PfmLoad(const char* filename, PfmImage& image)
 	if (!f)
 		return false;
 		
-	const uint32 kBufSize = 1024;
+	const uint32_t kBufSize = 1024;
 	char buffer[kBufSize];
 	
 	if (!fgets(buffer, kBufSize, f))
@@ -35,12 +37,12 @@ bool PfmLoad(const char* filename, PfmImage& image)
 	
 	sscanf(buffer, "%f", &image.m_maxDepth);
 	
-	uint32 dataStart = ftell(f);
+	uint32_t dataStart = ftell(f);
 	fseek(f, 0, SEEK_END);
-	uint32 dataEnd = ftell(f);
+	uint32_t dataEnd = ftell(f);
 	fseek(f, dataStart, SEEK_SET);
 	
-	uint32 dataSize = dataEnd-dataStart;
+	uint32_t dataSize = dataEnd-dataStart;
 	assert((dataSize&0x4) == 0);
 	
 	// determine if the rest of the image is RGB or scalar

@@ -5,7 +5,9 @@
 
 #include <vector>
 
-typedef uint32 (*ThreadFunc)(void*);
+#if defined(_WIN32)
+
+typedef uint32_t (*ThreadFunc)(void*);
 
 // very simple platform independent threading wrapper
 class ThreadPool
@@ -17,10 +19,10 @@ public:
 
 	void AddTask(ThreadFunc function, void* param);
 
-	void Run(uint32 workerCount);
+	void Run(uint32_t workerCount);
 	void Wait();
 
-	uint32 GetNumTasks() { return m_tasks.size(); }
+	uint32_t GetNumTasks() { return m_tasks.size(); }
 
 private:
 
@@ -39,3 +41,5 @@ private:
     std::vector<Task> m_tasks;
 	std::vector<HANDLE> m_threads;
 };
+
+#endif //_WIN32

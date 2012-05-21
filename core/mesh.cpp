@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void Mesh::DuplicateVertex(uint32 i)
+void Mesh::DuplicateVertex(uint32_t i)
 {
 	assert(m_positions.size() > i);	
 	m_positions.push_back(m_positions[i]);
@@ -71,7 +71,7 @@ Mesh* ImportMeshFromPly(const char* path)
         return NULL;
 
     // some scratch memory
-    const uint32 kMaxLineLength = 1024;
+    const uint32_t kMaxLineLength = 1024;
     char buffer[kMaxLineLength];
 
     //double startTime = GetSeconds();
@@ -82,11 +82,11 @@ Mesh* ImportMeshFromPly(const char* path)
 
     PlyFormat format = eAscii;
 
-    uint32 numFaces = 0;
-    uint32 numVertices = 0;
+    uint32_t numFaces = 0;
+    uint32_t numVertices = 0;
 
-    const uint32 kMaxProperties = 16;
-    uint32 numProperties = 0; 
+    const uint32_t kMaxProperties = 16;
+    uint32_t numProperties = 0; 
     float properties[kMaxProperties];
 
     bool vertexElement = false;
@@ -146,9 +146,9 @@ Mesh* ImportMeshFromPly(const char* path)
     mesh->m_indices.reserve(numFaces*3);
 
     // read vertices
-    for (uint32 v=0; v < numVertices; ++v)
+    for (uint32_t v=0; v < numVertices; ++v)
     {
-        for (uint32 i=0; i < numProperties; ++i)
+        for (uint32_t i=0; i < numProperties; ++i)
         {
             properties[i] = PlyRead<float>(file, format);
         }
@@ -158,14 +158,14 @@ Mesh* ImportMeshFromPly(const char* path)
     }
 
     // read indices
-    for (uint32 f=0; f < numFaces; ++f)
+    for (uint32_t f=0; f < numFaces; ++f)
     {
-        uint32 numIndices = (format == eAscii)?PlyRead<uint32>(file, format):PlyRead<byte>(file, format);
-		uint32 indices[4];
+        uint32_t numIndices = (format == eAscii)?PlyRead<uint32_t>(file, format):PlyRead<uint8_t>(file, format);
+		uint32_t indices[4];
 
-		for (uint32 i=0; i < numIndices; ++i)
+		for (uint32_t i=0; i < numIndices; ++i)
 		{
-			indices[i] = PlyRead<uint32>(file, format);
+			indices[i] = PlyRead<uint32_t>(file, format);
 		}
 
 		switch (numIndices)
@@ -198,13 +198,13 @@ Mesh* ImportMeshFromPly(const char* path)
 
         Vector3 n = SafeNormalize(Cross(v1-v0, v2-v0), Vector3(0.0f, 1.0f, 0.0f));
 
-		for (uint32 i=0; i < numIndices; ++i)
+		for (uint32_t i=0; i < numIndices; ++i)
 		{
 	        mesh->m_normals[indices[i]] += n;
 	    }
 	}
 
-    for (uint32 i=0; i < numVertices; ++i)
+    for (uint32_t i=0; i < numVertices; ++i)
     {
         mesh->m_normals[i] = SafeNormalize(mesh->m_normals[i], Vector3(0.0f, 1.0f, 0.0f));
     }
@@ -220,7 +220,7 @@ struct VertexKey
 {
 	VertexKey() :  v(0), vt(0), vn(0) {}
 	
-	uint32 v, vt, vn;
+	uint32_t v, vt, vn;
 	
 	bool operator == (const VertexKey& rhs) const
 	{
@@ -251,14 +251,14 @@ Mesh* ImportMeshFromObj(const char* path)
     vector<Vector3> normals;
     vector<Vector2> texcoords;
     vector<Vector3> colors;
-    vector<uint32>& indices = m->m_indices;
+    vector<uint32_t>& indices = m->m_indices;
 
-    //typedef unordered_map<VertexKey, uint32, MemoryHash<VertexKey> > VertexMap;
-    typedef map<VertexKey, uint32> VertexMap;
+    //typedef unordered_map<VertexKey, uint32_t, MemoryHash<VertexKey> > VertexMap;
+    typedef map<VertexKey, uint32_t> VertexMap;
     VertexMap vertexLookup;	
 
     // some scratch memory
-    const uint32 kMaxLineLength = 1024;
+    const uint32_t kMaxLineLength = 1024;
     char buffer[kMaxLineLength];
 
     //double startTime = GetSeconds();
@@ -312,8 +312,8 @@ Mesh* ImportMeshFromObj(const char* path)
         else if (buffer[0] == 'f')
         {
             // faces
-            uint32 faceIndices[4];
-            uint32 faceIndexCount = 0;
+            uint32_t faceIndices[4];
+            uint32_t faceIndexCount = 0;
 
             for (int i=0; i < 4; ++i)
             {
@@ -354,7 +354,7 @@ Mesh* ImportMeshFromObj(const char* path)
                 else
                 {
                     // add vertex
-                    uint32 newIndex = m->m_positions.size();
+                    uint32_t newIndex = m->m_positions.size();
                     faceIndices[faceIndexCount++] = newIndex;
 
                     vertexLookup.insert(make_pair(key, newIndex)); 	
@@ -410,12 +410,12 @@ Mesh* ImportMeshFromObj(const char* path)
     // calculate normals if none specified in file
     m->m_normals.resize(m->m_positions.size());
 
-    const uint32 numFaces = indices.size()/3;
-    for (uint32 i=0; i < numFaces; ++i)
+    const uint32_t numFaces = indices.size()/3;
+    for (uint32_t i=0; i < numFaces; ++i)
     {
-        uint32 a = indices[i*3+0];
-        uint32 b = indices[i*3+1];
-        uint32 c = indices[i*3+2];
+        uint32_t a = indices[i*3+0];
+        uint32_t b = indices[i*3+1];
+        uint32_t c = indices[i*3+2];
 
         Point3& v0 = m->m_positions[a];
         Point3& v1 = m->m_positions[b];
@@ -428,7 +428,7 @@ Mesh* ImportMeshFromObj(const char* path)
         m->m_normals[c] += n;
     }
 
-    for (uint32 i=0; i < m->m_normals.size(); ++i)
+    for (uint32_t i=0; i < m->m_normals.size(); ++i)
     {
         m->m_normals[i] = SafeNormalize(m->m_normals[i], Vector3(0.0f, 1.0f, 0.0f));
     }
@@ -440,7 +440,7 @@ Mesh* ImportMeshFromObj(const char* path)
 
 void Mesh::AddMesh(Mesh& m)
 {
-    uint32 offset = m_positions.size();
+    uint32_t offset = m_positions.size();
 
     // add new vertices
     m_positions.insert(m_positions.end(), m.m_positions.begin(), m.m_positions.end());
@@ -448,7 +448,7 @@ void Mesh::AddMesh(Mesh& m)
     m_colours.insert(m_colours.end(), m.m_colours.begin(), m.m_colours.end());
 
     // add new indices with offset
-    for (uint32 i=0; i < m.m_indices.size(); ++i)
+    for (uint32_t i=0; i < m.m_indices.size(); ++i)
     {
         m_indices.push_back(m.m_indices[i]+offset);
     }    
@@ -457,7 +457,7 @@ void Mesh::AddMesh(Mesh& m)
 
 void Mesh::Transform(const Matrix44& m)
 {
-    for (uint32 i=0; i < m_positions.size(); ++i)
+    for (uint32_t i=0; i < m_positions.size(); ++i)
     {
         m_positions[i] = m*m_positions[i];
         m_normals[i] = m*m_normals[i];
@@ -470,7 +470,7 @@ void Mesh::GetBounds(Vector3& outMinExtents, Vector3& outMaxExtents)
     Point3 maxExtents(-FLT_MAX);
 
     // calculate face bounds
-    for (uint32 i=0; i < m_positions.size(); ++i)
+    for (uint32_t i=0; i < m_positions.size(); ++i)
     {
         const Point3& a = m_positions[i];
 
@@ -484,7 +484,7 @@ void Mesh::GetBounds(Vector3& outMinExtents, Vector3& outMaxExtents)
 
 Mesh* CreateQuadMesh(float size, float y)
 {
-    uint32 indices[] = { 0, 1, 2, 2, 3, 0 };
+    uint32_t indices[] = { 0, 1, 2, 2, 3, 0 };
     Point3 positions[4];
     Vector3 normals[4];
 
@@ -506,11 +506,11 @@ Mesh* CreateQuadMesh(float size, float y)
     return m;
 }
 
-Mesh* CreateDiscMesh(float radius, uint32 segments)
+Mesh* CreateDiscMesh(float radius, uint32_t segments)
 {
 	segments = 3;
 	
-	const uint32 numVerts = 1 + segments;
+	const uint32_t numVerts = 1 + segments;
 
 	Mesh* m = new Mesh();
 	m->m_positions.resize(numVerts);
@@ -519,9 +519,9 @@ Mesh* CreateDiscMesh(float radius, uint32 segments)
 	m->m_positions[0] = Point3(0.0f);
 	m->m_positions[1] = Point3(0.0f, 0.0f, radius);
 
-	for (uint32 i=1; i <= segments; ++i)
+	for (uint32_t i=1; i <= segments; ++i)
 	{
-		uint32 nextVert = (i+1)%numVerts;
+		uint32_t nextVert = (i+1)%numVerts;
 
 		if (nextVert == 0)
 			nextVert = 1;

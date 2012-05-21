@@ -7,6 +7,8 @@
 
 #include "memory.h"
 
+#if defined(_WIN32)
+
 using namespace std;
 
 // these two things should not be here
@@ -21,7 +23,7 @@ DWORD WINAPI ThreadPool::WorkerMain(void* data)
 	ThreadPool* pool = (ThreadPool*)(data);
 
 	//double start = GetSeconds();
-	//uint32 tasksExecuted = 0;
+	//uint32_t tasksExecuted = 0;
 	
     // initialize tls
     g_memArena = new MemoryArena(128*1024);
@@ -72,7 +74,7 @@ ThreadPool::ThreadPool()
 
 ThreadPool::~ThreadPool()
 {
-    for (uint32 i=0; i < m_threads.size(); ++i)
+    for (uint32_t i=0; i < m_threads.size(); ++i)
     {
         CloseHandle(m_threads[i]);
     }
@@ -91,10 +93,10 @@ void ThreadPool::AddTask(ThreadFunc func, void* param)
 
 #include "maths.h"
 
-void ThreadPool::Run(uint32 workerCount)
+void ThreadPool::Run(uint32_t workerCount)
 {
 	// create workers
-    for(uint32 i=0; i < workerCount; ++i)
+    for(uint32_t i=0; i < workerCount; ++i)
     {
         HANDLE newThread = CreateThread(NULL, 0, WorkerMain, this, 0, NULL);
         if (newThread == NULL)
@@ -132,10 +134,12 @@ void ThreadPool::AddWorker(ThreadFunc func, void* param)
 
 void ThreadPool::Wait()
 {
-    for (uint32 i=0; i < m_threads.size(); ++i)
+    for (uint32_t i=0; i < m_threads.size(); ++i)
     {
         pthread_join(m_threads[i], NULL);
     }		
 }
 
-#endif
+#endif // USE_PTHREADS
+
+#endif // _WIN32

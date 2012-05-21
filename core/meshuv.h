@@ -25,7 +25,7 @@ struct Face
 	}
 	
 	Edge* e[3];
-	uint32 v[3];
+	uint32_t v[3];
 	
 	Vector3 n;	// normal
 	Point3 c;	// centroid
@@ -130,7 +130,7 @@ struct Chart
 		boundary.erase(e);
 	}
 	
-	void RemapVertex(uint32 oldIndex, uint32 newIndex)
+	void RemapVertex(uint32_t oldIndex, uint32_t newIndex)
 	{
 		// find any references to old vertex and remap to new index
 		for (std::set<Face*>::iterator it=faces.begin(), end=faces.end(); it != end; ++it)
@@ -140,7 +140,7 @@ struct Chart
 			// for each vertex in face
 			for (int i=0; i < 3; ++i)
 			{
-				uint32 v = face->v[i];
+				uint32_t v = face->v[i];
 				
 				if (v == oldIndex)
 				{
@@ -171,12 +171,12 @@ typedef std::vector<Chart*> ChartSet;
 // unwrap the mesh
 void UvAtlas(Mesh* mesh, EdgeSet& edges, FaceSet& faces, ChartSet& charts)
 {	
-	uint32 numFaces = mesh->GetNumFaces();
+	uint32_t numFaces = mesh->GetNumFaces();
 	
 	// pre-allocate
 	faces.resize(numFaces);
 	
-	for (uint32 i=0; i < numFaces; ++i)
+	for (uint32_t i=0; i < numFaces; ++i)
 	{
 		int v0 = mesh->m_indices[i*3+0];
 		int v1 = mesh->m_indices[i*3+1];
@@ -202,7 +202,7 @@ void UvAtlas(Mesh* mesh, EdgeSet& edges, FaceSet& faces, ChartSet& charts)
 	// create clusters
 	std::set<Face*> unchartedFaces;
 	
-	for (uint32 i=0; i < numFaces; ++i)
+	for (uint32_t i=0; i < numFaces; ++i)
 		unchartedFaces.insert(&faces[i]);
 	
 	std::vector<Chart*> vertexToChart(mesh->m_positions.size());
@@ -277,7 +277,7 @@ void UvAtlas(Mesh* mesh, EdgeSet& edges, FaceSet& faces, ChartSet& charts)
 			// for each vertex in face
 			for (int i=0; i < 3; ++i)
 			{
-				uint32 v = face->v[i];
+				uint32_t v = face->v[i];
 				
 				// if vertex already referenced then
 				if (vertexToChart[v] == NULL)
@@ -357,15 +357,15 @@ void PackChartsStrip(ChartIterator begin, ChartIterator end)
 
 struct PackGrid
 {
-	PackGrid(uint32 gridWidth, uint32 gridHeight) 
+	PackGrid(uint32_t gridWidth, uint32_t gridHeight) 
 		: m_width(0)
 		, m_height(0)
 		, m_gridWidth(gridWidth)
 		, m_gridHeight(gridHeight)
 	{
 		
-		m_grid = new uint8[gridWidth*gridHeight];
-		memset(m_grid, 0, sizeof(uint8)*gridWidth*gridHeight);
+		m_grid = new uint8_t[gridWidth*gridHeight];
+		memset(m_grid, 0, sizeof(uint8_t)*gridWidth*gridHeight);
 	}
 	
 	~PackGrid()
@@ -374,13 +374,13 @@ struct PackGrid
 	}
 	
 	// tries to pack a rect of w,h into the current bounds, returns true on success
-	inline bool TryPack(uint32 w, uint32 h, uint32& x, uint32& y) const
+	inline bool TryPack(uint32_t w, uint32_t h, uint32_t& x, uint32_t& y) const
 	{
 		if (w > m_width || h > m_height)
 			return false;
 		
-		uint32 endx = m_width-w;
-		uint32 endy = m_height-h;
+		uint32_t endx = m_width-w;
+		uint32_t endy = m_height-h;
 		
 		for (y=0; y < endy; ++y)
 		{
@@ -397,19 +397,19 @@ struct PackGrid
 	}
 		
 	// return true if rect is already occupied
-	inline bool Occupied(uint32 px, uint32 py, uint32 w, uint32 h) const
+	inline bool Occupied(uint32_t px, uint32_t py, uint32_t w, uint32_t h) const
 	{			   
-		uint32 xend = px+w;
-		uint32 yend = py+h;
+		uint32_t xend = px+w;
+		uint32_t yend = py+h;
 
 		assert(xend <= m_width);
 		assert(yend <= m_height);
 		
-		for (uint32 y=py; y < yend; ++y)
+		for (uint32_t y=py; y < yend; ++y)
 		{
-			const uint8* row = &m_grid[y*m_gridWidth];
+			const uint8_t* row = &m_grid[y*m_gridWidth];
 			
-			for (uint32 x=px; x < xend; ++x)
+			for (uint32_t x=px; x < xend; ++x)
 			{
 				if (row[x] != 0)
 					return true;
@@ -419,25 +419,25 @@ struct PackGrid
 		return false;
 	}
 	
-	inline void Fill(uint32 px, uint32 py, uint32 w, uint32 h)
+	inline void Fill(uint32_t px, uint32_t py, uint32_t w, uint32_t h)
 	{		
-		uint32 xend = px+w;
-		uint32 yend = py+h;
+		uint32_t xend = px+w;
+		uint32_t yend = py+h;
 
 		assert(xend <= m_width);
 		assert(yend <= m_height);
 		
-		for (uint32 y=py; y < yend; ++y)
+		for (uint32_t y=py; y < yend; ++y)
 		{
 			memset(&m_grid[y*m_gridWidth + px], 1, w);
-	//		for (uint32 x=px; x < xend; ++x)
+	//		for (uint32_t x=px; x < xend; ++x)
 	//		{
 	//			m_grid[y*m_gridWidth + x] = 1;
 	//		}
 		}
 	}
 	
-	void SetSize(uint32 w, uint32 h)
+	void SetSize(uint32_t w, uint32_t h)
 	{
 		assert(w <= m_gridWidth);
 		assert(h <= m_gridHeight);
@@ -449,20 +449,20 @@ struct PackGrid
 private:
 	
 	// valid dimensions
-	uint32 m_width;
-	uint32 m_height;
+	uint32_t m_width;
+	uint32_t m_height;
 	
-	const uint32 m_gridWidth;
-	const uint32 m_gridHeight;
+	const uint32_t m_gridWidth;
+	const uint32_t m_gridHeight;
 	
-	uint8* m_grid;
+	uint8_t* m_grid;
 };
 
-float PackCost(uint32 mw, uint32 mh, uint32 nw, uint32 nh)
+float PackCost(uint32_t mw, uint32_t mh, uint32_t nw, uint32_t nh)
 {	
 	// calculate the relative increase in map size
-	uint32 oldArea = mw*mh;
-	uint32 newArea = nw*nh;
+	uint32_t oldArea = mw*mh;
+	uint32_t newArea = nw*nh;
 	
 	float aspect = float(nw)/nh;
 	
@@ -473,9 +473,9 @@ float PackCost(uint32 mw, uint32 mh, uint32 nw, uint32 nh)
 }
 
 template <typename ChartIterator>
-void PackChartsBrute(ChartIterator begin, ChartIterator end, uint32 resolution, float efficiency)
+void PackChartsBrute(ChartIterator begin, ChartIterator end, uint32_t resolution, float efficiency)
 {
-	const uint32 kPadding = 1;
+	const uint32_t kPadding = 1;
 	
 	PackGrid* rasterGrid = new PackGrid(resolution, resolution);
 	
@@ -489,8 +489,8 @@ void PackChartsBrute(ChartIterator begin, ChartIterator end, uint32 resolution, 
 	
 	std::sort(begin, end, ChartSizeSort());
 	
-	uint32 mw = 0;
-	uint32 mh = 0;
+	uint32_t mw = 0;
+	uint32_t mh = 0;
 	
 	for (ChartIterator it=begin; it != end; ++it)
 	{
@@ -507,11 +507,11 @@ void PackChartsBrute(ChartIterator begin, ChartIterator end, uint32 resolution, 
 		chartBounds *= chart.scale;
 		
 		// search for position in current bounds to hold chart
-		uint32 cw = ceilf(resolution*chartBounds.x) + 2*kPadding;
-		uint32 ch = ceilf(resolution*chartBounds.y) + 2*kPadding;
+		uint32_t cw = ceilf(resolution*chartBounds.x) + 2*kPadding;
+		uint32_t ch = ceilf(resolution*chartBounds.y) + 2*kPadding;
 		
 		// pack pos
-		uint32 px, py;
+		uint32_t px, py;
 		
 		if (!rasterGrid->TryPack(cw, ch, px, py))
 		{				

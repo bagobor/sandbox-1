@@ -17,13 +17,13 @@ public:
 	// accumulates samples specified in continuous raster space
 	void AddSample(float x, float y, const Colour& c)
 	{
-		assert(m_rect.Contains(uint32(x), uint32(y)));
+		assert(m_rect.Contains(uint32_t(x), uint32_t(y)));
 
 		// calculate offset into data
-		const uint32 row = uint32(y) - m_rect.Top();
-		const uint32 col = uint32(x) - m_rect.Left();
+		const uint32_t row = uint32_t(y) - m_rect.Top();
+		const uint32_t col = uint32_t(x) - m_rect.Left();
 		
-		const uint32 i = (m_rect.Width() * row) + col;
+		const uint32_t i = (m_rect.Width() * row) + col;
 		
 		m_data[i] = c;	
 	}
@@ -51,10 +51,10 @@ struct RenderJob
 
 	// output, executing process must supply filtered radiance values
 	Colour* m_output;
-	uint32  m_outputPitch;
+	uint32_t  m_outputPitch;
 
 	// quality settings
-	uint32 m_samplesPerPixel;
+	uint32_t m_samplesPerPixel;
 
 };
 

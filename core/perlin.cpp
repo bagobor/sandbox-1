@@ -6,7 +6,7 @@ namespace Perlin
 {
 
 	//	types.
-typedef int int32;
+typedef int int32_t;
 typedef float real64;
 
 //
@@ -18,14 +18,14 @@ typedef float real64;
 //! TODO: not sure if this is endian safe
 
 //	fast floor float->int conversion routine.
-inline int32 Floor2Int(real64 val) 
+inline int32_t Floor2Int(real64 val) 
 {
 #if 0
 	val -= _doublemagicroundeps;
 	val += _doublemagic;
-	return ((int32*)&val)[0];
+	return ((int32_t*)&val)[0];
 #else
-	return (int32)floorf(val);
+	return (int32_t)floorf(val);
 #endif
 }
 
@@ -90,24 +90,24 @@ static unsigned char NoisePerm[2 * NOISE_PERM_SIZE] = {
 };
 
 //	1d gradient function.   
-static inline real64 Grad1d(int32 x, real64 dx) 
+static inline real64 Grad1d(int32_t x, real64 dx) 
 {
-	int32 h = NoisePerm[x];
+	int32_t h = NoisePerm[x];
 	h &= 3;
 	return ((h&1) ? -dx : dx);
 }
 
 //	2d gradient function.   
-static inline real64 Grad2d(int32 x, int32 y, real64 dx, real64 dy) 
+static inline real64 Grad2d(int32_t x, int32_t y, real64 dx, real64 dy) 
 {
-	int32 h = NoisePerm[NoisePerm[x]+y];
+	int32_t h = NoisePerm[NoisePerm[x]+y];
 	h &= 3;
 	return ((h&1) ? -dx : dx) + ((h&2) ? -dy : dy);
 }
 //	3d gradient function.
-static inline real64 Grad3d(int32 x, int32 y, int32 z, real64 dx, real64 dy, real64 dz) 
+static inline real64 Grad3d(int32_t x, int32_t y, int32_t z, real64 dx, real64 dy, real64 dz) 
 {
-	int32 h = NoisePerm[NoisePerm[NoisePerm[x]+y]+z];
+	int32_t h = NoisePerm[NoisePerm[NoisePerm[x]+y]+z];
 	h &= 15;
 
 	//	Ken Perlins original impl
@@ -143,18 +143,18 @@ return ((h&4)==0 ? -a:a) + ((h&2)==0 ? -b:b) + ((h&1)==0 ? -c:c);
 static real64 PerlinNoise3DFunctionPeriodic(real64 x, real64 y, real64 z, int px, int py, int pz) 
 {
 	// Compute noise cell coordinates and offsets
-	int32 ix = Floor2Int(x);
-	int32 iy = Floor2Int(y);
-	int32 iz = Floor2Int(z);
+	int32_t ix = Floor2Int(x);
+	int32_t iy = Floor2Int(y);
+	int32_t iz = Floor2Int(z);
 	real64 dx = x - ix, dy = y - iy, dz = z - iz;
 
-	int32 ix0 = (ix%px) & (NOISE_PERM_SIZE-1);
-	int32 iy0 = (iy%py) & (NOISE_PERM_SIZE-1);
-	int32 iz0 = (iz%pz) & (NOISE_PERM_SIZE-1);
+	int32_t ix0 = (ix%px) & (NOISE_PERM_SIZE-1);
+	int32_t iy0 = (iy%py) & (NOISE_PERM_SIZE-1);
+	int32_t iz0 = (iz%pz) & (NOISE_PERM_SIZE-1);
 
-	int32 ix1 = ((ix+1)%px) & (NOISE_PERM_SIZE-1);
-	int32 iy1 = ((iy+1)%py) & (NOISE_PERM_SIZE-1);
-	int32 iz1 = ((iz+1)%pz) & (NOISE_PERM_SIZE-1);
+	int32_t ix1 = ((ix+1)%px) & (NOISE_PERM_SIZE-1);
+	int32_t iy1 = ((iy+1)%py) & (NOISE_PERM_SIZE-1);
+	int32_t iz1 = ((iz+1)%pz) & (NOISE_PERM_SIZE-1);
 
 	real64 w000 = Grad3d(ix0, iy0, iz0,   dx,   dy,   dz);
 	real64 w100 = Grad3d(ix1, iy0, iz0,   dx-1, dy,   dz);
@@ -180,9 +180,9 @@ static real64 PerlinNoise3DFunctionPeriodic(real64 x, real64 y, real64 z, int px
 static real64 PerlinNoise3DFunction(real64 x, real64 y, real64 z) 
 {
 	// Compute noise cell coordinates and offsets
-	int32 ix = Floor2Int(x);
-	int32 iy = Floor2Int(y);
-	int32 iz = Floor2Int(z);
+	int32_t ix = Floor2Int(x);
+	int32_t iy = Floor2Int(y);
+	int32_t iz = Floor2Int(z);
 	real64 dx = x - ix, dy = y - iy, dz = z - iz;
 	// Compute gradient weights
 	ix &= (NOISE_PERM_SIZE-1);
@@ -213,8 +213,8 @@ static real64 PerlinNoise3DFunction(real64 x, real64 y, real64 z)
 static real64 PerlinNoise2DFunction(real64 x, real64 y) 
 {
 	// Compute noise cell coordinates and offsets
-	int32 ix = Floor2Int(x);
-	int32 iy = Floor2Int(y);
+	int32_t ix = Floor2Int(x);
+	int32_t iy = Floor2Int(y);
 	real64 dx = x - ix, dy = y - iy;
 	// Compute gradient weights
 	ix &= (NOISE_PERM_SIZE-1);
@@ -235,7 +235,7 @@ static real64 PerlinNoise2DFunction(real64 x, real64 y)
 static real64 PerlinNoise1DFunction(real64 x) 
 {
 	// Compute noise cell coordinates and offsets
-	int32 ix = Floor2Int(x);
+	int32_t ix = Floor2Int(x);
 	real64 dx = x - ix;
 	// Compute gradient weights
 	ix &= (NOISE_PERM_SIZE-1);

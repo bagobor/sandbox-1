@@ -13,8 +13,8 @@ public:
 		 	 float fov,
 			 float near,
 			 float far,
-			 uint32 width,
-			 uint32 height) : m_cameraToWorld(cameraToWorld)
+			 uint32_t width,
+			 uint32_t height) : m_cameraToWorld(cameraToWorld)
 
 	{
 		Matrix44 rasterToScreen( 2.0f / width, 0.0f, 0.0f, 0.0f,
@@ -33,7 +33,7 @@ public:
 		m_rasterToWorld = cameraToWorld*screenToCamera*rasterToScreen;
 	}	
 
-	void GenerateRay(uint32 rasterX, uint32 rasterY, Point3& origin, Vector3& dir) const
+	void GenerateRay(uint32_t rasterX, uint32_t rasterY, Point3& origin, Vector3& dir) const
 	{
 		float xoff = Randf(-0.5f, 0.5f);
 		float yoff = Randf(-0.5f, 0.5f);
@@ -44,7 +44,7 @@ public:
 		dir = Normalize(p-m_cameraToWorld.GetTranslation());
 	}
 
-	void GenerateRayNoJitter(uint32 rasterX, uint32 rasterY, Point3& origin, Vector3& dir) const
+	void GenerateRayNoJitter(uint32_t rasterX, uint32_t rasterY, Point3& origin, Vector3& dir) const
 	{
 		Point3 p = m_rasterToWorld * Point3(float(rasterX) + 0.5f, float(rasterY) + 0.5f, 0.0f);		
 

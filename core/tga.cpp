@@ -9,20 +9,20 @@ using namespace std;
 
 struct TgaHeader
 {
-    uint8  identsize;          // size of ID field that follows 18 byte header (0 usually)
-    uint8  colourmaptype;      // type of colour map 0=none, 1=has palette
-    uint8  imagetype;          // type of image 0=none,1=indexed,2=rgb,3=grey,+8=rle packed
+    uint8_t  identsize;          // size of ID field that follows 18 uint8_t header (0 usually)
+    uint8_t  colourmaptype;      // type of colour map 0=none, 1=has palette
+    uint8_t  imagetype;          // type of image 0=none,1=indexed,2=rgb,3=grey,+8=rle packed
 
-    uint16 colourmapstart;     // first colour map entry in palette
-    uint16 colourmaplength;    // number of colours in palette
-    uint8  colourmapbits;      // number of bits per palette entry 15,16,24,32
+    uint16_t colourmapstart;     // first colour map entry in palette
+    uint16_t colourmaplength;    // number of colours in palette
+    uint8_t  colourmapbits;      // number of bits per palette entry 15,16,24,32
 
-    uint16 xstart;             // image x origin
-    uint16 ystart;             // image y origin
-    uint16 width;              // image width in pixels
-	uint16 height;             // image height in pixels
-    uint8  bits;               // image bits per pixel 8,16,24,32
-    uint8  descriptor;         // image descriptor bits (vh flip bits)
+    uint16_t xstart;             // image x origin
+    uint16_t ystart;             // image y origin
+    uint16_t width;              // image width in pixels
+	uint16_t height;             // image height in pixels
+    uint8_t  bits;               // image bits per pixel 8,16,24,32
+    uint8_t  descriptor;         // image descriptor bits (vh flip bits)
     
     // pixel data follows header  
 };
@@ -63,8 +63,8 @@ bool TgaSave(const char* filename, const TgaImage& image)
 
 		union texel
 		{
-			uint32 u32;
-			byte u8[4];
+			uint32_t u32;
+			uint8_t u8[4];
 		};
 		
 		texel* t = (texel*)image.m_data;
@@ -86,7 +86,7 @@ bool TgaSave(const char* filename, const TgaImage& image)
 }
 
 
-bool TgaLoad(const tchar* filename, TgaImage& image)
+bool TgaLoad(const char* filename, TgaImage& image)
 {
 	if (!filename)
 		return false;
@@ -99,57 +99,57 @@ bool TgaLoad(const tchar* filename, TgaImage& image)
 	}
 
 	char aHeaderIDLen;
-	fread(&aHeaderIDLen, sizeof(byte), 1, aTGAFile);
+	fread(&aHeaderIDLen, sizeof(uint8_t), 1, aTGAFile);
 
 	char aColorMapType;
-	fread(&aColorMapType, sizeof(byte), 1, aTGAFile);
+	fread(&aColorMapType, sizeof(uint8_t), 1, aTGAFile);
 	
 	char anImageType;
-	fread(&anImageType, sizeof(byte), 1, aTGAFile);
+	fread(&anImageType, sizeof(uint8_t), 1, aTGAFile);
 
 	short aFirstEntryIdx;
-	fread(&aFirstEntryIdx, sizeof(u16), 1, aTGAFile);
+	fread(&aFirstEntryIdx, sizeof(uint16_t), 1, aTGAFile);
 
 	short aColorMapLen;
-	fread(&aColorMapLen, sizeof(u16), 1, aTGAFile);
+	fread(&aColorMapLen, sizeof(uint16_t), 1, aTGAFile);
 
 	char aColorMapEntrySize;
-	fread(&aColorMapEntrySize, sizeof(byte), 1, aTGAFile);	
+	fread(&aColorMapEntrySize, sizeof(uint8_t), 1, aTGAFile);	
 
 	short anXOrigin;
-	fread(&anXOrigin, sizeof(u16), 1, aTGAFile);
+	fread(&anXOrigin, sizeof(uint16_t), 1, aTGAFile);
 
 	short aYOrigin;
-	fread(&aYOrigin, sizeof(u16), 1, aTGAFile);
+	fread(&aYOrigin, sizeof(uint16_t), 1, aTGAFile);
 
 	short anImageWidth;
-	fread(&anImageWidth, sizeof(u16), 1, aTGAFile);	
+	fread(&anImageWidth, sizeof(uint16_t), 1, aTGAFile);	
 
 	short anImageHeight;
-	fread(&anImageHeight, sizeof(u16), 1, aTGAFile);	
+	fread(&anImageHeight, sizeof(uint16_t), 1, aTGAFile);	
 
 	char aBitCount = 32;
-	fread(&aBitCount, sizeof(byte), 1, aTGAFile);	
+	fread(&aBitCount, sizeof(uint8_t), 1, aTGAFile);	
 
 	char anImageDescriptor;// = 8 | (1<<5);
-	fread((char*)&anImageDescriptor, sizeof(byte), 1, aTGAFile);
+	fread((char*)&anImageDescriptor, sizeof(uint8_t), 1, aTGAFile);
 	
 	// total is the number of bytes we'll have to read
-	uint8 numComponents = aBitCount / 8;
-	uint32 numTexels = anImageWidth * anImageHeight;
+	uint8_t numComponents = aBitCount / 8;
+	uint32_t numTexels = anImageWidth * anImageHeight;
 
 	// allocate memory for image pixels
 	image.m_width = anImageWidth;
 	image.m_height = anImageHeight;
-	image.m_data = new uint32[numTexels];
+	image.m_data = new uint32_t[numTexels];
 
 	// finally load the image pixels
-	for (uint32 i=0; i < numTexels; ++i)
+	for (uint32_t i=0; i < numTexels; ++i)
 	{
 		union texel
 		{
-			uint32 u32;
-			byte u8[4];
+			uint32_t u32;
+			uint8_t u8[4];
 		};
 
 		texel t;
@@ -173,9 +173,9 @@ bool TgaLoad(const tchar* filename, TgaImage& image)
 		// swap all the rows
 		int rowSize = image.m_width*4;	
 
-		byte* buf = new byte[image.m_width*4];
-		byte* start = (byte*)image.m_data;
-		byte* end = &((byte*)image.m_data)[rowSize*(image.m_height-1)];
+		uint8_t* buf = new uint8_t[image.m_width*4];
+		uint8_t* start = (uint8_t*)image.m_data;
+		uint8_t* end = &((uint8_t*)image.m_data)[rowSize*(image.m_height-1)];
 		
 		while (start < end)
 		{

@@ -33,11 +33,11 @@ Colour PathTrace(const Scene& scene, const Point3& startOrigin, const Vector3& s
 	Vector3 n;
 	const Primitive* hit;
 
-	const uint32 kMaxPathDepth = 4;
+	const uint32_t kMaxPathDepth = 4;
 
     g_memArena->Reset();
 
-	for (uint32 i=0; i < kMaxPathDepth; ++i)
+	for (uint32_t i=0; i < kMaxPathDepth; ++i)
 	{
 		// find closest hit
 		if (scene.Trace(rayOrigin, rayDir, t, n, &hit))
@@ -110,12 +110,12 @@ Colour ForwardTraceUniform(const Scene& scene, const Point3& startOrigin, const 
     Vector3 n(rayDir);
     const Primitive* hit;
 
-    const uint32 kMaxPathDepth = 8;
+    const uint32_t kMaxPathDepth = 8;
     float pdf = 1.0f;
 
     g_memArena->Reset();
 
-    for (uint32 i=0; i < kMaxPathDepth; ++i)
+    for (uint32_t i=0; i < kMaxPathDepth; ++i)
     {
         // find closest hit
         if (scene.Trace(rayOrigin, rayDir, t, n, &hit))
@@ -166,9 +166,9 @@ Colour ForwardTraceImportance(const Scene& scene, const Point3& startOrigin, con
 	Vector3 n(rayDir);
 	const Primitive* hit;
 
-	const uint32 kMaxPathDepth = 8;
+	const uint32_t kMaxPathDepth = 8;
 
-	for (uint32 i=0; i < kMaxPathDepth; ++i)
+	for (uint32_t i=0; i < kMaxPathDepth; ++i)
 	{
 		// find closest hit
 		if (scene.Trace(rayOrigin, rayDir, t, n, &hit))

@@ -93,7 +93,7 @@ void* RenderJobThreadFuncOpenCL(void* param)
 	cmdQueue = clCreateCommandQueue(context, devices[0], 0, 0);
 	
 	// create cl buffer for render job output
-	const uint32 bufSize = job->m_renderRect.Width() * job->m_renderRect.Height() * 4 * sizeof(cl_float);
+	const uint32_t bufSize = job->m_renderRect.Width() * job->m_renderRect.Height() * 4 * sizeof(cl_float);
 
     cl_mem outputBuffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bufSize, NULL, &status);
 

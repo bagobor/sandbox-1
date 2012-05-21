@@ -117,7 +117,7 @@ inline XVector3<T> Max(const XVector3<T>& a, const XVector3<T>& b)
 }
 
 template <typename T>
-inline  XVector3<T> Min(const XVector3<T>& a, const XVector3<T>& b)
+inline XVector3<T> Min(const XVector3<T>& a, const XVector3<T>& b)
 {
 	return XVector3<T>(Min(a.x, b.x), Min(a.y, b.y), Min(a.z, b.z));
 }

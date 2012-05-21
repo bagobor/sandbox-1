@@ -28,7 +28,7 @@ using namespace std;
 AABBTree* g_tree;
 Colour* g_pixels;
 Colour* g_filtered;
-uint32 g_iterations;
+uint32_t g_iterations;
 
 Point3 g_camPos;
 Rotation g_camDir;
@@ -36,12 +36,12 @@ Rotation g_camDir;
 Scene* g_scene;
 
 // render dimensions
-uint32 g_width = 640;
-uint32 g_height = 360;
+uint32_t g_width = 640;
+uint32_t g_height = 360;
 
 // window dimensions
-uint32 g_windowWidth = g_width;
-uint32 g_windowHeight = g_height;
+uint32_t g_windowWidth = g_width;
+uint32_t g_windowHeight = g_height;
 
 float g_exposure = 0.1f;
 float g_zoom = 1.0f;
@@ -50,7 +50,7 @@ float g_sunPhi = 0.95993042;
 float g_sunTurbidity = 2.0f;
 
 // work harder!
-const uint32 g_numWorkers = 8;
+const uint32_t g_numWorkers = 8;
 
 float g_flySpeed = 0.5f;
 
@@ -76,14 +76,14 @@ struct RayJob
 
     // output, executing process must supply filtered radiance values
     Colour* m_output;
-    uint32  m_outputPitch;
+    uint32_t  m_outputPitch;
 
     // quality settings
-    uint32 m_samplesPerPixel;
+    uint32_t m_samplesPerPixel;
 
 };
 
-void ValidateC(const Colour& c, uint32 x, uint32 y)
+void ValidateC(const Colour& c, uint32_t x, uint32_t y)
 {
 	if (!_finite(c.r) ||
 		!_finite(c.g) ||
@@ -98,7 +98,7 @@ void ValidateC(const Colour& c, uint32 x, uint32 y)
 	}
 }
 
-uint32 RayTraceThreadFunc(void* data)
+uint32_t RayTraceThreadFunc(void* data)
 {
     const RayJob& job = *((RayJob*)(data));
 
@@ -106,9 +106,9 @@ uint32 RayTraceThreadFunc(void* data)
     float t;
     Vec3 n;
 
-    for (uint32 j=rect.m_top; j < rect.m_bottom; ++j)
+    for (uint32_t j=rect.m_top; j < rect.m_bottom; ++j)
     {
-        for (uint32 i=rect.m_left; i < rect.m_right; ++i)
+        for (uint32_t i=rect.m_left; i < rect.m_right; ++i)
         {
             Point3 origin;
             Vec3 dir;
@@ -164,27 +164,27 @@ uint32 RayTraceThreadFunc(void* data)
 
 void RayTrace()
 {
-    const uint32 kSamples = g_width*g_height;
+    const uint32_t kSamples = g_width*g_height;
 
     ThreadPool threadPool;
 
-	const uint32 kTileSize = 16;
-    const uint32 kNumJobs = ceil(g_width / float(kTileSize)) * ceil(g_height / float(kTileSize));
+	const uint32_t kTileSize = 16;
+    const uint32_t kNumJobs = ceil(g_width / float(kTileSize)) * ceil(g_height / float(kTileSize));
 	vector<RayJob> jobs(kNumJobs);
 
     // create camera
     const Camera camera(TransformMatrix(g_camDir, g_camPos), 45.0f, 0.1f, 10000.0f, g_width, g_height);
-    uint32 jobIndex = 0;
+    uint32_t jobIndex = 0;
 
     double startTime = GetSeconds();
 
 	// create thread jobs
-    for (uint32 y=0; y < g_height; y += kTileSize)
+    for (uint32_t y=0; y < g_height; y += kTileSize)
     {
-		uint32 top = y;
-		uint32 bottom = min(top+kTileSize, g_height);
+		uint32_t top = y;
+		uint32_t bottom = min(top+kTileSize, g_height);
 
-		for (uint32 x=0; x < g_width; x += kTileSize)
+		for (uint32_t x=0; x < g_width; x += kTileSize)
 		{
 			RayJob& job = jobs[jobIndex++];
 
@@ -221,7 +221,7 @@ void RayTrace()
     {
         float s = g_exposure / g_iterations;
 
-        for (uint32 i=0; i < g_width*g_height; ++i)
+        for (uint32_t i=0; i < g_width*g_height; ++i)
         {
             g_filtered[i] = LinearToSrgb(g_pixels[i] * s);
         }
@@ -229,7 +229,7 @@ void RayTrace()
         presentMem = g_filtered;
     }
 
-	static uint32 s_counter=0;
+	static uint32_t s_counter=0;
     if (s_counter % 10)
     {
         cout << "Trace took: " << (endTime-startTime)*1000.0f << "ms" << " rays/s: " << g_width*g_height/(endTime-startTime) << endl;
@@ -304,7 +304,7 @@ void Init()
 
 	Mesh* mesh = new Mesh();
 
-	for (uint32 i=0; i < models.size(); ++i)
+	for (uint32_t i=0; i < models.size(); ++i)
 	{
 		Mesh* submesh = ImportMeshFromPly(("models/classroom/" + models[i]).c_str());
 		submesh->Transform(RotationMatrix(DegToRad(-90.0f), Vector3(1.0f, 0.0f, 0.0f)));

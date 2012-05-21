@@ -20,15 +20,14 @@ inline void AlignedFree(void *ptr)
     free(*(((void**)ptr) - 1));
 }
 
-
 // temporary allocation storage, used to reduce load on crt malloc
 class MemoryArena
 {
 public:
 
-	MemoryArena(const uint32 sizeInBytes)
+	MemoryArena(const uint32_t sizeInBytes)
 	{
-		m_mem = (byte*)AlignedMalloc(sizeInBytes, 16);
+		m_mem = (uint8_t*)AlignedMalloc(sizeInBytes, 16);
 		m_size = sizeInBytes;
 		m_head = m_mem;
 	}
@@ -38,15 +37,15 @@ public:
 		AlignedFree(m_mem);
 	}
 
-	byte* Allocate(uint32 size)
+	uint8_t* Allocate(uint32_t size)
 	{
-		if ((m_head+size)-m_mem > ptrdiff(m_size))
+		if ((m_head+size)-m_mem > ptrdiff_t(m_size))
 		{
 			assert(!"Arena ran out of memory");
 			return NULL;
 		}
 
-		byte* p = m_head;
+		uint8_t* p = m_head;
 		m_head += size;
 
 		return p;
@@ -57,9 +56,9 @@ public:
 		m_head = m_mem;
 	}
 
-	byte* m_mem;
-	byte* m_head;
-	uint32 m_size;
+	uint8_t* m_mem;
+	uint8_t* m_head;
+	uint32_t m_size;
 };
 
 // version of placement new to support usage as: new (MemArena) Type(); 

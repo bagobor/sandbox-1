@@ -9,10 +9,10 @@
 using namespace std;
 
 #if _WIN32
-_declspec (thread) uint32 AABBTree::s_traceDepth;
+_declspec (thread) uint32_t AABBTree::s_traceDepth;
 #endif
 
-AABBTree::AABBTree(Point3* vertices, uint32 numVerts, uint32* indices, uint32 numFaces) 
+AABBTree::AABBTree(Point3* vertices, uint32_t numVerts, uint32_t* indices, uint32_t numFaces) 
     : m_vertices(vertices)
     , m_numVerts(numVerts)
     , m_indices(indices)
@@ -31,7 +31,7 @@ namespace
 
 	struct FaceSorter
 	{
-		FaceSorter(const Point3* positions, const uint32* indices, uint32 n, uint32 axis) 
+		FaceSorter(const Point3* positions, const uint32_t* indices, uint32_t n, uint32_t axis) 
 			: m_vertices(positions)
 			, m_indices(indices)
 			, m_numIndices(n)
@@ -39,7 +39,7 @@ namespace
 		{        
 		}
 
-		inline bool operator()(uint32 lhs, uint32 rhs) const
+		inline bool operator()(uint32_t lhs, uint32_t rhs) const
 		{
 			float a = GetCentroid(lhs);
 			float b = GetCentroid(rhs);
@@ -50,7 +50,7 @@ namespace
 				return a < b;
 		}
 
-		inline float GetCentroid(uint32 face) const
+		inline float GetCentroid(uint32_t face) const
 		{
 			const Point3& a = m_vertices[m_indices[face*3+0]];
 			const Point3& b = m_vertices[m_indices[face*3+1]];
@@ -60,12 +60,12 @@ namespace
 		}
 
 		const Point3* m_vertices;
-		const uint32* m_indices;
-		uint32 m_numIndices;
-		uint32 m_axis;
+		const uint32_t* m_indices;
+		uint32_t m_numIndices;
+		uint32_t m_axis;
 	};
 	
-	inline uint32 LongestAxis(const Vector3& v)
+	inline uint32_t LongestAxis(const Vector3& v)
 	{    
 		if (v.x > v.y && v.x > v.z)
 			return 0;
@@ -75,13 +75,13 @@ namespace
 
 } // anonymous namespace
 
-void AABBTree::CalculateFaceBounds(uint32* faces, uint32 numFaces, Vector3& outMinExtents, Vector3& outMaxExtents)
+void AABBTree::CalculateFaceBounds(uint32_t* faces, uint32_t numFaces, Vector3& outMinExtents, Vector3& outMaxExtents)
 {
     Vector3 minExtents(FLT_MAX);
     Vector3 maxExtents(-FLT_MAX);
 
     // calculate face bounds
-    for (uint32 i=0; i < numFaces; ++i)
+    for (uint32_t i=0; i < numFaces; ++i)
     {
         Vector3 a = Vector3(m_vertices[m_indices[faces[i]*3+0]]);
         Vector3 b = Vector3(m_vertices[m_indices[faces[i]*3+1]]);
@@ -102,7 +102,7 @@ void AABBTree::CalculateFaceBounds(uint32* faces, uint32 numFaces, Vector3& outM
 }
 
 // track current tree depth
-static uint32 s_depth = 0;
+static uint32_t s_depth = 0;
 
 void AABBTree::Build()
 {
@@ -110,12 +110,12 @@ void AABBTree::Build()
 
     const double startTime = GetSeconds();
 
-    const uint32 numFaces = m_numFaces;
+    const uint32_t numFaces = m_numFaces;
 
     // build initial list of faces
     m_faces.reserve(numFaces);
 	/*	
-    for (uint32 i=0; i < numFaces; ++i)
+    for (uint32_t i=0; i < numFaces; ++i)
     {
         m_faces[i] = i;
     }
@@ -125,7 +125,7 @@ void AABBTree::Build()
     m_faceBounds.reserve(numFaces);   
     
 	std::vector<Bounds> stack;
-	for (uint32 i=0; i < numFaces; ++i)
+	for (uint32_t i=0; i < numFaces; ++i)
     {
 		Bounds top;
         CalculateFaceBounds(&i, 1, top.m_min, top.m_max);
@@ -148,7 +148,7 @@ void AABBTree::Build()
 			else
 			{
 				// split along longest axis
-				uint32 a = LongestAxis(b.m_max-b.m_min);
+				uint32_t a = LongestAxis(b.m_max-b.m_min);
 
 				float splitPos = (b.m_min[a] + b.m_max[a])*0.5f;
 				Bounds left(b);
@@ -168,7 +168,7 @@ void AABBTree::Build()
 		}
     }
 
-	m_nodes.reserve(unsigned int(numFaces*1.5f));
+	m_nodes.reserve(uint32_t(numFaces*1.5f));
 
     // allocate space for all the nodes
 	m_freeNode = 1;
@@ -195,7 +195,7 @@ void AABBTree::Build()
 }
 
 // partion faces around the median face
-uint32 AABBTree::PartitionMedian(Node& n, uint32* faces, uint32 numFaces)
+uint32_t AABBTree::PartitionMedian(Node& n, uint32_t* faces, uint32_t numFaces)
 {
 	FaceSorter predicate(&m_vertices[0], &m_indices[0], m_numFaces*3, LongestAxis(n.m_maxExtents-n.m_minExtents));
     std::nth_element(faces, faces+numFaces/2, faces+numFaces, predicate);
@@ -204,7 +204,7 @@ uint32 AABBTree::PartitionMedian(Node& n, uint32* faces, uint32 numFaces)
 }
 
 // partion faces based on the surface area heuristic
-uint32 AABBTree::PartitionSAH(Node& n, uint32* faces, uint32 numFaces)
+uint32_t AABBTree::PartitionSAH(Node& n, uint32_t* faces, uint32_t numFaces)
 {
 	
 	/*
@@ -212,29 +212,29 @@ uint32 AABBTree::PartitionSAH(Node& n, uint32* faces, uint32 numFaces)
     Vector3 variance(0.0f);
 
     // calculate best axis based on variance
-    for (uint32 i=0; i < numFaces; ++i)
+    for (uint32_t i=0; i < numFaces; ++i)
     {
         mean += 0.5f*(m_faceBounds[faces[i]].m_min + m_faceBounds[faces[i]].m_max);
     }
     
     mean /= float(numFaces);
 
-    for (uint32 i=0; i < numFaces; ++i)
+    for (uint32_t i=0; i < numFaces; ++i)
     {
         Vector3 v = 0.5f*(m_faceBounds[faces[i]].m_min + m_faceBounds[faces[i]].m_max) - mean;
         v *= v;
         variance += v;
     }
 
-    uint32 bestAxis = LongestAxis(variance);
+    uint32_t bestAxis = LongestAxis(variance);
 	*/
 
-	uint32 bestAxis = 0;
-	uint32 bestIndex = 0;
+	uint32_t bestAxis = 0;
+	uint32_t bestIndex = 0;
 	float bestCost = FLT_MAX;
 
-	for (uint32 a=0; a < 3; ++a)	
-	//uint32 a = bestAxis;
+	for (uint32_t a=0; a < 3; ++a)	
+	//uint32_t a = bestAxis;
 	{
 		// sort faces by centroids
 		FaceSorter predicate(&m_vertices[0], &m_indices[0], m_numFaces*3, a);
@@ -247,7 +247,7 @@ uint32 AABBTree::PartitionSAH(Node& n, uint32* faces, uint32 numFaces)
 		Bounds lower;
 		Bounds upper;
 
-		for (uint32 i=0; i < numFaces; ++i)
+		for (uint32_t i=0; i < numFaces; ++i)
 		{
 			lower.Union(m_faceBounds[faces[i]]);
 			upper.Union(m_faceBounds[faces[numFaces-i-1]]);
@@ -259,7 +259,7 @@ uint32 AABBTree::PartitionSAH(Node& n, uint32* faces, uint32 numFaces)
 		float invTotalSA = 1.0f / cumulativeUpper[0];
 
 		// test all split positions
-		for (uint32 i=0; i < numFaces-1; ++i)
+		for (uint32_t i=0; i < numFaces-1; ++i)
 		{
 			float pBelow = cumulativeLower[i] * invTotalSA;
 			float pAbove = cumulativeUpper[i] * invTotalSA;
@@ -281,14 +281,14 @@ uint32 AABBTree::PartitionSAH(Node& n, uint32* faces, uint32 numFaces)
 	return bestIndex+1;
 }
 
-void AABBTree::BuildRecursive(uint32 nodeIndex, uint32* faces, uint32 numFaces)
+void AABBTree::BuildRecursive(uint32_t nodeIndex, uint32_t* faces, uint32_t numFaces)
 {
-    const uint32 kMaxFacesPerLeaf = 6;
+    const uint32_t kMaxFacesPerLeaf = 6;
     
     // if we've run out of nodes allocate some more
     if (nodeIndex >= m_nodes.size())
     {
-		uint32 s = std::max(uint32(1.5f*m_nodes.size()), 512U);
+		uint32_t s = std::max(uint32_t(1.5f*m_nodes.size()), 512U);
 
 		cout << "Resizing tree, current size: " << m_nodes.size()*sizeof(Node) << " new size: " << s*sizeof(Node) << endl;
 
@@ -317,9 +317,9 @@ void AABBTree::BuildRecursive(uint32 nodeIndex, uint32* faces, uint32 numFaces)
         ++m_innerNodes;        
 
         // face counts for each branch
-        //const uint32 leftCount = PartitionMedian(n, faces, numFaces);
-        const uint32 leftCount = PartitionSAH(n, faces, numFaces);
-        const uint32 rightCount = numFaces-leftCount;
+        //const uint32_t leftCount = PartitionMedian(n, faces, numFaces);
+        const uint32_t leftCount = PartitionSAH(n, faces, numFaces);
+        const uint32_t rightCount = numFaces-leftCount;
 
 		// alloc 2 nodes
 		m_nodes[nodeIndex].m_children = m_freeNode;
@@ -337,7 +337,7 @@ void AABBTree::BuildRecursive(uint32 nodeIndex, uint32* faces, uint32 numFaces)
 
 struct StackEntry
 {
-    uint32 m_node;   
+    uint32_t m_node;   
     float m_dist;
 };
 
@@ -345,7 +345,7 @@ struct StackEntry
 #define TRACE_STATS 0
 
 
-bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, float& outU, float& outV, float& outW, float& outSign, uint32& outIndex) const
+bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, float& outU, float& outV, float& outW, float& outSign, uint32_t& outIndex) const
 {
 #if _WIN32
     // reset stats
@@ -360,16 +360,16 @@ bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, fl
 
     float minT = FLT_MAX;
     float minU, minV, minW, minSign;
-    uint32 minIndex;
+    uint32_t minIndex;
     Vector3 minNormal;
 
-    const uint32 kStackDepth = 50;
+    const uint32_t kStackDepth = 50;
     
     StackEntry stack[kStackDepth];
     stack[0].m_node = 0;
     stack[0].m_dist = 0.0f;
 
-    uint32 stackCount = 1;
+    uint32_t stackCount = 1;
 
     while (stackCount)
     {
@@ -390,7 +390,7 @@ filth:
         {
 
 #if TRACE_STATS
-            extern uint32 g_nodesChecked;
+            extern uint32_t g_nodesChecked;
             ++g_nodesChecked;
 #endif
 
@@ -406,8 +406,8 @@ filth:
             IntersectRayAABBOmpf(start, rcp_dir, leftChild.m_minExtents, leftChild.m_maxExtents, dist[0]);
             IntersectRayAABBOmpf(start, rcp_dir, rightChild.m_minExtents, rightChild.m_maxExtents, dist[1]);
 
-            const uint32 closest = dist[1] < dist[0]; // 0 or 1
-            const uint32 furthest = closest ^ 1;
+            const uint32_t closest = dist[1] < dist[0]; // 0 or 1
+            const uint32_t furthest = closest ^ 1;
 
             if (dist[furthest] < minT)
             {
@@ -425,16 +425,16 @@ filth:
         }
         else
         {
-            for (uint32 i=0; i < node->m_numFaces; ++i)
+            for (uint32_t i=0; i < node->m_numFaces; ++i)
             {
-                const uint32 faceIndex = node->m_faces[i];
-                const uint32 indexStart = faceIndex*3;
+                const uint32_t faceIndex = node->m_faces[i];
+                const uint32_t indexStart = faceIndex*3;
 
                 const Point3& a = m_vertices[m_indices[indexStart+0]];
                 const Point3& b = m_vertices[m_indices[indexStart+1]];
                 const Point3& c = m_vertices[m_indices[indexStart+2]];
 #if TRACE_STATS
-                extern uint32 g_trisChecked;
+                extern uint32_t g_trisChecked;
                 ++g_trisChecked;
 #endif
 
@@ -465,7 +465,7 @@ filth:
     return (outT != FLT_MAX);
 }
 /*
-bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, float& u, float& v, float& w, float& faceSign, uint32& faceIndex) const
+bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, float& u, float& v, float& w, float& faceSign, uint32_t& faceIndex) const
 {   
     s_traceDepth = 0;
 
@@ -478,7 +478,7 @@ bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, fl
 }
 */
 
-void AABBTree::TraceRecursive(uint32 nodeIndex, const Point3& start, const Vector3& dir, float& outT, float& outU, float& outV, float& outW, float& faceSign, uint32& faceIndex) const
+void AABBTree::TraceRecursive(uint32_t nodeIndex, const Point3& start, const Vector3& dir, float& outT, float& outU, float& outV, float& outW, float& faceSign, uint32_t& faceIndex) const
 {
 	const Node& node = m_nodes[nodeIndex];
 
@@ -489,7 +489,7 @@ void AABBTree::TraceRecursive(uint32 nodeIndex, const Point3& start, const Vecto
 #endif
 		
 #if TRACE_STATS
-        extern uint32 g_nodesChecked;
+        extern uint32_t g_nodesChecked;
         ++g_nodesChecked;
 #endif
 
@@ -502,8 +502,8 @@ void AABBTree::TraceRecursive(uint32 nodeIndex, const Point3& start, const Vecto
         IntersectRayAABB(start, dir, leftChild.m_minExtents, leftChild.m_maxExtents, dist[0], NULL);
         IntersectRayAABB(start, dir, rightChild.m_minExtents, rightChild.m_maxExtents, dist[1], NULL);
         
-        uint32 closest = 0;
-        uint32 furthest = 1;
+        uint32_t closest = 0;
+        uint32_t furthest = 1;
 		
         if (dist[1] < dist[0])
         {
@@ -523,15 +523,15 @@ void AABBTree::TraceRecursive(uint32 nodeIndex, const Point3& start, const Vecto
         Vector3 normal;
         float t, u, v, w, s;
 
-        for (uint32 i=0; i < node.m_numFaces; ++i)
+        for (uint32_t i=0; i < node.m_numFaces; ++i)
         {
-            uint32 indexStart = node.m_faces[i]*3;
+            uint32_t indexStart = node.m_faces[i]*3;
 
             const Point3& a = m_vertices[m_indices[indexStart+0]];
             const Point3& b = m_vertices[m_indices[indexStart+1]];
             const Point3& c = m_vertices[m_indices[indexStart+2]];
 #if TRACE_STATS
-            extern uint32 g_trisChecked;
+            extern uint32_t g_trisChecked;
             ++g_trisChecked;
 #endif
 
@@ -560,16 +560,16 @@ bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, Ve
     return (outT != FLT_MAX);
 }
 
-void AABBTree::TraceRecursive(uint32 n, const Point3& start, const Vector3& dir, float& outT, Vector3* outNormal) const
+void AABBTree::TraceRecursive(uint32_t n, const Point3& start, const Vector3& dir, float& outT, Vector3* outNormal) const
 {
     const Node& node = m_nodes[n];
 
     if (node.m_numFaces == 0)
     {
-        extern _declspec(thread) uint32 g_traceDepth;
+        extern _declspec(thread) uint32_t g_traceDepth;
         ++g_traceDepth;
 #if _DEBUG
-        extern uint32 g_nodesChecked;
+        extern uint32_t g_nodesChecked;
         ++g_nodesChecked;
 #endif
         float t;
@@ -587,15 +587,15 @@ void AABBTree::TraceRecursive(uint32 n, const Point3& start, const Vector3& dir,
         Vector3 normal;
         float t, u, v, w;
 
-        for (uint32 i=0; i < node.m_numFaces; ++i)
+        for (uint32_t i=0; i < node.m_numFaces; ++i)
         {
-            uint32 indexStart = node.m_faces[i]*3;
+            uint32_t indexStart = node.m_faces[i]*3;
 
             const Point3& a = m_vertices[m_indices[indexStart+0]];
             const Point3& b = m_vertices[m_indices[indexStart+1]];
             const Point3& c = m_vertices[m_indices[indexStart+2]];
 #if _DEBUG
-            extern uint32 g_trisChecked;
+            extern uint32_t g_trisChecked;
             ++g_trisChecked;
 #endif
 
@@ -615,7 +615,7 @@ void AABBTree::TraceRecursive(uint32 n, const Point3& start, const Vector3& dir,
 */
 bool AABBTree::TraceRaySlow(const Point3& start, const Vector3& dir, float& outT, Vector3* outNormal) const
 {    
-    const uint32 numFaces = GetNumFaces();
+    const uint32_t numFaces = GetNumFaces();
 
     float minT = FLT_MAX;
     Vector3 minNormal(0.0f, 1.0f, 0.0f);
@@ -624,7 +624,7 @@ bool AABBTree::TraceRaySlow(const Point3& start, const Vector3& dir, float& outT
     float t = 0.0f;
     bool hit = false;
 
-    for (uint32 i=0; i < numFaces; ++i)
+    for (uint32_t i=0; i < numFaces; ++i)
     {
         const Point3& a = m_vertices[m_indices[i*3+0]];
         const Point3& b = m_vertices[m_indices[i*3+1]];
@@ -663,9 +663,9 @@ void AABBTree::DebugDraw()
 
 }
 
-void AABBTree::DebugDrawRecursive(uint32 nodeIndex, uint32 depth)
+void AABBTree::DebugDrawRecursive(uint32_t nodeIndex, uint32_t depth)
 {
-    static uint32 kMaxDepth = 3;
+    static uint32_t kMaxDepth = 3;
 
     if (depth > kMaxDepth)
         return;
@@ -678,7 +678,7 @@ void AABBTree::DebugDrawRecursive(uint32 nodeIndex, uint32 depth)
     Vector3 maxExtents = -FLT_MAX;
 
     // calculate face bounds
-    for (uint32 i=0; i < m_vertices.size(); ++i)
+    for (uint32_t i=0; i < m_vertices.size(); ++i)
     {
         Vector3 a = m_vertices[i];
 

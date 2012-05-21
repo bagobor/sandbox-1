@@ -47,7 +47,7 @@ class PerlinTexture : public Texture
 {
 public:
 
-	PerlinTexture(float frequency, float persistance=1.0f, uint32 octaves=1) : m_frequency(frequency),
+	PerlinTexture(float frequency, float persistance=1.0f, uint32_t octaves=1) : m_frequency(frequency),
 																			   m_persistance(persistance),
 																			   m_octaves(octaves)
 	{
@@ -62,7 +62,7 @@ public:
 
 	float m_frequency;
 	float m_persistance;
-	uint32 m_octaves;
+	uint32_t m_octaves;
 	
 };
 

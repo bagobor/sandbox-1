@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/maths.h>
+#include "maths.h"
 
 struct Matrix22
 {

@@ -10,8 +10,8 @@
 
 using namespace std;
 
-const uint32 kWidth = 800;
-const uint32 kHeight = 600;
+const uint32_t kWidth = 800;
+const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
 const float kZoom = kWorldSize+10;
 

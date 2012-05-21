@@ -7,13 +7,6 @@
 #include "core.h"
 #include "types.h"
 
-#include "vec2.h"
-#include "vec3.h"
-#include "vec4.h"
-#include "point3.h"
-#include "mat22.h"
-#include "mat44.h"
-
 const float kPi = 3.1415926535897932384626433832795f;
 const float k2Pi = 2.0f*kPi;
 const float kInvPi = 1.0f/kPi;
@@ -198,6 +191,12 @@ T SafeNormalize(const T& v, const T& fallback=T())
 		return fallback;
 }
 
+#include "vec2.h"
+#include "vec3.h"
+#include "vec4.h"
+#include "point3.h"
+#include "mat22.h"
+#include "mat44.h"
 
 // represents a plane in the form ax + by + cz - d = 0
 class Plane : public Vec4
@@ -264,13 +263,13 @@ inline float Random(float lo, float hi)
 	return r;
 }
 
-extern u32 seed1;
-extern u32 seed2;
+extern uint32_t seed1;
+extern uint32_t seed2;
 
 void RandInit();
 
 // random number generator
-inline u32 Rand()
+inline uint32_t Rand()
 {
 	seed1 = ( seed2 ^ ( ( seed1 << 5 ) | ( seed1 >> 27 ) ) ) ^ ( seed1*seed2 );
 	seed2 = seed1 ^ ( ( seed2 << 12 ) | ( seed2 >> 20 ) );
@@ -281,8 +280,8 @@ inline u32 Rand()
 // returns random number between 0-1
 inline float Randf()
 {
-	u32 value = Rand();
-	u32 limit = 0xffffffff;
+	uint32_t value = Rand();
+	uint32_t limit = 0xffffffff;
 
 	return ( float )value*( 1.0f/( float )limit );
 }
@@ -721,7 +720,7 @@ public:
 	
 	Colour(float r_=0.0f, float g_=0.0f, float b_=0.0f, float a_=1.0f) : r(r_), g(g_), b(b_), a(a_) {}
 	Colour(float* p) : r(p[0]), g(p[1]), b(p[2]), a(p[3]) {}
-	Colour(uint32 rgba)
+	Colour(uint32_t rgba)
 	{
 		a = ((rgba)&0xff)/255.0f;
 		r = ((rgba>>24)&0xff)/255.0f;
@@ -849,19 +848,19 @@ inline Colour XYZToLinear(float x, float y, float z)
 	return Colour(c);
 }
 
-inline uint32 ColourToRGBA8(const Colour& c)
+inline uint32_t ColourToRGBA8(const Colour& c)
 {
 	union SmallColor
 	{
-		uint8 u8[4];
-		uint32 u32;
+		uint8_t u8[4];
+		uint32_t u32;
 	};
 
 	SmallColor s;
-	s.u8[0] = (uint8)(Clamp(c.r, 0.0f, 1.0f) * 255);
-	s.u8[1] = (uint8)(Clamp(c.g, 0.0f, 1.0f) * 255);
-	s.u8[2] = (uint8)(Clamp(c.b, 0.0f, 1.0f) * 255);
-	s.u8[3] = (uint8)(Clamp(c.a, 0.0f, 1.0f) * 255);
+	s.u8[0] = (uint8_t)(Clamp(c.r, 0.0f, 1.0f) * 255);
+	s.u8[1] = (uint8_t)(Clamp(c.g, 0.0f, 1.0f) * 255);
+	s.u8[2] = (uint8_t)(Clamp(c.b, 0.0f, 1.0f) * 255);
+	s.u8[3] = (uint8_t)(Clamp(c.a, 0.0f, 1.0f) * 255);
 
 	return s.u32;
 }
@@ -1214,17 +1213,17 @@ public:
 
 	Rect() : m_left(0), m_right(0), m_top(0), m_bottom(0) {}
 
-	Rect(uint32 left, uint32 right, uint32 top, uint32 bottom) : m_left(left), m_right(right), m_top(top), m_bottom(bottom)
+	Rect(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom) : m_left(left), m_right(right), m_top(top), m_bottom(bottom)
 	{
 		assert(left <= right);
 		assert(top <= bottom);	
 	}
 
-	uint32 Width() const { return m_right - m_left; }
-	uint32 Height() const { return m_bottom - m_top; }
+	uint32_t Width() const { return m_right - m_left; }
+	uint32_t Height() const { return m_bottom - m_top; }
 
 	// expand rect x units in each direction
-	void Expand(uint32 x)
+	void Expand(uint32_t x)
 	{
 		m_left -= x;
 		m_right += x;
@@ -1232,20 +1231,20 @@ public:
 		m_bottom += x;
 	}
 
-	uint32 Left() const { return m_left; }
-	uint32 Right() const { return m_right; }
-	uint32 Top() const { return m_top; }
-	uint32 Bottom() const { return m_bottom; }
+	uint32_t Left() const { return m_left; }
+	uint32_t Right() const { return m_right; }
+	uint32_t Top() const { return m_top; }
+	uint32_t Bottom() const { return m_bottom; }
 
-	bool Contains(uint32 x, uint32 y) const
+	bool Contains(uint32_t x, uint32_t y) const
 	{
 		return (x >= m_left) && (x <= m_right) && (y >= m_top) && (y <= m_bottom);
 	}
 
-	uint32 m_left;
-	uint32 m_right;
-	uint32 m_top;
-	uint32 m_bottom;
+	uint32_t m_left;
+	uint32_t m_right;
+	uint32_t m_top;
+	uint32_t m_bottom;
 };
 
 // doesn't really belong here but efficient (and I believe correct) in place random shuffle based on the Fisher-Yates / Knuth algorithm
@@ -1253,12 +1252,12 @@ template <typename T>
 void RandomShuffle(T begin, T end)
 {
 	assert(end > begin);
-	uint32 n = distance(begin, end);
+	uint32_t n = distance(begin, end);
 
-	for (uint32 i=0; i < n; ++i)
+	for (uint32_t i=0; i < n; ++i)
 	{
 		// pick a random number between 0 and n-1
-		uint32 r = Rand() % (n-i);
+		uint32_t r = Rand() % (n-i);
 
 		// swap that location with the current randomly selected position
 		swap(*(begin+i), *(begin+(i+r)));

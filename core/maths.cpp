@@ -1,7 +1,7 @@
 #include "maths.h"
 
-u32 seed1;
-u32 seed2;
+uint32_t seed1;
+uint32_t seed2;
 
 void RandInit()
 {

@@ -15,10 +15,10 @@ public:
 	}
 };
 
-void WaitForThreads(const Thread* threads, uint32 n)
+void WaitForThreads(const Thread* threads, uint32_t n)
 {
 	// just join all the threads
-	for (uint32 i=0; i < n; ++i)
+	for (uint32_t i=0; i < n; ++i)
 	{
 		pthread_join(threads[i], NULL);
 	}

@@ -96,7 +96,7 @@ public:
 	}
 
 	// convenience overloads
-	void SetAxis(uint32 index, const XVector3<T>& a)
+	void SetAxis(uint32_t index, const XVector3<T>& a)
 	{
 		columns[index][0] = a.x;
 		columns[index][1] = a.y;
@@ -185,9 +185,9 @@ inline XMatrix44<T> Transpose(const XMatrix44<T>& m)
 	XMatrix44<float> inv;
 
 	// transpose
-	for (uint32 c=0; c < 4; ++c)
+	for (uint32_t c=0; c < 4; ++c)
 	{
-		for (uint32 r=0; r < 4; ++r)
+		for (uint32_t r=0; r < 4; ++r)
 		{
 			inv.columns[c][r] = m.columns[r][c];
 		}

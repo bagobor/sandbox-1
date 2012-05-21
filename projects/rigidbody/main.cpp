@@ -12,8 +12,8 @@
 
 using namespace std;
 
-const uint32 kHeight = 600;
-const uint32 kWidth = 600;
+const uint32_t kHeight = 600;
+const uint32_t kWidth = 600;
 const float kWorldSize = 4.0f;
 const float kZoom = kWorldSize + 0.0f;
 

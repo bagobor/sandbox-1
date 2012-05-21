@@ -74,7 +74,7 @@ public:
 
 		float cdf = 0.0f;
 
-		for (uint32 i=0; i < m_mesh->GetNumFaces(); ++i)
+		for (uint32_t i=0; i < m_mesh->GetNumFaces(); ++i)
 		{
 			Point3& a = m_mesh->m_positions[m_mesh->m_indices[i*3+0]];
 			Point3& b = m_mesh->m_positions[m_mesh->m_indices[i*3+1]];
@@ -91,7 +91,7 @@ public:
 		// convert cumulative areas to cdfs
 		const float m_rcpCdf = 1.0f / cdf;
 		
-		for (uint32 i=0; i < m_mesh->GetNumFaces(); ++i)
+		for (uint32_t i=0; i < m_mesh->GetNumFaces(); ++i)
 		{
 			m_cdf[i] *= m_rcpCdf;
 		}
@@ -102,15 +102,15 @@ public:
 
     virtual bool Intersect(const Point3& rayOrigin, const Vector3& rayDir, float& t, Vector3* normal) const
     {
-        uint32 triIndex;
+        uint32_t triIndex;
         float u, v, w, s;
         
         if (m_aabbTree->TraceRay(rayOrigin, rayDir, t, u, v, w, s, triIndex))
         {
             // interpolate vertex normals
-            uint32 i0 = m_mesh->m_indices[triIndex*3+0];
-            uint32 i1 = m_mesh->m_indices[triIndex*3+1];
-            uint32 i2 = m_mesh->m_indices[triIndex*3+2];
+            uint32_t i0 = m_mesh->m_indices[triIndex*3+0];
+            uint32_t i1 = m_mesh->m_indices[triIndex*3+1];
+            uint32_t i2 = m_mesh->m_indices[triIndex*3+2];
             
             *normal = Sign(s)*Normalize(u*m_mesh->m_normals[i0] + v*m_mesh->m_normals[i1] + w*m_mesh->m_normals[i2]);
 
@@ -120,10 +120,10 @@ public:
         return false;
     }
 
-	inline uint32 PickTri(float random) const 
+	inline uint32_t PickTri(float random) const 
 	{
 		float cdf = 0.0f;
-		uint32 face=0;
+		uint32_t face=0;
 
 		for(; face < m_mesh->GetNumFaces(); ++face)
 		{
@@ -134,19 +134,19 @@ public:
 		return std::min(face, m_mesh->GetNumFaces()-1);
 	}
 
-	inline uint32 PickTriFast(float random) const
+	inline uint32_t PickTriFast(float random) const
 	{
 		std::vector<float>::const_iterator i = std::lower_bound(m_cdf.begin(), m_cdf.end(), random);
 		return (i-m_cdf.begin());
 
 		/*
-		uint32 low = 0;
-		uint32 high = m_cdf.size()-1;
+		uint32_t low = 0;
+		uint32_t high = m_cdf.size()-1;
 
 		// binary search
 		while (low < high)
 		{
-			uint32 mid = (low+high)/2;
+			uint32_t mid = (low+high)/2;
 
 			if (random <= m_cdf[mid])
 			{
@@ -166,10 +166,10 @@ public:
 		*/
 	}
 
-	inline uint32 PickTriRef(float random) const
+	inline uint32_t PickTriRef(float random) const
 	{
 		float cdf = 0.0f;
-		uint32 face=0;
+		uint32_t face=0;
 
 		for(; face < m_mesh->GetNumFaces(); ++face)
 		{
@@ -191,7 +191,7 @@ public:
 	// return a random point on the primitive
     virtual Point3 Sample(Vector3* normal) const
     {
-		const uint32 face = PickTriFast(Randf());
+		const uint32_t face = PickTriFast(Randf());
 
 		float u, v;
 		UniformSampleTriangle(u, v);

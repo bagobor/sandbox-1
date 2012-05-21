@@ -683,7 +683,7 @@ void Update()
 	TgaImage img;
 	img.m_width = gScreenWidth;
 	img.m_height = gScreenHeight;
-	img.m_data = new uint32[gScreenWidth*gScreenHeight];
+	img.m_data = new uint32_t[gScreenWidth*gScreenHeight];
 		
 	glReadPixels(0, 0, gScreenWidth, gScreenHeight, GL_RGBA, GL_UNSIGNED_BYTE, img.m_data);
 		

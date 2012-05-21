@@ -144,11 +144,11 @@ public:
 	int GetCell(int x, int y, int z) const
 	{
 		// from RTCD p288
-		const int32 h1 = 0x8da6b343;
-		const int32 h2 = 0xd8163841;
-		const int32 h3 = 0xcb1ab31f;
+		const int32_t h1 = 0x8da6b343;
+		const int32_t h2 = 0xd8163841;
+		const int32_t h3 = 0xcb1ab31f;
 
-		int32 n = h1 * x + h2 * y + h3 * z;
+		int32_t n = h1 * x + h2 * y + h3 * z;
 		
 		n %= NumBuckets;
 		if (n < 0)
@@ -313,10 +313,10 @@ public:
 	int GetCell(int x, int y) const
 	{
 		// from RTCD p288
-		const int32 h1 = 0x8da6b343;
-		const int32 h2 = 0xd8163841;
+		const int32_t h1 = 0x8da6b343;
+		const int32_t h2 = 0xd8163841;
 		
-		int32 n = h1 * x + h2 * y;
+		int32_t n = h1 * x + h2 * y;
 		
 		n %= NumBuckets;
 		if (n < 0)
@@ -344,5 +344,5 @@ public:
 	// array big enough for xdiv*ydiv*zdiv, each entry points to the head of each cell
 	Entry* m_data[NumBuckets];
 	Entry* m_pool[MaxItems];
-	uint32 m_numItems;
+	uint32_t m_numItems;
 };*/

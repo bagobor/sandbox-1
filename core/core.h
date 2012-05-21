@@ -51,7 +51,7 @@ inline bool IsPowerOfTwo(int n)
 
 // align a ptr to a power of tow
 template <typename T>
-inline T* AlignPtr(T* p, uint32 alignment)
+inline T* AlignPtr(T* p, uint32_t alignment)
 {
 	assert(IsPowerOfTwo(alignment));
 
@@ -61,14 +61,14 @@ inline T* AlignPtr(T* p, uint32 alignment)
 };
 
 // align an unsigned value to a power of two
-inline uint32 Align(uint32 val, uint32 alignment)
+inline uint32_t Align(uint32_t val, uint32_t alignment)
 {
 	assert(IsPowerOfTwo(alignment));
 
 	return (val+(alignment-1))& ~(alignment-1);
 }
 
-inline bool IsAligned(void* p, uint32 alignment)
+inline bool IsAligned(void* p, uint32_t alignment)
 {
 	return (((uintptr_t)p) & (alignment-1)) == 0;
 }
@@ -78,7 +78,7 @@ template <typename T>
 T ByteSwap(const T& val)
 {
 	T copy = val;
-	byte* p = reinterpret_cast<byte*>(&copy);
+	uint8_t* p = reinterpret_cast<uint8_t*>(&copy);
 	
 	std::reverse(p, p+sizeof(T));
 
