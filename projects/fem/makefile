@@ -4,7 +4,7 @@ CC = g++
 CFLAGS = -g -Wall -I"../.." -D_DEBUG 
 LDFLAGS = -g -framework GLUT -framework OpenGL -framework Cocoa
 
-TARGET  = FEM 
+TARGET  = fem 
 SOURCES = $(wildcard *.cpp) ../../core/platform.cpp ../../core/shader.cpp 
 HEADERS = $(wildcard *.h)
 
@@ -12,7 +12,7 @@ OBJECTS = $(SOURCES:.cpp=.o)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS) Makefile
+$(TARGET): $(OBJECTS) makefile
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $(TARGET) 
 
 clean:

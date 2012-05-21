@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <set>
 
-// Task List
+// Todo List
 // --------- 
 //
 // * Implement fracturing based on Eigenvalues of deformation gradient
@@ -90,7 +90,7 @@ struct Element
 
 		mB[0] = PerpCCW(e3);
 		mB[1] = PerpCW(e2);
-		mB[2] = PerpCCW(e1);		
+		mB[2] = PerpCCW(e1);
 
 		mEdges[0] = kInvalidIndex;
 		mEdges[1] = kInvalidIndex;
