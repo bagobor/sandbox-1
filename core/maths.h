@@ -4,15 +4,15 @@
 #include <float.h>
 #include <cassert>
 
-#include "Core.h"
-#include "Types.h"
+#include "core.h"
+#include "types.h"
 
-#include "Vec2.h"
-#include "Vec3.h"
-#include "Vec4.h"
-#include "Point3.h"
-#include "Mat22.h"
-#include "Mat44.h"
+#include "vec2.h"
+#include "vec3.h"
+#include "vec4.h"
+#include "point3.h"
+#include "mat22.h"
+#include "mat44.h"
 
 const float kPi = 3.1415926535897932384626433832795f;
 const float k2Pi = 2.0f*kPi;
