@@ -1,8 +1,8 @@
-#include "IlluminationSim.h"
-#include "Profiler.h"
-#include "Core.h"
-#include "Glsl.h"
-#include "Material.h"
+#include "illuminationsim.h"
+#include "profiler.h"
+#include "core.h"
+#include "glsl.h"
+#include "material.h"
 
 #include <limits>
 

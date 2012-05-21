@@ -1,4 +1,4 @@
-#include "Common.glsl"
+#include "common.glsl"
 
 void main()
 {

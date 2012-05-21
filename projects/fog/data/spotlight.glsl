@@ -1,4 +1,4 @@
-#include "Common.glsl"
+#include "common.glsl"
 
 uniform sampler2D g_texDiffuse;
 uniform sampler2D g_texNormal;

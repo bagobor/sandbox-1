@@ -1,8 +1,8 @@
-#include "Fem.h"
+#include "fem.h"
 
-#include "Core/Vec2.h"
-#include "Core/Mat22.h"
-#include "Core/Shader.h"
+#include "core/vec2.h"
+#include "core/mat22.h"
+#include "core/shader.h"
 
 #include <vector>
 #include <algorithm>

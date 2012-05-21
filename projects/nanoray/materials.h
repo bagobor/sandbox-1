@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Core/Core.h"
-#include "Core/Maths.h"
-#include "Core/Memory.h"
+#include "core/core.h"
+#include "core/maths.h"
+#include "core/memory.h"
 
-#include "Textures.h"
+#include "textures.h"
 
 extern _declspec(thread) MemoryArena* g_memArena;
 

@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "Types.h"
+#include "types.h"
 
 class LogListener;
 

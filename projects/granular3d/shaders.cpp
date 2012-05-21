@@ -1,8 +1,8 @@
 #include "shaders.h"
 
-#include <Core/Types.h>
-#include <Core/Maths.h>
-#include <Core/Shader.h>
+#include <core/types.h>
+#include <core/maths.h>
+#include <core/shader.h>
 
 void DrawPoints(float* positions, int n, float radius, float screenWidth, float screenAspect)
 {

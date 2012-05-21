@@ -1,11 +1,11 @@
 // FogVolumes.cpp : 
 //
 
-#include "Core/Perlin.h"
-#include "Core/Shader.h"
-#include "Core/Types.h"
-#include "Core/Maths.h"
-#include "Core/Platform.h"
+#include "core/perlin.h"
+#include "core/shader.h"
+#include "core/types.h"
+#include "core/maths.h"
+#include "core/platform.h"
 
 #include <vector>
 

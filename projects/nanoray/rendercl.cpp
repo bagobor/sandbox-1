@@ -1,10 +1,10 @@
-#include "RenderCL.h"
-#include "RenderJob.h"
-#include "RenderJobQueue.h"
+#include "rendercl.h"
+#include "renderjob.h"
+#include "renderjobqueue.h"
 
-#include "Shared/Platform.h"
+#include "shared/platform.h"
 
-#include <CL/cl.h>
+#include <cl/cl.h>
 #include <iostream>
 #include <string>
 

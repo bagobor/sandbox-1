@@ -1,7 +1,7 @@
-#include "AABBTree.h"
+#include "aabbtree.h"
 
-#include "Maths.h"
-#include "Platform.h"
+#include "maths.h"
+#include "platform.h"
 
 #include <algorithm>
 #include <iostream>

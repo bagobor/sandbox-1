@@ -1,7 +1,7 @@
-#include "Log.h"
+#include "log.h"
 
-#include "Threading.h"
-#include "Platform.h"
+#include "threading.h"
+#include "platform.h"
 
 #include <algorithm>
 #include <iostream>
@@ -77,7 +77,7 @@ public:
 
 #if WIN32
 
-#include <Windows.h>
+#include <windows.h>
 
 
 // outputs to debugger console

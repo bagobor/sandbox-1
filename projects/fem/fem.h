@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Core/Types.h"
-#include "Core/Maths.h"
-#include "Core/Vec2.h"
-#include "Core/Mat22.h"
+#include "core/types.h"
+#include "core/maths.h"
+#include "core/vec2.h"
+#include "core/mat22.h"
 
 namespace fem
 {

@@ -1,13 +1,13 @@
 #include <iostream>
 
-#include "Core/Types.h"
-#include "Core/Platform.h"
-#include "Core/AABBTree.h"
-#include "Core/Mesh.h"
-#include "Core/MeshUv.h"
-#include "Core/Tga.h"
+#include "core/types.h"
+#include "core/platform.h"
+#include "core/aabbtree.h"
+#include "core/mesh.h"
+#include "core/meshuv.h"
+#include "core/tga.h"
 
-#include "Graphics/RenderGL/GLUtil.h"
+#include "graphics/rendergl/glutil.h"
 
 ChartSet g_charts;
 FaceSet g_faces;

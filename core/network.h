@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Singleton.h"
-#include "Core.h"
-#include "External/enet-1.2/include/enet/enet.h"
+#include "singleton.h"
+#include "core.h"
+#include "external/enet-1.2/include/enet/enet.h"
 
 #include <vector>
 

@@ -9,7 +9,7 @@
  *
  */
 
-#include "Mesh.h"
+#include "mesh.h"
 
 #include <set>
 #include <vector>

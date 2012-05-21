@@ -1,4 +1,4 @@
-#include "Maths.h"
+#include "maths.h"
 
 u32 seed1;
 u32 seed2;

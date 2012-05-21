@@ -1,4 +1,4 @@
-#include "Common.glsl"
+#include "common.glsl"
 
 uniform mat4 g_lightToWorld;
 uniform mat4 g_worldToLight;

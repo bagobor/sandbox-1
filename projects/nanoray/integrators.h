@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Core/Core.h"
-#include "Core/Maths.h"
+#include "core/core.h"
+#include "core/maths.h"
 
-#include "Scene.h"
+#include "scene.h"
 
 Colour PathTrace(const Scene& s, const Point3& rayOrigin, const Vector3& rayDir);
 Colour ForwardTraceImportance(const Scene& scene, const Point3& startOrigin, const Vector3& startDir);

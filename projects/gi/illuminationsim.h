@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core.h"
-#include "Mesh.h"
+#include "core.h"
+#include "mesh.h"
 
 struct Surfel
 {

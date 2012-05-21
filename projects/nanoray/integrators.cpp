@@ -1,4 +1,4 @@
-#include "Integrators.h"
+#include "integrators.h"
 
 float InScatter(const Point3& start, const Vector3& dir, const Point3& lightPos, float t)
 {

@@ -1,9 +1,9 @@
-#include <Core/Maths.h>
-#include <Core/Shader.h>
-#include <Core/Platform.h>
+#include <core/maths.h>
+#include <core/shader.h>
+#include <core/platform.h>
 
-#include "Fem.h"
-#include "Mesher.h"
+#include "fem.h"
+#include "mesher.h"
 
 #include <iostream>
 #include <cmath>

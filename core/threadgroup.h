@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Types.h"
-#include "Threading.h"
+#include "types.h"
+#include "threading.h"
 
 #include <vector>
 

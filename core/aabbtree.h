@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core/Core.h"
-#include "Core/Maths.h"
+#include "core/core.h"
+#include "core/maths.h"
 
 #include <vector>
 

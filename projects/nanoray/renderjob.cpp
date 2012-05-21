@@ -1,6 +1,6 @@
-#include "RenderJob.h"
+#include "renderjob.h"
 
-#include "Integrators.h"
+#include "integrators.h"
 
 #include <iostream>
 

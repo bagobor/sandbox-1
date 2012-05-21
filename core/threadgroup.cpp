@@ -1,11 +1,11 @@
-#include "ThreadGroup.h"
+#include "threadgroup.h"
 
-#include "Platform.h"
+#include "platform.h"
 
 #include <iostream>
 #include <cassert>
 
-#include "Memory.h"
+#include "memory.h"
 
 using namespace std;
 
@@ -89,7 +89,7 @@ void ThreadPool::AddTask(ThreadFunc func, void* param)
     m_tasks.push_back(t);
 }
 
-#include "Maths.h"
+#include "maths.h"
 
 void ThreadPool::Run(uint32 workerCount)
 {

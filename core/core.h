@@ -13,7 +13,7 @@
 #include <cassert>
 #endif
 
-#include "Types.h"
+#include "types.h"
 
 #if !PLATFORM_SPU && !PLATFORM_OPENCL
 #include <string>
@@ -99,7 +99,7 @@ T ByteSwap(const T& val)
 #define ToLittleEndian(x) x
 #endif
 
-//#include "Platform.h"
+//#include "platform.h"
 
 //#define sizeof_array(x) (sizeof(x)/sizeof(*x))
 template <typename T, size_t N>

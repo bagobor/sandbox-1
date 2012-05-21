@@ -1,11 +1,11 @@
-#include <Core/Types.h>
-#include <Core/Maths.h>
-#include <Core/Platform.h>
+#include <core/types.h>
+#include <core/maths.h>
+#include <core/platform.h>
 
-#include <Graphics/RenderGL/GLUtil.h>
+#include <graphics/rendergl/glutil.h>
 
 #ifndef WIN32
-#include <OpenGL/OpenGL.h>
+#include <opengl/opengl.h>
 #endif
 
 #include <iostream>

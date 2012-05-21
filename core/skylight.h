@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Maths.h"
+#include "core/maths.h"
 
 // implements Perez's model for sky luminance
 inline float SkyDistribution(float theta, float gamma, float a, float b, float c, float d, float e)

@@ -18,14 +18,14 @@
 
 using namespace std;
 
-#include "Core/Perlin.h"
-#include "Core/Platform.h"
-#include "Core/Maths.h"
-#include "Core/Tga.h"
-#include "Core/Shader.h"
+#include "core/perlin.h"
+#include "core/platform.h"
+#include "core/maths.h"
+#include "core/tga.h"
+#include "core/shader.h"
 
-#include "Grid3D.h"
-#include "BlackBody.h"
+#include "grid3d.h"
+#include "blackbody.h"
 
 const int kWidth = 128;
 const int kHeight = 256;

@@ -1,6 +1,6 @@
-#include "Mesher.h"
+#include "mesher.h"
 
-#include "Core/Maths.h"
+#include "core/maths.h"
 
 #include <vector>
 

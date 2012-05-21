@@ -7,8 +7,8 @@
 
 #elif __APPLE__
 
-#include <OpenGL/OpenGL.h>
-#include <GLUT/glut.h>
+#include <opengl/opengl.h>
+#include <glut/glut.h>
 
 #elif PLATFORM_IOS
 
@@ -23,7 +23,7 @@
 
 #endif
 
-#include "Core/Vec4.h"
+#include "core/vec4.h"
 
 #define glVerify(x) {x; glAssert(#x, __LINE__, __FILE__);}
 void glAssert(const char* msg, long line, const char* file);
@@ -32,6 +32,5 @@ GLuint CompileProgramFromFile(const char *vertexPath, const char *fragmentPath);
 GLuint CompileProgram(const char *vsource, const char *fsource);
 
 void DrawPlane(const Vec4& p);
-//void DrawString(int x, int y, const char* s);
 void DrawString(int x, int y, const char* s, ...);
 

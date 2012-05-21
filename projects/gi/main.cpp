@@ -8,14 +8,14 @@
 
 #include "stdlib.h" // for atexit()
 
-#include "Maths.h"
-#include "Scene.h"
-#include "ParticleContainer.h"
-#include "ParticleEmitter.h"
-#include "Camera.h"
-#include "View.h"
-#include "Texture.h"
-#include "IlluminationSim.h"
+#include "maths.h"
+#include "scene.h"
+#include "particlecontainer.h"
+#include "particleemitter.h"
+#include "camera.h"
+#include "view.h"
+#include "texture.h"
+#include "illuminationsim.h"
 
 using namespace std;
 

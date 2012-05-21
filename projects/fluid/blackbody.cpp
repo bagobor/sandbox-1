@@ -408,8 +408,8 @@ void BlackBodyXYZ(float T, float* xyz)
 	}
 }
 
-#include "Core/Maths.h"
-#include "Core/Tga.h"
+#include "core/maths.h"
+#include "core/tga.h"
 
 void GenerateBlackBodyTestImage()
 {

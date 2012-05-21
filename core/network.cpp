@@ -1,5 +1,5 @@
-#include "Network.h"
-#include "Log.h"
+#include "network.h"
+#include "log.h"
 
 using namespace std;
 
@@ -180,7 +180,7 @@ ENetPeer* Network::Connect(const char* a, uint16 port)
 }
 
 // could seperate this out better, the only place it's used is in the message dispatch stuff
-//#include "Game.h"
+//#include "game.h"
 
 //extern Game* gGame;
 

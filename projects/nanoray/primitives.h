@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Core/Core.h"
-#include "Core/Maths.h"
-#include "Core/Mesh.h"
-#include "Core/AABBTree.h"
+#include "core/core.h"
+#include "core/maths.h"
+#include "core/mesh.h"
+#include "core/aabbtree.h"
 
-#include "Materials.h"
+#include "materials.h"
 
 class Primitive
 {

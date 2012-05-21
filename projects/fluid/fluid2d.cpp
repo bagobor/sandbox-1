@@ -17,12 +17,12 @@
 #include <algorithm>
 #include <vector>
 
-#include <Core/Maths.h>
-#include <Core/Shader.h>
+#include <core/maths.h>
+#include <core/shader.h>
 
 using namespace std;
 
-#include "BlackBody.h"
+#include "blackbody.h"
 
 const int kWidth = 128;
 const int kHeight = 128;

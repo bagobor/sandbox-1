@@ -1,11 +1,11 @@
-#include <Core/Maths.h>
-#include <Core/Pfm.h>
-#include <Core/Mesh.h>
-#include <Core/Shader.h>
+#include <core/maths.h>
+#include <core/pfm.h>
+#include <core/mesh.h>
+#include <core/shader.h>
 
 #define STRINGIFY(A) #A
 
-#include "Sh.h"
+#include "sh.h"
 
 #include <iostream>
 #include <cmath>

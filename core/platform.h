@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Types.h"
-#include "Log.h"
+#include "types.h"
+#include "log.h"
 
 #include <vector>
 #include <string>

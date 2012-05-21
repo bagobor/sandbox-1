@@ -1,6 +1,6 @@
-#include "Core/Types.h"
-#include "Core/Maths.h"
-#include "Core/Mat22.h"
+#include "core/types.h"
+#include "core/maths.h"
+#include "core/mat22.h"
 
 #include <vector>
 

@@ -1,4 +1,4 @@
-#include <Core/Maths.h>
+#include <core/maths.h>
 
 typedef Vec2 float2;
 typedef Vec3 float3;

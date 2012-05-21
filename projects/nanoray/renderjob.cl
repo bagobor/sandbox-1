@@ -5,7 +5,7 @@
 
  #define PLATFORM_OPENCL 1
 
- #include "RenderJob.h"
+ #include "renderjob.h"
 
 
 __kernel void renderKernel(__global float4* output)

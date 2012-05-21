@@ -1,6 +1,6 @@
-#include "Core.h"
-#include "Platform.h"
-#include "Types.h"
+#include "core.h"
+#include "platform.h"
+#include "types.h"
 
 #include <iostream>
 #include <fstream>
@@ -8,9 +8,9 @@
 
 #ifdef WIN32
 
-#include <Windows.h>
-#include <Commdlg.h>
-#include <MmSystem.h>
+#include <windows.h>
+#include <commdlg.h>
+#include <mmsystem.h>
 #include <tchar.h>
 
 using namespace std;

@@ -1,10 +1,10 @@
-#include "Shader.h"
+#include "shader.h"
 
-#include "Types.h"
-#include "Maths.h"
-#include "Platform.h"
-#include "Tga.h"
-#include "Png.h"
+#include "types.h"
+#include "maths.h"
+#include "platform.h"
+#include "tga.h"
+#include "png.h"
 
 #include <stdarg.h>
 #include <stdio.h>

@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "Core/Maths.h"
+#include "core/maths.h"
 
 #define TIMERS 1
 #if TIMERS

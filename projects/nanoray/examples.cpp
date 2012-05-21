@@ -1,5 +1,5 @@
-#include "Scene.h"
-#include "Camera.h"
+#include "scene.h"
+#include "camera.h"
 
 
 // scene descs

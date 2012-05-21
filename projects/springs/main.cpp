@@ -1,8 +1,8 @@
-#include <Core/Maths.h>
-#include <Core/Shader.h>
-#include <Core/Platform.h>
-#include <Core/Mat22.h>
-#include "Cg.h"
+#include <core/maths.h>
+#include <core/shader.h>
+#include <core/platform.h>
+#include <core/mat22.h>
+#include "cg.h"
 
 #include <iostream>
 #include <cmath>

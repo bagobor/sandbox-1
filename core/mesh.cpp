@@ -1,5 +1,5 @@
-#include "Mesh.h"
-#include "Platform.h"
+#include "mesh.h"
+#include "platform.h"
 
 #include <map>
 #include <fstream>

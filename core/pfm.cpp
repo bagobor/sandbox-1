@@ -7,7 +7,7 @@
  *
  */
 
-#include "Pfm.h"
+#include "pfm.h"
 #include <cassert>
 
 bool PfmLoad(const char* filename, PfmImage& image)

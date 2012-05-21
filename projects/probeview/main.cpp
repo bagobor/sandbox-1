@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include "Core/Types.h"
-#include "Core/AABBTree.h"
-#include "Core/Mesh.h"
-#include "Core/Pfm.h"
+#include "core/types.h"
+#include "core/aabbtree.h"
+#include "core/mesh.h"
+#include "core/pfm.h"
 
-#include "Graphics/RenderGL/GLUtil.h"
+#include "graphics/rendergl/glutil.h"
 
 using namespace std;
 

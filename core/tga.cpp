@@ -1,7 +1,7 @@
-#include "Tga.h"
-#include "Core.h"
-#include "Types.h"
-#include "Log.h"
+#include "tga.h"
+#include "core.h"
+#include "types.h"
+#include "log.h"
 
 #include <stdio.h>
 

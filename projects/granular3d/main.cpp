@@ -1,9 +1,9 @@
-#include <Core/Types.h>
-#include <Core/Maths.h>
-#include <Core/Platform.h>
-#include <Core/HashGrid.h>
-#include <Core/Maths.h>
-#include <Core/Shader.h>
+#include <core/types.h>
+#include <core/maths.h>
+#include <core/platform.h>
+#include <core/hashgrid.h>
+#include <core/maths.h>
+#include <core/shader.h>
 
 #include <iostream>
 

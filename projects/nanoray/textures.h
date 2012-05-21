@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Core/Core.h"
-#include "Core/Maths.h"
-#include "Core/Perlin.h"
+#include "core/core.h"
+#include "core/maths.h"
+#include "core/perlin.h"
 
 class Texture
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Maths.h"
+#include "maths.h"
 
 // fixed size grid with wrapping, supports point queries only
 template <typename T, int NumBuckets>

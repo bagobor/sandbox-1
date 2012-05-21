@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "Core.h"
-#include "Maths.h"
+#include "core.h"
+#include "maths.h"
 
 struct Mesh
 {

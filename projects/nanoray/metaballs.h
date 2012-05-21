@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core/Maths.h"
-#include "Core/Core.h"
+#include "core/maths.h"
+#include "core/core.h"
 
 class Metaballs
 {

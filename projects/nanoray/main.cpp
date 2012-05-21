@@ -1,19 +1,19 @@
 // Sandbox.cpp : Defines the entry point for the console application.
 //
 
-#include "Core/Maths.h"
-#include "Core/Mesh.h"
-#include "Core/AABBTree.h"
-#include "Core/ThreadGroup.h"
+#include "core/maths.h"
+#include "core/mesh.h"
+#include "core/aabbtree.h"
+#include "core/threadgroup.h"
 #include "core/platform.h"
 
-#include "External/glut/glut.h"
+#include "external/glut/glut.h"
 
-#include "Scene.h"
-#include "Camera.h"
-#include "Integrators.h"
+#include "scene.h"
+#include "camera.h"
+#include "integrators.h"
 
-#include "Memory.h"
+#include "memory.h"
 
 float g_statLightSampleTime;
 float g_statLightGenSampleTime;

@@ -6,7 +6,7 @@
  *  Copyright 2011 None. All rights reserved.
  *
  */
-#include "Core.h"
+#include "core.h"
 
 template <typename Iter>
 void radix_sort(Iter begin, Iter end, Iter auxBegin, Iter auxEnd)
