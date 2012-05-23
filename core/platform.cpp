@@ -16,7 +16,6 @@ using namespace std;
 #include <windows.h>
 #include <commdlg.h>
 #include <mmsystem.h>
-#include <char.h>
 
 double GetSeconds()
 {
@@ -37,7 +36,7 @@ double GetSeconds()
 	LARGE_INTEGER t;
 	QueryPerformanceCounter(&t);
 	
-	int64 delta = t.QuadPart-lastTime.QuadPart;
+	__int64 delta = t.QuadPart-lastTime.QuadPart;
 	double deltaSeconds = double(delta) / double(freq.QuadPart);
 	
 	time += deltaSeconds;
@@ -57,7 +56,7 @@ void Sleep(double seconds)
 // helper function to get exe path
 string GetExePath()
 {
-	const uint kMaxPathLength = 2048;
+	const uint32_t kMaxPathLength = 2048;
 
 	char exepath[kMaxPathLength];
 

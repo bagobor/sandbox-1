@@ -13,15 +13,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Assertion.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Bounds.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Image.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,12 +40,6 @@
     <ClCompile Include="Core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Hash.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Stream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Png.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -75,16 +60,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Assertion.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Bounds.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Core.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Image.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Log.h">
@@ -137,12 +113,6 @@
     </ClInclude>
     <ClInclude Include="Containers.h">
       <Filter>Source Files\Containers</Filter>
-    </ClInclude>
-    <ClInclude Include="Hash.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Stream.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Png.h">
       <Filter>Source Files</Filter>
