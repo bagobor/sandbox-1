@@ -381,10 +381,7 @@ void PressureSolve(Grid3D& out, const Grid3D& divergence, float dt)
 					float e = read->Get(x, y, z-1);
 					float f = read->Get(x, y, z+1);
 					
-					//float v = (1.0f/6.0f)*(p - scale*(a+b+c+d+e+f))*rcpScale;
 					float v = (p+(a+b+c+d+e+f))/6.0f;
-					
-					//float v = 0.5f*rcpScale/6.0f*(p - dt*(a+b+c+d+e+f));
 					
 					write->Set(x, y, z, v);
 				}
@@ -416,19 +413,6 @@ void PressureApply(Grid3D& u, Grid3D& v, Grid3D& w, const Grid3D& pressure, floa
 				u.Add(x, y, z, -dpdx);
 				v.Add(x, y, z, -dpdy);
 				w.Add(x, y, z, -dpdz);
-				
-				/*
-				float p = pressure.Get(x, y, z);
-				
-				u.Add(x+1, y, z, -dt*(pressure.Get(x+1, y, z)-p));
-				u.Add(x-1, y, z, -dt*(p-pressure.Get(x-1, y, z)));
-				
-				v.Add(x, y+1, z, -dt*(pressure.Get(x, y+1, z)-p));
-				v.Add(x, y-1, z, -dt*(p-pressure.Get(x, y-1, z)));
-				
-				w.Add(x, y, z+1, -dt*(pressure.Get(x, y, z+1)-p));
-				w.Add(x, y, z-1, -dt*(p-pressure.Get(x, y, z-1)));
-				*/
 			}
 		}
 	}

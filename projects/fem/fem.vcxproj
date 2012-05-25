@@ -85,15 +85,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="FEM.cpp" />
+    <ClCompile Include="fem.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Mesher.cpp" />
+    <ClCompile Include="mesher.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Cg.h" />
-    <ClInclude Include="FEM.h" />
-    <ClInclude Include="Mat22.h" />
-    <ClInclude Include="Mesher.h" />
+    <ClInclude Include="cg.h" />
+    <ClInclude Include="fem.h" />
+    <ClInclude Include="mesher.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -45,14 +45,14 @@ struct SceneParams
 		mLameMu(1000.0f),
 		mDamping(10.0f),
 		mDrag(0.0f),
-   		mFriction(0.5f),
+		mFriction(0.5f),
 		mToughness(500.0f) {}
 	
 };
 
 Scene* CreateScene(
 	const Particle* particles, uint32_t numParticles,
-   	const Triangle* elements, uint32_t numTriangles);
+	const Triangle* elements, uint32_t numTriangles);
 
 void DestroyScene(Scene* sim);
 

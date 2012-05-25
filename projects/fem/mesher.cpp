@@ -4,10 +4,29 @@
 
 #include <vector>
 
-void Triangulate(const Vec2* points, uint32_t numPoints, const  std::vector<Vec2>& outPoints, std::vector<uint32_t>& outTris)
-{
-		
+using namespace std;
 
+void Triangulate(const Vec2* points, uint32_t numPoints, vector<uint32_t>& outTris)
+{
+	// incremental insert Delaunay triangulation
+
+	// construct an initial enclosing triangle
+	Vec2 p0(-FLT_MAX, -FLT_MAX);
+	Vec2 p1( FLT_MAX, -FLT_MAX);
+	Vec2 p2(-FLT_MAX, FLT_MAX);
+		
+	struct Triangle
+	{
+		Vec2 x[3];
+		float 
+
+
+	for (uint32_t i=0; i < numPoints; ++i)
+	{
+		// find all triangles that inserting this point would
+		// violate the Delaunay condition for
+
+	}
 }
 
 void CreateTorus(std::vector<Vec2>& points, std::vector<uint32_t>& indices, float inner, float outer, uint32_t segments)
