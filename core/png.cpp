@@ -3,9 +3,7 @@
 
 #include <iostream>
 
-//#include "external/libpng/png.h"
 #include "external/stb_image/stb_image.c"
-
 
 bool PngLoad(const char* filename, PngImage& image)
 {	

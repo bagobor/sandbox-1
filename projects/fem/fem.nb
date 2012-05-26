@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       157,          7]
-NotebookDataLength[     16984,        418]
-NotebookOptionsPosition[     16420,        394]
-NotebookOutlinePosition[     16774,        410]
-CellTagsIndexPosition[     16731,        407]
+NotebookDataLength[     17085,        420]
+NotebookOptionsPosition[     16520,        396]
+NotebookOutlinePosition[     16874,        412]
+CellTagsIndexPosition[     16831,        409]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -144,7 +144,7 @@ Cell[BoxData[
       $CellContext`f[$CellContext`t], 
       $CellContext`g[$CellContext`t]}, {$CellContext`t, 0, 1, $CellContext`h},
       Joined -> True, PlotRange -> {-1, 1}]], StandardForm],
-  ImageSizeCache->{58., {2., 8.}}]], "Output",
+  ImageSizeCache->{360., {110., 114.}}]], "Output",
  CellChangeTimes->{
   3.5451156335229816`*^9, 3.545115671388918*^9, {3.5451157101444683`*^9, 
    3.5451157327156477`*^9}, 3.5459772625596447`*^9}]
@@ -178,8 +178,8 @@ Cell[BoxData[
       RowBox[{
        RowBox[{"FaceForm", "[", "None", "]"}], ",", 
        RowBox[{"EdgeForm", "[", "Blue", "]"}], ",", 
-       RowBox[{"AbsolutePointSize", "[", "8", "]"}]}], "}"}]}], ";"}], "\n", 
-   "\[IndentingNewLine]", 
+       RowBox[{"AbsolutePointSize", "[", "8", "]"}]}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]", "\n", 
    RowBox[{"fig", " ", "=", " ", 
     RowBox[{"GraphicsRow", "[", 
      RowBox[{"{", "\[IndentingNewLine]", 
@@ -260,7 +260,7 @@ Cell[BoxData[
       RowBox[{"{", 
        RowBox[{
         RowBox[{"NotebookDirectory", "[", "]"}], ",", " ", 
-        "\"\<Figures.pdf\>\""}], "}"}], "]"}], ",", "fig"}], 
+        "\"\<figures.pdf\>\""}], "}"}], "]"}], ",", "fig"}], 
     "]"}]}]}]], "Input",
  CellChangeTimes->{{3.5459772760526237`*^9, 3.545977279536824*^9}, {
    3.5459774035501757`*^9, 3.545977411473515*^9}, {3.545977454313778*^9, 
@@ -273,7 +273,8 @@ Cell[BoxData[
    3.545980685737561*^9, 3.54598071424214*^9}, {3.545980814471547*^9, 
    3.545980846660657*^9}, {3.545981232209897*^9, 3.545981319090659*^9}, {
    3.545981414727171*^9, 3.545981415595686*^9}, {3.545981455806637*^9, 
-   3.5459814561469088`*^9}, {3.545981520193952*^9, 3.54598154435003*^9}}],
+   3.5459814561469088`*^9}, {3.545981520193952*^9, 3.54598154435003*^9}, {
+   3.546981812911796*^9, 3.546981813033627*^9}}],
 
 Cell[BoxData[
  GraphicsBox[{{}, {InsetBox[
@@ -381,15 +382,16 @@ Cell[BoxData[
   3.5459805746169767`*^9, {3.545980606798848*^9, 3.545980624869442*^9}, {
    3.54598069092549*^9, 3.545980714875008*^9}, 3.545980847904044*^9, 
    3.5459812381494226`*^9, {3.545981302381198*^9, 3.545981320001463*^9}, 
-   3.545981419555138*^9, {3.545981522058812*^9, 3.545981546185227*^9}}],
+   3.545981419555138*^9, {3.545981522058812*^9, 3.545981546185227*^9}, 
+   3.546981795131242*^9}],
 
-Cell[BoxData["\<\"/Users/miles/Foundry/trunk/Apps/FEM/Figures.pdf\"\>"], \
-"Output",
+Cell[BoxData["\<\"/Users/miles/Kiln/projects/fem/Figures.pdf\"\>"], "Output",
  CellChangeTimes->{
   3.5459805746169767`*^9, {3.545980606798848*^9, 3.545980624869442*^9}, {
    3.54598069092549*^9, 3.545980714875008*^9}, 3.545980847904044*^9, 
    3.5459812381494226`*^9, {3.545981302381198*^9, 3.545981320001463*^9}, 
-   3.545981419555138*^9, {3.545981522058812*^9, 3.545981546557095*^9}}]
+   3.545981419555138*^9, {3.545981522058812*^9, 3.545981546185227*^9}, 
+   3.546981795447648*^9}]
 }, Open  ]]
 },
 WindowSize->{740, 652},
@@ -413,12 +415,12 @@ Cell[CellGroupData[{
 Cell[579, 22, 4408, 101, 283, "Input"],
 Cell[4990, 125, 215, 4, 40, "Output"],
 Cell[5208, 131, 217, 4, 40, "Output"],
-Cell[5428, 137, 536, 12, 27, "Output"]
+Cell[5428, 137, 541, 12, 239, "Output"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[6001, 154, 5329, 121, 388, "Input"],
-Cell[11333, 277, 4674, 106, 481, "Output"],
-Cell[16010, 385, 394, 6, 27, "Output"]
+Cell[6006, 154, 5379, 122, 388, "Input"],
+Cell[11388, 278, 4700, 107, 481, "Output"],
+Cell[16091, 387, 413, 6, 27, "Output"]
 }, Open  ]]
 }
 ]

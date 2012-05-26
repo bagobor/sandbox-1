@@ -277,6 +277,12 @@ inline uint32_t Rand()
 	return seed1;
 }
 
+// returns a random number in the range [min, max)
+inline uint32_t Rand(uint32_t min, uint32_t max)
+{
+	return min + Rand()%(max-min);
+}
+
 // returns random number between 0-1
 inline float Randf()
 {

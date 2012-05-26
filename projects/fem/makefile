@@ -5,7 +5,7 @@ CFLAGS = -g -Wall -I"../.." -D_DEBUG
 LDFLAGS = -g -framework GLUT -framework OpenGL -framework Cocoa
 
 TARGET  = fem 
-SOURCES = $(wildcard *.cpp) ../../core/platform.cpp ../../core/shader.cpp 
+SOURCES = $(wildcard *.cpp) ../../core/platform.cpp ../../core/shader.cpp ../../core/maths.cpp 
 HEADERS = $(wildcard *.h)
 
 OBJECTS = $(SOURCES:.cpp=.o)
