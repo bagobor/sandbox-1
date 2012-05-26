@@ -112,9 +112,46 @@ void Init()
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 	}	
 
+	/* Random convex */
+	
+	if (1)
+	{	
+		gSubsteps = 20;
+
+		gSceneParams.mDrag = 1.0f;
+		gSceneParams.mLameLambda = 10000.0f;
+		gSceneParams.mLameMu = 10000.0f;
+		gSceneParams.mDamping = 80.0f;
+		gSceneParams.mDrag = 0.0f;
+		gSceneParams.mFriction = 0.95f;
+		gSceneParams.mToughness = 2000.0f;
+
+		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
+
+		// generate a random set of points in a unit cube
+		RandInit();
+
+		const uint32_t numPoints = 10;
+		vector<Vec2> points;
+
+		for (uint32_t i=0; i < numPoints; ++i)
+			points.push_back(Vec2(0.0f, 1.0f) + 0.5f*Vec2(Randf(-1.0f, 1.0f), Randf(-1.0f, 1.0f)));
+
+		// triangulate
+		vector<uint32_t> tris;
+		TriangulateDelaunay(&points[0], points.size(), tris);
+
+		// generate elements
+		for (uint32_t i=0; i < points.size(); ++i)
+			gParticles.push_back(Particle(points[i], 1.0f));
+
+		for (uint32_t i=0; i < tris.size()/3; ++i)
+			gTriangles.push_back(Triangle(tris[i*3], tris[i*3+1], tris[i*3+2]));
+	}
+
 	/* Donut */
 
-	if (1)
+	if (0)
 	{	
 		gSubsteps = 20;
 

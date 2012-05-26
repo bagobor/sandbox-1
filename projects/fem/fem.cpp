@@ -1,4 +1,5 @@
 #include "fem.h"
+#include "mesher.h"
 
 #include "core/vec2.h"
 #include "core/mat22.h"
@@ -11,15 +12,15 @@
 // Todo List
 // --------- 
 //
-// * Implement fracturing based on Eigenvalues of deformation gradient
-// * Implement semi-implicit solver 
-// * Implement amortized polar decomposition / SVD if possible 
-// * Implement plasticity model
-// * Implement graphics mesh barycentric skinning
-// * Implement stress averaging, temporal and spatial
-// * Implement Delaunay triangulation 
+// * Fracturing based on Eigenvalues of deformation gradient
+// * Semi-implicit solver 
+// * Amortized polar decomposition / SVD if possible 
+// * Plasticity model
+// * Barycentric skinning of a graphics mesh
+// * Stress averaging, temporal and spatial
+// * Delaunay triangulation 
+// * Write a font-loader to get some interesting shapes to triangulate
 // * Embed a mesh (buddha, bunny) in a cubic tet mesh and set material properties so that you can carve out interior through fracture events
-
 
 using namespace std;
 
@@ -130,7 +131,6 @@ struct Scene
 	vector<Particle> mParticles;
 
 	vector<Triangle> mTriangles;
-	vector<Edge> mEdges;
 	vector<Element> mElements;
 	vector<Vec3> mPlanes;
 
@@ -147,7 +147,6 @@ Matrix22 CalcDeformation(const Vec2 x[3], const Matrix22& invM)
 {	
 	Vec2 e1 = x[1]-x[0]; 
 	Vec2 e2 = x[2]-x[0]; 
-
 
 	Matrix22 m(e1, e2);
 
@@ -625,48 +624,6 @@ Scene* CreateScene(
 		Vec2 x[3] = { particles[t.i].p, particles[t.j].p, particles[t.k].p }; 
 
 		scene->mElements.push_back(Element(x));	
-
-		// add edges
-
-		for (uint32_t j=0; j < 3; ++j)
-		{
-			Edge e(GetVertex(t, j), GetVertex(t, (j+1)%3));
-		
-			set<Edge>::iterator it = edges.insert(e).first;
-			//evil
-			const_cast<Edge&>(*it).AddTri(i);
-		}
-	}
-
-	// flatten	
-	scene->mEdges.assign(edges.begin(), edges.end());
-	
-	// assign edges to elements 
-	uint32_t numEdges = scene->mEdges.size();
-
-	for (uint32_t i=0; i < numEdges; ++i)
-	{
-		const Edge& e = scene->mEdges[i];
-
-		for (uint32_t t=0; t < 2; ++t)
-		{
-			uint32_t triIndex = e.mTriangles[t];
-
-			if (triIndex != kInvalidIndex)
-			{
-				assert(triIndex < numTriangles);
-				scene->mElements[triIndex].AddEdge(i);
-			}
-		}
-	}
-	
-	// check all elements assigned correctly
-	for (uint32_t i=0; i < numTriangles; ++i)
-	{
-		const Element& e = scene->mElements[i];
-		
-		for (uint32_t j=0; j < 3; ++j)
-			assert(e.mEdges[j] != kInvalidIndex);
 	}
 
 	scene->mParticles.assign(particles, particles+numParticles);
