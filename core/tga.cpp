@@ -143,7 +143,7 @@ bool TgaLoad(const char* filename, TgaImage& image)
 	image.m_height = anImageHeight;
 	image.m_data = new uint32_t[numTexels];
 
-	// finally load the image pixels
+	// load the image pixels
 	for (uint32_t i=0; i < numTexels; ++i)
 	{
 		union texel
@@ -168,8 +168,9 @@ bool TgaLoad(const char* filename, TgaImage& image)
 	}
 
 	// if bit 5 of the descriptor is set then the image is flipped vertically so we fix it up
-	if (anImageDescriptor & (1 << 3))
+	if (anImageDescriptor & (1 << 5))
 	{
+
 		// swap all the rows
 		int rowSize = image.m_width*4;	
 

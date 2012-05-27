@@ -4,6 +4,8 @@
 
 struct TgaImage
 {
+	~TgaImage() { delete m_data; }
+
 	uint16_t m_width;
 	uint16_t m_height;
 

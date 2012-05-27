@@ -13,6 +13,8 @@ namespace
 
 	bool CalculateCircumcircle(const Vec2& p, const Vec2& q, const Vec2& r, Vec2& outCircumCenter, float& outCircumRadiusSq)
 	{
+		//printf("(%f, %f) (%f, %f) (%f, %f)\n", p.x, p.y, q.x, q.y, r.x, r.y);
+
 		// calculate the intersection of two perpendicular bisectors
 		const Vec2 pq = q-p;
 		const Vec2 qr = r-q;
@@ -93,7 +95,7 @@ void TriangulateDelaunay(const Vec2* points, uint32_t numPoints, vector<uint32_t
 	vector<Edge> edges;
 
 	// initialize with an all containing triangle, todo: calculate proper bounds
-	const float bounds = 1000.0f;
+	const float bounds = 100.0f;
 
 	vertices.push_back(Vec2(-bounds, -bounds));
 	vertices.push_back(Vec2( bounds, -bounds));
@@ -108,15 +110,25 @@ void TriangulateDelaunay(const Vec2* points, uint32_t numPoints, vector<uint32_t
 
 		const Vec2 p = points[i];
 
+		//printf("Point: %f %f\n", points[i].x, points[i].y);
+
 		// find all triangles for which inserting this point would
 		// violate the Delaunay condition, that is, which triangles
 		// circumcircles does this point lie inside
 		for (uint32_t j=0; j < triangles.size(); )
 		{
 			const Triangle& t = triangles[j];
-			
-			if (LengthSq(t.mCircumCenter-p) < t.mCircumRadiusSq)
+
+			if (LengthSq(t.mCircumCenter-p) <= t.mCircumRadiusSq)
 			{
+				//printf("%d %d %d by %f, %f\n", t.mEdges[0][0], t.mEdges[0][1], t.mEdges[1][1], LengthSq(t.mCircumCenter-p), t.mCircumRadiusSq);
+
+				Vec2 a = vertices[t.mEdges[0][0]];
+			    Vec2 b = vertices[t.mEdges[0][1]];
+				Vec2 c = vertices[t.mEdges[1][1]];
+
+				//printf("	Inside tri: (%f, %f) (%f, %f) (%f, %f) with %f, %f radius: %f\n", a.x, a.y, b.x, b.y, c.x, c.y, t.mCircumCenter.x, t.mCircumCenter.y, t.mCircumRadiusSq);
+
 				for (uint32_t e=0; e < 3; ++e)
 				{
 					// if edge doesn't already exist add it
@@ -137,6 +149,8 @@ void TriangulateDelaunay(const Vec2* points, uint32_t numPoints, vector<uint32_t
 				++j;
 			}
 		}	
+
+		//printf("NumEdges: %d\n", edges.size());
 
 		// re-triangulate point to the enclosing set of edges
 		for (uint32_t e=0; e < edges.size(); ++e)

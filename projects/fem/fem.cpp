@@ -726,9 +726,12 @@ void Update(Scene* scene, float dt)
 	glEnd();
 	*/
 
-	numParticles = Fracture(particles, numParticles, triangles, numTriangles, fractures, numFractures); 
+	if (params.mToughness > 0.0f)
+	{
+		numParticles = Fracture(particles, numParticles, triangles, numTriangles, fractures, numFractures); 
 
-	numParticles = SeparateSingular(particles, numParticles, triangles, numTriangles);
+		numParticles = SeparateSingular(particles, numParticles, triangles, numTriangles);
+	}
 
 	scene->mParticles.resize(numParticles);
 	particles = &scene->mParticles[0];	

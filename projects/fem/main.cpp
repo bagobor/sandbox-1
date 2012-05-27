@@ -1,6 +1,7 @@
 #include <core/maths.h>
 #include <core/shader.h>
 #include <core/platform.h>
+#include <core/tga.h>
 
 #include "fem.h"
 #include "mesher.h"
@@ -34,7 +35,7 @@ int gSubsteps = 1;
 
 Vec2 gMousePos;
 int gMouseIndex=-1;
-float gMouseStrength = 400.0f;
+float gMouseStrength = 2000.0f;
 
 bool gPause=false;
 bool gStep=false;
@@ -45,6 +46,28 @@ SceneParams gSceneParams;
 vector<Particle> gParticles;
 vector<Triangle> gTriangles;
 vector<Vec3>	 gPlanes;
+vector<Vec2>	 gUVs;
+
+GLuint gTexture;
+bool gShowTexture = false;
+
+GLuint CreateTexture(uint32_t width, uint32_t height, void* data)
+{
+	GLuint id;
+
+	glVerify(glGenTextures(1, &id));
+	glBindTexture(GL_TEXTURE_2D, id);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//_MIPMAP_LINEAR);
+	///glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);		
+	glVerify(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
+	//glGenerateMipmapEXT(GL_TEXTURE_2D);
+
+	return id;
+}
 
 void Init()
 
@@ -114,7 +137,7 @@ void Init()
 
 	/* Random convex */
 	
-	if (1)
+	if (0)
 	{	
 		gSubsteps = 20;
 
@@ -149,6 +172,79 @@ void Init()
 			gTriangles.push_back(Triangle(tris[i*3], tris[i*3+1], tris[i*3+2]));
 	}
 
+	/* Image */
+	if (1)
+	{
+		gSubsteps = 80;
+
+		gSceneParams.mDrag = 1.0f;
+		gSceneParams.mLameLambda = 115000.0f;
+		gSceneParams.mLameMu = 115000.0f;
+		gSceneParams.mDamping = 120.0f;
+		gSceneParams.mDrag = 1.0f;
+		gSceneParams.mFriction = 0.5f;
+		gSceneParams.mToughness = 0.0f;
+
+		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
+		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
+
+		TgaImage img;
+		TgaLoad("armadillo.tga", img);
+		
+		gTexture = CreateTexture(img.m_width, img.m_height, img.m_data);
+
+		vector<Vec2> points;
+
+		// distribute points inside the image at evenly spaced intervals
+		const float resolution = 0.04f;
+		const float scale = 2.0f;
+	
+		const uint32_t dd = img.m_width*resolution;
+		const float aspect = float(img.m_height)/img.m_width;
+		const float noise = 0.0f;
+
+		for (uint32_t y=0; y < img.m_height; y+=dd)
+		{
+			for (uint32_t x=0; x < img.m_width; x+=dd)
+			{
+				// if value non-zero then add a point
+				if (img.m_data[y*img.m_width + x] != 0)
+				{
+					Vec2 uv(float(x)/img.m_width + Randf(-noise, noise), float(y)/img.m_height + Randf(-noise, noise));
+					gUVs.push_back(uv);
+
+					points.push_back(scale*Vec2(uv.x, uv.y*aspect));
+				}
+			}
+		}
+
+		// triangulate
+		vector<uint32_t> tris;
+		TriangulateDelaunay(&points[0], points.size(), tris);
+
+		// generate elements
+		for (uint32_t i=0; i < points.size(); ++i)
+			gParticles.push_back(Particle(points[i], 1.0f));
+
+		for (uint32_t i=0; i < tris.size()/3; ++i)
+		{
+			Triangle t(tris[i*3], tris[i*3+1], tris[i*3+2]);
+
+			Vec2 p = points[t.i];
+			Vec2 q = points[t.j];
+			Vec2 r = points[t.k];
+
+			// ignore triangles whose center is not inside the shape
+			Vec2 c = (p+q+r)/3.0f;
+			
+			uint32_t x = c.x*img.m_width/scale;
+			uint32_t y = c.y*img.m_width/scale;
+			
+			if (img.m_data[y*img.m_width + x] != 0)
+				gTriangles.push_back(t);
+		}
+	}
+
 	/* Donut */
 
 	if (0)
@@ -166,7 +262,7 @@ void Init()
 		vector<Vec2> torusPoints;
 		vector<uint32_t> torusIndices;
 
-		CreateTorus(torusPoints, torusIndices, 0.2f, 0.5f, 12);
+		CreateTorus(torusPoints, torusIndices, 0.2f, 0.5f, 30);
 	
 		for (size_t i=0; i < torusPoints.size(); ++i)
 			gParticles.push_back(Particle(torusPoints[i], 1.0f));
@@ -213,7 +309,12 @@ void Modify(float dt)
 
 	if (gMouseIndex != -1)
 	{
-		gParticles[gMouseIndex].f += gMouseStrength*(gMousePos-gParticles[gMouseIndex].p);
+		Vec2 pq = gMousePos-gParticles[gMouseIndex].p;
+
+		Vec2 damp = -10.0f*Dot(Normalize(pq), gParticles[gMouseIndex].v)*Normalize(pq);
+		Vec2 stretch = gMouseStrength*pq;
+
+		gParticles[gMouseIndex].f += stretch + damp; 
 		//gParticles[gMouseIndex].p = gMousePos;
 
 		SetParticles(gScene, &gParticles[0]);
@@ -275,7 +376,20 @@ void Update()
 	glEnd();
 
 	// tris
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	if (gTexture && gShowTexture)
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, gTexture);
+		
+	}
+	else
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		glDisable(GL_TEXTURE_2D);
+	}
+
+	glDisable(GL_CULL_FACE);
 	glBegin(GL_TRIANGLES);
 	glColor3f(1.0f, 1.0f, 1.0f);
 	
@@ -287,13 +401,23 @@ void Update()
 		Vec2 b = gParticles[t.j].p;
 		Vec2 c = gParticles[t.k].p;
 	
-		// debug draw	
+		if (gTexture && gShowTexture)
+			glTexCoord2fv(gUVs[t.i]);
 		glVertex2fv(a);
+	
+		if (gTexture && gShowTexture)
+			glTexCoord2fv(gUVs[t.j]);
 		glVertex2fv(b);
+		
+		if (gTexture && gShowTexture)
+			glTexCoord2fv(gUVs[t.k]);
 		glVertex2fv(c);	
 	}
 
 	glEnd();
+
+	if (!gShowTexture)
+	{
 
 	// particles
 	glPointSize(4.0f);
@@ -317,7 +441,11 @@ void Update()
 		glVertex2fv(gParticles[i].p + gParticles[i].f*s);
 	}
 	glEnd();
-		
+	}
+
+	if (gShowTexture)
+		glDisable(GL_TEXTURE_2D);
+
 
 	// mouse spring
 	if (gMouseIndex != -1)
@@ -436,6 +564,11 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		case 'p':
 		{
 			gPause = !gPause;
+			break;
+		}
+		case 'b':
+		{
+			gShowTexture = !gShowTexture;
 			break;
 		}
 		case 'r':

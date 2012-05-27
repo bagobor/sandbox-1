@@ -1,9 +1,9 @@
-Mountain Dew - 3D Graffiti
+3D Graffiti
 ==========================
 
-This OpenGL demo app reads the BVH file Drawing001.bvh and generates
-a triangle mesh from the path. Controller rotation data is read but
-is currently ignored as I found it didn't give results as good as the
+This OpenGL demo app reads BVH motion capture data taken from a hand held 
+controller and generates a triangle mesh from the path. Controller rotation data
+is read but is currently ignored as I found it didn't give results as good as the
 parallel transport method for constructing a reference frame along a path.
 A nice description of the paralle transport method is given in 
 "Quaternion Gauss Maps and Optimal Framings of Curves and Surfaces (1998)", 
@@ -36,5 +36,3 @@ l - Decrease path thickness
 b - Show wirefame 
 n - Show normals
 
-//
-Miles Macklin, 25/2/2012
