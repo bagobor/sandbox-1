@@ -19,8 +19,8 @@
 // * Barycentric skinning of a graphics mesh
 // * Stress averaging, temporal and spatial
 // * Delaunay triangulation 
-// * Write a font-loader to get some interesting shapes to triangulate
-// * Embed a mesh (buddha, bunny) in a cubic tet mesh and set material properties so that you can carve out interior through fracture events
+// * Image based shape generation
+// * CUDA implementation
 
 using namespace std;
 
@@ -485,7 +485,7 @@ uint32_t UpdateForces(Particle* particles, uint32_t numParticles,
 
 	for (uint32_t i=0; i < numParticles; ++i)
 	{
-		particles[i].f += (gravity - drag*particles[i].v)*particles[i].invMass;
+		particles[i].f += (gravity/particles[i].invMass) - drag*particles[i].v;
 	}
 
 	uint32_t numFractures = 0;
@@ -626,9 +626,14 @@ Scene* CreateScene(
 		scene->mElements.push_back(Element(x));	
 	}
 
+
 	scene->mParticles.assign(particles, particles+numParticles);
 	scene->mTriangles.assign(triangles, triangles+numTriangles);
 
+	// assign original indices to particles (need to track particles after fracture)
+	for (uint32_t i=0; i < numParticles; ++i)
+		scene->mParticles[i].index = i;
+		
 	// space for fractures
 	scene->mFractures.resize(scene->mParticles.size());
 

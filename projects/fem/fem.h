@@ -13,12 +13,13 @@ struct Scene;
 struct Particle
 {
 	Particle() {};
-	Particle(Vec2 x, float im) : p(x), invMass(im)  {}
+	Particle(Vec2 x, float im) : p(x), invMass(im) {}
 
 	Vec2 p;
 	Vec2 v;
 	Vec2 f;
 	float invMass;
+	uint32_t index;
 };
 
 struct Triangle 

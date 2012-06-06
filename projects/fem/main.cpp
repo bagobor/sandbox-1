@@ -137,9 +137,9 @@ void Init()
 
 	/* Random convex */
 	
-	if (0)
+	if (1)
 	{	
-		gSubsteps = 20;
+		gSubsteps = 80;
 
 		gSceneParams.mDrag = 1.0f;
 		gSceneParams.mLameLambda = 10000.0f;
@@ -147,7 +147,7 @@ void Init()
 		gSceneParams.mDamping = 80.0f;
 		gSceneParams.mDrag = 0.0f;
 		gSceneParams.mFriction = 0.95f;
-		gSceneParams.mToughness = 2000.0f;
+		gSceneParams.mToughness = 20000.0f;
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 
@@ -160,10 +160,13 @@ void Init()
 		for (uint32_t i=0; i < numPoints; ++i)
 			points.push_back(Vec2(0.0f, 1.0f) + 0.5f*Vec2(Randf(-1.0f, 1.0f), Randf(-1.0f, 1.0f)));
 
+		const float maxArea = 0.02f;
+		const float minAngle = kPi/6.0f;
+
 		// triangulate
 		vector<uint32_t> tris;
-		TriangulateDelaunay(&points[0], points.size(), tris);
-
+		TriangulateDelaunay(&points[0], points.size(), points.size()*8, maxArea, minAngle, tris, points);
+	
 		// generate elements
 		for (uint32_t i=0; i < points.size(); ++i)
 			gParticles.push_back(Particle(points[i], 1.0f));
@@ -173,17 +176,16 @@ void Init()
 	}
 
 	/* Image */
-	if (1)
+	if (0)
 	{
-		gSubsteps = 80;
+		gSubsteps = 50;
 
-		gSceneParams.mDrag = 1.0f;
-		gSceneParams.mLameLambda = 115000.0f;
-		gSceneParams.mLameMu = 115000.0f;
-		gSceneParams.mDamping = 120.0f;
-		gSceneParams.mDrag = 1.0f;
+		gSceneParams.mLameLambda = 45000.0f;
+		gSceneParams.mLameMu = 45000.0f;
+		gSceneParams.mDamping = 60.0f;
+		gSceneParams.mDrag = 0.0f;
 		gSceneParams.mFriction = 0.5f;
-		gSceneParams.mToughness = 0.0f;
+		gSceneParams.mToughness = 80000.0f;
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
@@ -199,13 +201,14 @@ void Init()
 		const float resolution = 0.04f;
 		const float scale = 2.0f;
 	
-		const uint32_t dd = img.m_width*resolution;
 		const float aspect = float(img.m_height)/img.m_width;
 		const float noise = 0.0f;
 
-		for (uint32_t y=0; y < img.m_height; y+=dd)
+		const uint32_t inc = img.m_width*resolution;
+
+		for (uint32_t y=0; y < img.m_height; y+=inc)
 		{
-			for (uint32_t x=0; x < img.m_width; x+=dd)
+			for (uint32_t x=0; x < img.m_width; x+=inc)
 			{
 				// if value non-zero then add a point
 				if (img.m_data[y*img.m_width + x] != 0)
@@ -218,13 +221,16 @@ void Init()
 			}
 		}
 
+		const float maxArea = 0.5f;
+		const float minAngle = kPi/10.0f;
+
 		// triangulate
 		vector<uint32_t> tris;
-		TriangulateDelaunay(&points[0], points.size(), tris);
+		TriangulateDelaunay(&points[0], points.size(), points.size(), maxArea, minAngle, tris, points);
 
 		// generate elements
 		for (uint32_t i=0; i < points.size(); ++i)
-			gParticles.push_back(Particle(points[i], 1.0f));
+			gParticles.push_back(Particle(points[i], 2.0f));
 
 		for (uint32_t i=0; i < tris.size()/3; ++i)
 		{
@@ -234,7 +240,7 @@ void Init()
 			Vec2 q = points[t.j];
 			Vec2 r = points[t.k];
 
-			// ignore triangles whose center is not inside the shape
+			// discard triangles whose center is not inside the shape
 			Vec2 c = (p+q+r)/3.0f;
 			
 			uint32_t x = c.x*img.m_width/scale;
@@ -262,7 +268,7 @@ void Init()
 		vector<Vec2> torusPoints;
 		vector<uint32_t> torusIndices;
 
-		CreateTorus(torusPoints, torusIndices, 0.2f, 0.5f, 30);
+		CreateTorus(torusPoints, torusIndices, 0.2f, 0.5f, 12);
 	
 		for (size_t i=0; i < torusPoints.size(); ++i)
 			gParticles.push_back(Particle(torusPoints[i], 1.0f));
@@ -402,15 +408,15 @@ void Update()
 		Vec2 c = gParticles[t.k].p;
 	
 		if (gTexture && gShowTexture)
-			glTexCoord2fv(gUVs[t.i]);
+			glTexCoord2fv(gUVs[gParticles[t.i].index]);
 		glVertex2fv(a);
 	
 		if (gTexture && gShowTexture)
-			glTexCoord2fv(gUVs[t.j]);
+			glTexCoord2fv(gUVs[gParticles[t.j].index]);
 		glVertex2fv(b);
 		
 		if (gTexture && gShowTexture)
-			glTexCoord2fv(gUVs[t.k]);
+			glTexCoord2fv(gUVs[gParticles[t.k].index]);
 		glVertex2fv(c);	
 	}
 

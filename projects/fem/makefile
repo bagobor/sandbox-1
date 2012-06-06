@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 CC = g++
 
-CFLAGS = -g -O2 -Wall -I"../.."
+CFLAGS = -g -O3 -ffast-math -Wall -I"../.."
 LDFLAGS = -g -framework GLUT -framework OpenGL -framework Cocoa
 
 TARGET  = fem 
