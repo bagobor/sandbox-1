@@ -37,7 +37,7 @@ Vec2 gMousePos;
 int gMouseIndex=-1;
 float gMouseStrength = 2000.0f;
 
-bool gPause=false;
+bool gPause=true;
 bool gStep=false;
 
 Scene* gScene;
@@ -47,7 +47,7 @@ vector<Particle> gParticles;
 vector<Triangle> gTriangles;
 vector<Vec3>	 gPlanes;
 vector<Vec2>	 gUVs;
-
+uint32_t gExtra = 1;
 GLuint gTexture;
 bool gShowTexture = false;
 
@@ -67,6 +67,52 @@ GLuint CreateTexture(uint32_t width, uint32_t height, void* data)
 	//glGenerateMipmapEXT(GL_TEXTURE_2D);
 
 	return id;
+}
+
+// return true if any pixels in box are non-zero 
+uint32_t Neighbours(const TgaImage& img, int cx, int cy, int width, float& ax, float& ay)
+{
+	int xmin = max(0, cx-width);
+   	int xmax = min(cx+width, int(img.m_width-1));
+	int ymin = max(0, cy-width);
+	int ymax = min(cy+width, int(img.m_height-1));
+
+	uint32_t count = 0;
+
+	ax = 0.0f;
+	ay = 0.0f;
+
+	for (int y=ymin; y <= ymax; ++y)
+	{
+		for (int x=xmin; x <= xmax; ++x)
+		{
+			if (img.m_data[y*img.m_width + x] != 0)
+			{
+				ax += x;
+				ay += y;
+
+				++count;
+			}
+		}
+	}
+	
+	if (count)
+	{
+		ax /= count;
+		ay /= count;
+	}
+
+	return count;
+}
+
+bool EdgeDetect(const TgaImage& img, int cx, int cy)
+{
+	if (bool(img.SampleClamp(cx+1, cy)) != bool(img.SampleClamp(cx-1,cy)))
+		return true;
+	if (bool(img.SampleClamp(cx, cy+1)) != bool(img.SampleClamp(cx, cy-1)))
+		return true;
+
+	return false;
 }
 
 void Init()
@@ -137,7 +183,7 @@ void Init()
 
 	/* Random convex */
 	
-	if (1)
+	if (0)
 	{	
 		gSubsteps = 80;
 
@@ -165,7 +211,9 @@ void Init()
 
 		// triangulate
 		vector<uint32_t> tris;
-		TriangulateDelaunay(&points[0], points.size(), points.size()*8, maxArea, minAngle, tris, points);
+		TriangulateDelaunay(&points[0], points.size(), points, tris);
+
+		RefineDelaunay(&points[0], points.size(), &tris[0], tris.size()/3, points.size()*4, minAngle, maxArea, points, tris);
 	
 		// generate elements
 		for (uint32_t i=0; i < points.size(); ++i)
@@ -176,16 +224,16 @@ void Init()
 	}
 
 	/* Image */
-	if (0)
+	if (1)
 	{
-		gSubsteps = 50;
+		gSubsteps = 30;
 
 		gSceneParams.mLameLambda = 45000.0f;
 		gSceneParams.mLameMu = 45000.0f;
-		gSceneParams.mDamping = 60.0f;
-		gSceneParams.mDrag = 0.0f;
+		gSceneParams.mDamping = 120.0f;
+		gSceneParams.mDrag = 0.1f;
 		gSceneParams.mFriction = 0.5f;
-		gSceneParams.mToughness = 80000.0f;
+		gSceneParams.mToughness = 50000.0f;
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
@@ -198,41 +246,40 @@ void Init()
 		vector<Vec2> points;
 
 		// distribute points inside the image at evenly spaced intervals
-		const float resolution = 0.04f;
+		const float resolution = 0.027f;
 		const float scale = 2.0f;
 	
 		const float aspect = float(img.m_height)/img.m_width;
-		const float noise = 0.0f;
-
+	
+		// edge detect options	
 		const uint32_t inc = img.m_width*resolution;
+		const uint32_t margin = max((inc-1)/4, 1U);
+
+		printf("%d %d\n", inc, margin);
 
 		for (uint32_t y=0; y < img.m_height; y+=inc)
 		{
 			for (uint32_t x=0; x < img.m_width; x+=inc)
 			{
 				// if value non-zero then add a point
-				if (img.m_data[y*img.m_width + x] != 0)
+				float cx, cy;	
+				uint32_t n = Neighbours(img, x, y, margin, cx, cy); 
+
+				if (n > 0 && n < (margin*2+1)*(margin*2+1))
 				{
-					Vec2 uv(float(x)/img.m_width + Randf(-noise, noise), float(y)/img.m_height + Randf(-noise, noise));
-					gUVs.push_back(uv);
+					Vec2 uv(float(x)/img.m_width, float(y)/img.m_height);
 
 					points.push_back(scale*Vec2(uv.x, uv.y*aspect));
 				}
 			}
 		}
-
-		const float maxArea = 0.5f;
-		const float minAngle = kPi/10.0f;
-
+	
 		// triangulate
 		vector<uint32_t> tris;
-		TriangulateDelaunay(&points[0], points.size(), points.size(), maxArea, minAngle, tris, points);
+		TriangulateDelaunay(&points[0], points.size(), points, tris);
 
-		// generate elements
-		for (uint32_t i=0; i < points.size(); ++i)
-			gParticles.push_back(Particle(points[i], 2.0f));
-
-		for (uint32_t i=0; i < tris.size()/3; ++i)
+		// discard triangles whose center is not inside the shape
+		for (uint32_t i=0; i < tris.size()/3; )
 		{
 			Triangle t(tris[i*3], tris[i*3+1], tris[i*3+2]);
 
@@ -240,14 +287,34 @@ void Init()
 			Vec2 q = points[t.j];
 			Vec2 r = points[t.k];
 
-			// discard triangles whose center is not inside the shape
 			Vec2 c = (p+q+r)/3.0f;
 			
 			uint32_t x = c.x*img.m_width/scale;
 			uint32_t y = c.y*img.m_width/scale;
-			
-			if (img.m_data[y*img.m_width + x] != 0)
-				gTriangles.push_back(t);
+		
+			float a, b;	
+			if (Neighbours(img, x, y, 0, a, b) == 0)
+				tris.erase(tris.begin()+i*3, tris.begin()+i*3+3);	
+			else
+				++i;
+		}
+
+		const float maxArea = 0.02f;
+		const float minAngle = DegToRad(20.0f);
+
+		// refine shape
+		RefineDelaunay(&points[0], points.size(), &tris[0], tris.size()/3, points.size()*5+gExtra, minAngle, maxArea, points, tris);
+
+		for (uint32_t i=0; i < tris.size()/3; ++i)
+		{
+			gTriangles.push_back(Triangle(tris[i*3], tris[i*3+1], tris[i*3+2]));
+		}
+
+		// generate elements
+		for (uint32_t i=0; i < points.size(); ++i)
+		{
+			gParticles.push_back(Particle(points[i], 2.0f));
+			gUVs.push_back(points[i]*Vec2(1.0f/scale, 1.0f/(scale*aspect)));
 		}
 	}
 
@@ -579,6 +646,9 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		}
 		case 'r':
 		{
+			++gExtra;
+			printf("extra: %d\n", gExtra);
+
 			Init();
 			break;
 		}
