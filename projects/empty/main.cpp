@@ -1,10 +1,7 @@
 #include <iostream>
 
 #include "core/types.h"
-#include "core/aabbtree.h"
-#include "core/mesh.h"
-
-#include "graphics/rendergl/glutil.h"
+#include "core/shader.h"
 
 using namespace std;
 
@@ -33,9 +30,7 @@ void GLUTUpdate()
 	
 	
 	// flip
-	glutSwapBuffers();
-	
-	cout << "----------------------------------------------" << endl;
+	glutSwapBuffers();	
 }
 
 void GLUTReshape(int width, int height)
@@ -131,7 +126,7 @@ int main(int argc, char* argv[])
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	
     glutInitWindowSize(g_screenWidth, g_screenHeight);
-    glutCreateWindow("Fluid3D");
+    glutCreateWindow("Empty");
     glutPositionWindow(350, 100);
 	
 #if WIN32

@@ -629,10 +629,6 @@ Scene* CreateScene(
 
 	scene->mParticles.assign(particles, particles+numParticles);
 	scene->mTriangles.assign(triangles, triangles+numTriangles);
-
-	// assign original indices to particles (need to track particles after fracture)
-	for (uint32_t i=0; i < numParticles; ++i)
-		scene->mParticles[i].index = i;
 		
 	// space for fractures
 	scene->mFractures.resize(scene->mParticles.size());

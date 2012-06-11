@@ -6,15 +6,13 @@
 
 using namespace std;
 
-#define AssertEq(x, y, e) { if (Abs(x-y) > e*Max(Abs(x), Abs(y))) { cout << #x << " != " << #y << "(" << x - y << ")" << endl; assert(0); } } 
-#define DEBUG_PRINT 1
+#define DEBUG_PRINT 0
 
-typedef double real;
+typedef float real;
 typedef XVector2<real> Vec2r;
 
 namespace
 {
-
 	bool CalculateCircumcircle(const Vec2r& p, const Vec2r& q, const Vec2r& r, Vec2r& outCircumCenter, real& outCircumRadius)
 	{
 #if DEBUG_PRINT
@@ -45,10 +43,6 @@ namespace
 		outCircumCenter = a + t*u;
 		outCircumRadius = Length(outCircumCenter-p);
 		
-		// sanity check center is equidistant from other vertices
-		AssertEq(Length(outCircumCenter-q), outCircumRadius, 0.01);
-		AssertEq(Length(outCircumCenter-r), outCircumRadius, 0.01);	
-
 		return true;
 	}
 
@@ -108,9 +102,9 @@ namespace
 		Vec2r e2 = Normalize(c-a);
 	   	Vec2r e3 = Normalize(c-b);
 
-		real alpha = acosf(Dot(e1, e2));
-		real beta = acosf(Dot(-e1, e3));
-		real gamma = kPi-alpha-beta;
+		real alpha(acos(Dot(e1, e2)));
+		real beta(acos(Dot(-e1, e3)));
+		real gamma(kPi-alpha-beta);
 
 		return min(min(alpha, beta), gamma);
 	}
@@ -133,29 +127,23 @@ namespace
 
 		Triangulation(const Vec2* points, uint32_t numPoints, const uint32_t* tris, uint32_t numTris) 
 		{
-			minArea = 0.0f;
-
 			for (uint32_t i=0; i < numPoints; ++i)
 				vertices.push_back(Vec2r(points[i]));
 
 			for (uint32_t i=0; i < numTris; ++i)
 				triangles.push_back(Triangle(tris[i*3+0], tris[i*3+1], tris[i*3+2], &vertices[0]));
 
-			// calculate boundary edges
-
-
-
 			assert(Valid());
 		}
 
-		Triangulation(const Vec2r& lower, const Vec2r& upper) : lower(lower), upper(upper)
+		Triangulation(const Vec2r& lower, const Vec2r& upper) 
 		{
 			Vec2r extents(upper-lower);
 
 			// initialize triangulation with the bounding box
 			vertices.push_back(lower);
-			vertices.push_back(lower + real(2.0)*Vec2r(extents.x, 0.0));	
-			vertices.push_back(lower + real(2.0)*Vec2r(0.0, extents.y));
+			vertices.push_back(lower + real(2.0)*Vec2r(extents.x, real(0.0)));	
+			vertices.push_back(lower + real(2.0)*Vec2r(real(0.0), extents.y));
 
 			triangles.push_back(Triangle(0, 1, 2, &vertices[0]));
 
@@ -232,7 +220,7 @@ namespace
 				uint32_t v1 = edges[e][1];
 				uint32_t v2 = i;
 
-				if (fabsf(TriArea(vertices[v0], vertices[v1], vertices[v2])) > 1.e-5f)
+				if (fabs(TriArea(vertices[v0], vertices[v1], vertices[v2])) > real(1.e-5))
 				{
 					Triangle t(edges[e][0], edges[e][1], i, &vertices[0]);
 					triangles.push_back(t);
@@ -305,7 +293,7 @@ namespace
 
 		int FindPoorQualityTriangle(real minAngle, real maxArea)
 		{
-			const real b = 1.0f/(2.0f*sinf(minAngle));
+			const real b = real(1.0)/(real(2.0f)*sin(minAngle));
 			real maxB = b;
 			int worst = -1; 
 
@@ -315,7 +303,8 @@ namespace
 
 				Vec2r c = t.mCircumCenter;
 		
-				if (!TestVisiblity(c, t))
+				//if (!TestVisiblity(c, t))
+				if (!ContainsPoint(c))
 					continue;
 					
 				// calculate ratio of circumradius to shortest edge
@@ -337,15 +326,15 @@ namespace
 					worst = i;
 					return i;
 				}
-
-			/*	
-				Vec2Vec2r u= vertices[t.mVertices[0]];
-				Vec2 v = vertices[t.mVertices[1]];
+	
+				
+				Vec2r u= vertices[t.mVertices[0]];
+				Vec2r v = vertices[t.mVertices[1]];
 				Vec2r w = vertices[t.mVertices[2]];
 				
 				if (TriArea(u, v, w) > maxArea)
-					return i;
-					*/
+					return i;				
+					
 			}
 		
 			return worst;
@@ -498,7 +487,7 @@ void RefineDelaunay(const Vec2* points, uint32_t numPoints, const uint32_t* tria
 	while (mesh.vertices.size() < maxPoints)
 	{
 		Vec2r m;
-		real r;
+		real r(0.0);
 		if (0 && mesh.FindEncroachedSegment(m, r))
 		{
 			mesh.Insert(m);
@@ -549,19 +538,19 @@ void RefineDelaunay(const Vec2* points, uint32_t numPoints, const uint32_t* tria
 #endif
 
 
-void CreateTorus(std::vector<Vec2r>& points, std::vector<uint32_t>& indices, float inner, real outer, uint32_t segments)
+void CreateTorus(std::vector<Vec2>& points, std::vector<uint32_t>& indices, float inner, float outer, uint32_t segments)
 {
 	assert(inner < outer);
 
 	for (uint32_t i=0; i < segments; ++i)
 	{
-		float theta = real(i)/segments*kPi*2.0f;
+		float theta = float(i)/segments*kPi*2.0f;
 		
 		float x = sinf(theta);
 		float y = cosf(theta);
 		
-		points.push_back(Vec2r(x, y)*outer);
-		points.push_back(Vec2r(x, y)*inner);
+		points.push_back(Vec2(x, y)*outer);
+		points.push_back(Vec2(x, y)*inner);
 
 		if (i > 0)
 		{

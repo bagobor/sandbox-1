@@ -36,8 +36,11 @@ public:
 
 	typedef T value_type;
 
-	XVector2(float _x=0.0f, float _y=0.0f) : x(_x), y(_y) { VEC2_VALIDATE(); }
-	XVector2(const float* p) : x(p[0]), y(p[1]) {}
+	XVector2(T _x=T(0.0), T _y=T(0.0f)) : x(_x), y(_y) { VEC2_VALIDATE(); }
+	XVector2(const T* p) : x(p[0]), y(p[1]) {}
+
+	template <typename U>
+	explicit XVector2(const XVector2<U>& v) : x(v.x), y(v.y) {}
 
 	operator T* () { return &x; }
 	operator const T* () const { return &x; };

@@ -107,9 +107,9 @@ uint32_t Neighbours(const TgaImage& img, int cx, int cy, int width, float& ax, f
 
 bool EdgeDetect(const TgaImage& img, int cx, int cy)
 {
-	if (bool(img.SampleClamp(cx+1, cy)) != bool(img.SampleClamp(cx-1,cy)))
+	if (bool(img.SampleClamp(cx+1, cy) != 0) != bool(img.SampleClamp(cx-1,cy) != 0))
 		return true;
-	if (bool(img.SampleClamp(cx, cy+1)) != bool(img.SampleClamp(cx, cy-1)))
+	if (bool(img.SampleClamp(cx, cy+1) != 0) != bool(img.SampleClamp(cx, cy-1) != 0))
 		return true;
 
 	return false;
@@ -232,11 +232,13 @@ void Init()
 		gSceneParams.mLameMu = 45000.0f;
 		gSceneParams.mDamping = 120.0f;
 		gSceneParams.mDrag = 0.1f;
-		gSceneParams.mFriction = 0.5f;
-		gSceneParams.mToughness = 50000.0f;
+		gSceneParams.mFriction = 0.1f;
+		gSceneParams.mToughness = 70000.0f;
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
+
+		//gViewWidth = 10.0f;
 
 		TgaImage img;
 		TgaLoad("armadillo.tga", img);
@@ -246,7 +248,7 @@ void Init()
 		vector<Vec2> points;
 
 		// distribute points inside the image at evenly spaced intervals
-		const float resolution = 0.027f;
+		const float resolution = 0.04f;
 		const float scale = 2.0f;
 	
 		const float aspect = float(img.m_height)/img.m_width;
@@ -301,9 +303,9 @@ void Init()
 
 		const float maxArea = 0.02f;
 		const float minAngle = DegToRad(20.0f);
-
+		
 		// refine shape
-		RefineDelaunay(&points[0], points.size(), &tris[0], tris.size()/3, points.size()*5+gExtra, minAngle, maxArea, points, tris);
+		RefineDelaunay(&points[0], points.size(), &tris[0], tris.size()/3, points.size()*10+gExtra, minAngle, maxArea, points, tris);
 
 		for (uint32_t i=0; i < tris.size()/3; ++i)
 		{
@@ -346,6 +348,10 @@ void Init()
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
 	}
+
+	// assign index to particles
+	for (uint32_t i=0; i < gParticles.size(); ++i)
+		gParticles[i].index = i;
 
 	gScene = CreateScene(&gParticles[0], gParticles.size(), &gTriangles[0], gTriangles.size());
 }
