@@ -8,7 +8,8 @@ using namespace std;
 
 #define DEBUG_PRINT 0
 
-typedef float real;
+
+typedef double real;
 typedef XVector2<real> Vec2r;
 
 namespace
@@ -125,6 +126,8 @@ namespace
 		vector<Triangle> triangles;
 		vector<Edge> segments;
 
+		Triangulation() {}
+
 		Triangulation(const Vec2* points, uint32_t numPoints, const uint32_t* tris, uint32_t numTris) 
 		{
 			for (uint32_t i=0; i < numPoints; ++i)
@@ -175,7 +178,7 @@ namespace
 					printf("{{%f, %f}, {%f, %f}, {%f, %f}},\n",a.x, a.y, b.x, b.y, c.x, c.y); 
 #endif
 
-				if (Length(t.mCircumCenter-p) <= t.mCircumRadius)
+				if (Length(t.mCircumCenter-p) < t.mCircumRadius)
 				{
 					for (uint32_t e=0; e < 3; ++e)
 					{
@@ -216,18 +219,18 @@ namespace
 			for (uint32_t e=0; e < edges.size(); ++e)
 			{
 				
-				uint32_t v0 = edges[e][0];
-				uint32_t v1 = edges[e][1];
-				uint32_t v2 = i;
+			//	uint32_t v0 = edges[e][0];
+			//	uint32_t v1 = edges[e][1];
+			//	uint32_t v2 = i;
 
-				if (fabs(TriArea(vertices[v0], vertices[v1], vertices[v2])) > real(1.e-5))
+				//if (fabs(TriArea(vertices[v0], vertices[v1], vertices[v2])) > real(1.e-5))
 				{
 					Triangle t(edges[e][0], edges[e][1], i, &vertices[0]);
 					triangles.push_back(t);
 				}
 			}
 
-			//assert(Valid());
+			assert(Valid());
 		}
 
 		bool ContainsPoint(const Vec2r& c) const
@@ -366,6 +369,147 @@ namespace
 	};
 
 };
+
+
+// incremental insert Delaunay triangulation based on Bowyer/Watson's algorithm
+void TriangulateDelaunay2(const Vec2* inPoints, uint32_t numPoints, const Vec2* bPoints, uint32_t numBPoints, vector<Vec2>& outPoints, vector<uint32_t>& outTris)
+{
+	vector<Vec2r> points(inPoints, inPoints+numPoints);
+	vector<float> weights;
+	
+	Triangulation mesh;
+
+	const uint32_t iterations = 10;
+	for (uint32_t k=0; k < iterations; ++k)
+	{
+		// calculate bounds
+		Vec2r lower(FLT_MAX), upper(-FLT_MAX);
+
+		for (uint32_t i=0; i < numPoints; ++i)
+		{
+			lower = Min(lower, Vec2r(points[i]));
+			upper = Max(upper, Vec2r(points[i]));
+		}
+
+		Vec2r margin = Vec2r(upper-lower)*0.2f;
+
+		mesh = Triangulation(lower-margin, upper+margin);
+
+		// insert all initial points into triangulation
+		for (uint32_t i=0; i < numPoints; ++i)
+			mesh.Insert(Vec2r(points[i]));
+
+		// move verts to optimal position inside their 1 ring
+		points.resize(0);
+		points.resize(mesh.vertices.size()-3);
+		
+		weights.resize(0);	
+		weights.resize(mesh.vertices.size()-3);	
+
+		// optimize boundary points
+		for (uint32_t i=0; i < numBPoints; ++i)
+		{
+			uint32_t closest = 0;
+			real closestDistSq = FLT_MAX;
+
+			const Vec2r b = Vec2r(bPoints[i]);
+
+			// find closest point
+			for (uint32_t j=0; j < numPoints; ++j)
+			{
+				real dSq = LengthSq(mesh.vertices[j+3]-b);
+
+				if (dSq < closestDistSq)
+				{
+					closest = j;
+					closestDistSq = dSq;
+				}
+			}
+
+			points[closest] -= b;
+			weights[closest] -= 1.0f;
+		}
+		
+
+		// optimize interior points
+		for (uint32_t i=0; i < mesh.triangles.size(); ++i)
+		{
+			const Triangle& t = mesh.triangles[i];
+			
+			// throw away tris connected to the initial bounding box 
+			if (t.mVertices[0] < 3 || t.mVertices[1] < 3 || t.mVertices[2] < 3)
+				continue;
+		
+			Vec2r a = mesh.vertices[t.mVertices[0]];
+			Vec2r b = mesh.vertices[t.mVertices[1]];
+			Vec2r c = mesh.vertices[t.mVertices[2]];
+
+			real w = TriArea(a, b, c);
+
+			for (uint32_t v=0; v < 3; ++v)	
+			{
+				uint32_t s = t.mVertices[v]-3;
+
+				if (weights[s] >= 0.0f)
+				{
+					points[s] += w*t.mCircumCenter;
+					weights[s] += w;
+				}
+			}
+		}
+
+		for (uint32_t i=0; i < points.size(); ++i)
+			points[i] /= weights[i];
+	}
+
+		// calculate bounds
+		Vec2r lower(FLT_MAX), upper(-FLT_MAX);
+
+		for (uint32_t i=0; i < numPoints; ++i)
+		{
+			lower = Min(lower, Vec2r(points[i]));
+			upper = Max(upper, Vec2r(points[i]));
+		}
+
+		Vec2r margin = Vec2r(upper-lower)*0.2f;
+
+		mesh = Triangulation(lower-margin, upper+margin);
+
+		// insert all initial points into triangulation
+		for (uint32_t i=0; i < numPoints; ++i)
+			mesh.Insert(Vec2r(points[i]));
+
+		// move verts to optimal position inside their 1 ring
+		points.resize(0);
+		points.assign(mesh.vertices.begin()+3, mesh.vertices.end());
+
+	// copy to output
+	outPoints.resize(0);
+	for (uint32_t i=0; i < points.size(); ++i)
+		outPoints.push_back(Vec2(float(points[i].x), float(points[i].y)));
+	
+	outTris.resize(0);
+	for (uint32_t i=0; i < mesh.triangles.size(); ++i)
+	{
+		const Triangle& t = mesh.triangles[i];
+
+		// throw away tris connected to the initial bounding box 
+		if (t.mVertices[0] < 3 || t.mVertices[1] < 3 || t.mVertices[2] < 3)
+			continue;
+		
+		Vec2r a = mesh.vertices[t.mVertices[0]];
+		Vec2r b = mesh.vertices[t.mVertices[1]];
+		Vec2r c = mesh.vertices[t.mVertices[2]];
+
+		if (TriArea(a, b, c) > 1.e-4f)
+		{
+			outTris.push_back(t.mVertices[0]-3);
+			outTris.push_back(t.mVertices[1]-3);
+			outTris.push_back(t.mVertices[2]-3);
+		}
+	}
+}
+
 
 // incremental insert Delaunay triangulation based on Bowyer/Watson's algorithm
 void TriangulateDelaunay(const Vec2* points, uint32_t numPoints, vector<Vec2>& outPoints, vector<uint32_t>& outTris)
@@ -537,7 +681,137 @@ void RefineDelaunay(const Vec2* points, uint32_t numPoints, const uint32_t* tria
 }
 #endif
 
+namespace
+{
 
+
+bool EdgeDetect(const TgaImage& img, int cx, int cy)
+{
+	if (bool(img.SampleClamp(cx+1, cy) != 0) != bool(img.SampleClamp(cx-1,cy) != 0))
+		return true;
+	if (bool(img.SampleClamp(cx, cy+1) != 0) != bool(img.SampleClamp(cx, cy-1) != 0))
+		return true;
+
+	return false;
+}
+
+}
+/*
+uint32_t FindCandidateTri(const TgaImage& image, const Triangulation& mesh, Vec2r& outP)
+{
+	const float stepSize = min(1.0f/image.m_width, 1.0f/image.m_height);
+
+	uint32_t offset = rand();
+
+	for (uint32_t i=0; i < mesh.triangles.size(); ++i)
+	{
+		Vec2r bestP(FLT_MAX);
+	
+		// walk along each bisector, if we hit an edge check it against the best candidate so far
+		const Triangle& t = mesh.triangles[(i+offset)%mesh.triangles.size()];
+
+		Vec2r a = mesh.vertices[t.mVertices[0]];
+		Vec2r b = mesh.vertices[t.mVertices[1]];
+		Vec2r c = mesh.vertices[t.mVertices[2]];
+
+		for (uint32_t e=0; e < 3; ++e)
+		{
+			Vec2r e0 = mesh.vertices[t.mVertices[e]];
+			Vec2r e1 = mesh.vertices[t.mVertices[(e+1)%3]];
+
+			Vec2r p = mesh.vertices[t.mVertices[(e+2)%3]];
+			Vec2r b = Normalize(0.5*(e0+e1)-p);
+
+			p += b*stepSize*1.0f;
+
+			//printf("%f %f %f %f\n", p.x, p.y, b.x*stepSize, b.y*stepSize);
+			//printf("d: %f cr: %f\n", Length(p-t.mCircumCenter), t.mCircumRadius);
+
+			while (Length(p-t.mCircumCenter) < t.mCircumRadius)
+			{
+				uint32_t x = p.x*image.m_width;
+				uint32_t y = p.y*image.m_height;
+
+				if (EdgeDetect(image, x, y))
+				{
+					if (Length(p-t.mCircumCenter) < Length(bestP-t.mCircumCenter))
+						bestP = p;
+				}
+
+				p += b*stepSize;
+			}
+		}
+
+		if (Length(bestP-t.mCircumCenter) < t.mCircumRadius)
+		{
+			outP = bestP;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void TriangulateImage(const TgaImage& image, std::vector<Vec2>& outPoints, std::vector<uint32_t>& outTris)
+{
+	Vec2r lower(-0, -0), upper(2.0, 2.0);
+
+	Triangulation mesh(lower, upper);
+
+	Vec2r p;
+	while (FindCandidateTri(image, mesh, p) && mesh.vertices.size() < 100)
+	{
+		mesh.Insert(p);//Vec2r(Randf(0.0f, 1.0f), Randf(0.0f, 1.0f)));
+	}
+
+	// copy to output
+
+	uint32_t maxIndex = 0;
+
+	outTris.resize(0);
+	for (uint32_t i=0; i < mesh.triangles.size(); ++i)
+	{
+		const Triangle& t = mesh.triangles[i];
+
+		// throw away tris connected to the initial bounding box 
+		if (t.mVertices[0] < 3 || t.mVertices[1] < 3 || t.mVertices[2] < 3)
+			continue;
+	
+		Vec2r a = mesh.vertices[t.mVertices[0]];
+		Vec2r b = mesh.vertices[t.mVertices[1]];
+		Vec2r c = mesh.vertices[t.mVertices[2]];
+
+		//if (TriArea(a, b, c) > 1.e-3f)
+		{
+			outTris.push_back(t.mVertices[0]-3);
+			outTris.push_back(t.mVertices[1]-3);
+			outTris.push_back(t.mVertices[2]-3);
+		}
+	
+		maxIndex = max(maxIndex, t.mVertices[0]-3);
+		maxIndex = max(maxIndex, t.mVertices[1]-3);
+		maxIndex = max(maxIndex, t.mVertices[2]-3);
+
+	}
+
+	outPoints.resize(maxIndex+1);
+	for (uint32_t i=0; i < mesh.triangles.size(); ++i)
+	{
+		const Triangle& t = mesh.triangles[i];
+
+		if (t.mVertices[0] < 3 || t.mVertices[1] < 3 || t.mVertices[2] < 3)
+			continue;
+	
+		outPoints[t.mVertices[0]-3] = Vec2(mesh.vertices[t.mVertices[0]]);
+		outPoints[t.mVertices[1]-3] = Vec2(mesh.vertices[t.mVertices[1]]);
+		outPoints[t.mVertices[2]-3] = Vec2(mesh.vertices[t.mVertices[2]]);
+	}
+
+//for (uint32_t i=3; i < mesh.vertices.size(); ++i)
+//		outPoints.push_back(Vec2(float(mesh.vertices[i].x), float(mesh.vertices[i].y)));
+	
+}
+*/
 void CreateTorus(std::vector<Vec2>& points, std::vector<uint32_t>& indices, float inner, float outer, uint32_t segments)
 {
 	assert(inner < outer);

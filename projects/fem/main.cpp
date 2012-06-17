@@ -101,7 +101,7 @@ uint32_t Neighbours(const TgaImage& img, int cx, int cy, int width, float& ax, f
 		ax /= count;
 		ay /= count;
 	}
-
+	
 	return count;
 }
 
@@ -223,17 +223,18 @@ void Init()
 			gTriangles.push_back(Triangle(tris[i*3], tris[i*3+1], tris[i*3+2]));
 	}
 
+
 	/* Image */
 	if (1)
 	{
 		gSubsteps = 30;
 
-		gSceneParams.mLameLambda = 45000.0f;
-		gSceneParams.mLameMu = 45000.0f;
+		gSceneParams.mLameLambda = 75000.0f;
+		gSceneParams.mLameMu = 75000.0f;
 		gSceneParams.mDamping = 120.0f;
 		gSceneParams.mDrag = 0.1f;
 		gSceneParams.mFriction = 0.1f;
-		gSceneParams.mToughness = 70000.0f;
+		gSceneParams.mToughness = 40000.0f;
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
@@ -241,21 +242,22 @@ void Init()
 		//gViewWidth = 10.0f;
 
 		TgaImage img;
-		TgaLoad("armadillo.tga", img);
+		TgaLoad("bunny.tga", img);
 		
 		gTexture = CreateTexture(img.m_width, img.m_height, img.m_data);
 
 		vector<Vec2> points;
+		vector<Vec2> bpoints;
 
 		// distribute points inside the image at evenly spaced intervals
-		const float resolution = 0.04f;
+		const float resolution = 0.07f;
 		const float scale = 2.0f;
 	
 		const float aspect = float(img.m_height)/img.m_width;
 	
 		// edge detect options	
 		const uint32_t inc = img.m_width*resolution;
-		const uint32_t margin = max((inc-1)/4, 1U);
+		const uint32_t margin = max((inc-1)/2, 1U);
 
 		printf("%d %d\n", inc, margin);
 
@@ -267,18 +269,29 @@ void Init()
 				float cx, cy;	
 				uint32_t n = Neighbours(img, x, y, margin, cx, cy); 
 
-				if (n > 0 && n < (margin*2+1)*(margin*2+1))
+				if (n > 0)
 				{
-					Vec2 uv(float(x)/img.m_width, float(y)/img.m_height);
-
-					points.push_back(scale*Vec2(uv.x, uv.y*aspect));
+					Vec2 uv(float(x + 0.5f)/img.m_width, float(y + 0.5f)/img.m_height);
+					points.push_back(Vec2(uv.x, uv.y));
 				}
 			}
 		}
-	
+
+		for (uint32_t y=0; y < img.m_height; y++)
+		{
+			for (uint32_t x=0; x < img.m_width; x++)
+			{
+				if (EdgeDetect(img, x, y))
+				{
+					Vec2 uv(float(x + 0.5f)/img.m_width, float(y + 0.5f)/img.m_height);
+					bpoints.push_back(uv);
+				}
+			}
+		}
+
 		// triangulate
 		vector<uint32_t> tris;
-		TriangulateDelaunay(&points[0], points.size(), points, tris);
+		TriangulateDelaunay2(&points[0], points.size(), &bpoints[0], bpoints.size(), points, tris);
 
 		// discard triangles whose center is not inside the shape
 		for (uint32_t i=0; i < tris.size()/3; )
@@ -290,22 +303,22 @@ void Init()
 			Vec2 r = points[t.k];
 
 			Vec2 c = (p+q+r)/3.0f;
-			
-			uint32_t x = c.x*img.m_width/scale;
-			uint32_t y = c.y*img.m_width/scale;
+			uint32_t x = c.x*img.m_width;///scale;
+			uint32_t y = c.y*img.m_height;//scale;
 		
 			float a, b;	
 			if (Neighbours(img, x, y, 0, a, b) == 0)
-				tris.erase(tris.begin()+i*3, tris.begin()+i*3+3);	
+			//if (img.SampleClamp(p.x, p.y) || img.SampleClamp(q.x, q.y) || img.SampleClamp(r.x, r.y))
+				tris.erase(tris.begin()+i*3, tris.begin()+i*3+3);
 			else
 				++i;
 		}
 
-		const float maxArea = 0.02f;
-		const float minAngle = DegToRad(20.0f);
+	//	const float maxArea = 0.02f;
+	//	const float minAngle = DegToRad(20.0f);
 		
 		// refine shape
-		RefineDelaunay(&points[0], points.size(), &tris[0], tris.size()/3, points.size()*10+gExtra, minAngle, maxArea, points, tris);
+	//	RefineDelaunay(&points[0], points.size(), &tris[0], tris.size()/3, points.size()*10+gExtra, minAngle, maxArea, points, tris);
 
 		for (uint32_t i=0; i < tris.size()/3; ++i)
 		{
@@ -315,8 +328,9 @@ void Init()
 		// generate elements
 		for (uint32_t i=0; i < points.size(); ++i)
 		{
-			gParticles.push_back(Particle(points[i], 2.0f));
-			gUVs.push_back(points[i]*Vec2(1.0f/scale, 1.0f/(scale*aspect)));
+			gParticles.push_back(Particle(points[i]*Vec2(scale, scale*aspect), 2.0f));
+			//gUVs.push_back(points[i]*Vec2(1.0f/scale, 1.0f/(scale*aspect)));
+			gUVs.push_back(points[i]);
 		}
 	}
 
