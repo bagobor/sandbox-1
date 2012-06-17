@@ -10,8 +10,8 @@ struct TgaImage
 
 	uint32_t SampleClamp(int x, int y) const
 	{
-		uint32_t ix = std::min(std::max(0, x), int(m_width));
-		uint32_t iy = std::min(std::max(0, y), int(m_height));
+		uint32_t ix = std::min(std::max(0, x), int(m_width-1));
+		uint32_t iy = std::min(std::max(0, y), int(m_height-1));
 
 		return m_data[iy*m_width + ix];
 	}

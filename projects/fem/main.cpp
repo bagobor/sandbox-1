@@ -288,7 +288,7 @@ void Init()
 				}
 			}
 		}
-
+		
 		// triangulate
 		vector<uint32_t> tris;
 		TriangulateDelaunay2(&points[0], points.size(), &bpoints[0], bpoints.size(), points, tris);
@@ -301,7 +301,7 @@ void Init()
 			Vec2 p = points[t.i];
 			Vec2 q = points[t.j];
 			Vec2 r = points[t.k];
-
+	
 			Vec2 c = (p+q+r)/3.0f;
 			uint32_t x = c.x*img.m_width;///scale;
 			uint32_t y = c.y*img.m_height;//scale;
@@ -422,6 +422,7 @@ void Update()
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_TEXTURE_2D);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -452,7 +453,7 @@ void Update()
 	
 		gStep = false;
 	}
-
+	
 	// planes
 	glBegin(GL_LINES);
 	glColor3f(0.0f, 0.0f, 1.0f);
@@ -467,7 +468,7 @@ void Update()
 	}
 
 	glEnd();
-
+	
 	// tris
 	if (gTexture && gShowTexture)
 	{
@@ -566,6 +567,7 @@ void Update()
 	DrawString(x, y, "Mu: %.2f", gSceneParams.mLameMu); y += 13;
 	DrawString(x, y, "Toughness: %.2f", gSceneParams.mToughness); y += 13;
 
+	
 	glutSwapBuffers();
 }
 

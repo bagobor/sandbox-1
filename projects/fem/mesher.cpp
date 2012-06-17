@@ -375,7 +375,7 @@ namespace
 void TriangulateDelaunay2(const Vec2* inPoints, uint32_t numPoints, const Vec2* bPoints, uint32_t numBPoints, vector<Vec2>& outPoints, vector<uint32_t>& outTris)
 {
 	vector<Vec2r> points(inPoints, inPoints+numPoints);
-	vector<float> weights;
+	vector<real> weights;
 	
 	Triangulation mesh;
 
@@ -450,7 +450,7 @@ void TriangulateDelaunay2(const Vec2* inPoints, uint32_t numPoints, const Vec2* 
 			{
 				uint32_t s = t.mVertices[v]-3;
 
-				if (weights[s] >= 0.0f)
+				if (weights[s] >= 0.0)
 				{
 					points[s] += w*t.mCircumCenter;
 					weights[s] += w;
