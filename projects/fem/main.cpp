@@ -51,6 +51,8 @@ uint32_t gExtra = 1;
 GLuint gTexture;
 bool gShowTexture = false;
 
+vector<Vec2>	gBounds;
+
 GLuint CreateTexture(uint32_t width, uint32_t height, void* data)
 {
 	GLuint id;
@@ -144,14 +146,14 @@ void Init()
 
 	if (0)
 	{
-		gSubsteps = 20;
+		gSubsteps = 40;
 
 		gSceneParams.mDrag = 1.0f;
-		gSceneParams.mLameLambda = 10000.0f;
-		gSceneParams.mLameMu = 10000.0f;
+		gSceneParams.mLameLambda = 80000.0f;
+		gSceneParams.mLameMu = 80000.0f;
 		gSceneParams.mDamping = 200.0f;
 		gSceneParams.mDrag = 0.0f;
-		gSceneParams.mToughness = 8000.0f;
+		gSceneParams.mToughness = 0.0f;//8000.0f;
 
 		const float kDim = 0.1;
 
@@ -227,13 +229,13 @@ void Init()
 	/* Image */
 	if (1)
 	{
-		gSubsteps = 40;
+		gSubsteps = 50;
 
-		gSceneParams.mLameLambda = 9000.0f;
-		gSceneParams.mLameMu = 9000.0f;
-		gSceneParams.mDamping = 220.0f;
+		gSceneParams.mLameLambda = 49000.0f;
+		gSceneParams.mLameMu = 49000.0f;
+		gSceneParams.mDamping = 80.0f;
 		gSceneParams.mDrag = 0.1f;
-		gSceneParams.mFriction = 0.1f;
+		gSceneParams.mFriction = 0.5f;
 		gSceneParams.mToughness = 0.0f;//40000.0f;
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
@@ -242,7 +244,7 @@ void Init()
 		//gViewWidth = 10.0f;
 
 		TgaImage img;
-		TgaLoad("bunny.tga", img);
+		TgaLoad("armadillo.tga", img);
 		
 		gTexture = CreateTexture(img.m_width, img.m_height, img.m_data);
 
@@ -250,8 +252,9 @@ void Init()
 		vector<Vec2> bpoints;
 
 		// controls how finely the object is sampled
-		const float resolution = 0.07f;
-		const float scale = 3.0f;
+		const float resolution = 0.08f;
+		const float scale = 2.0f;
+		const float density = 140.5f;
 	
 		const float aspect = float(img.m_height)/img.m_width;
 	
@@ -287,10 +290,13 @@ void Init()
 				}
 			}
 		}
+
 		
 		// triangulate
+		const uint32_t iterations = 10;
+
 		vector<uint32_t> tris;
-		TriangulateVariational(&points[0], points.size(), &bpoints[0], bpoints.size(), points, tris);
+		TriangulateVariational(&points[0], points.size(), &bpoints[0], bpoints.size(), iterations, points, tris);
 
 		// discard triangles whose centroid is not inside the shape
 		for (uint32_t i=0; i < tris.size();)
@@ -312,18 +318,41 @@ void Init()
 				i += 3;
 		}
 
-		// generate elements
-		for (uint32_t i=0; i < tris.size()/3; ++i)
-			gTriangles.push_back(Triangle(tris[i*3], tris[i*3+1], tris[i*3+2]));
-
 		// generate particles
 		for (uint32_t i=0; i < points.size(); ++i)
 		{
 			// todo: mass based on connected element area
-			gParticles.push_back(Particle(points[i]*Vec2(scale, scale*aspect), 2.0f));
+			gParticles.push_back(Particle(points[i]*Vec2(scale, scale*aspect), 0.0f));
 
 			gUVs.push_back(points[i]);
 		}
+
+		// generate elements and assign mass based on connected area
+		for (uint32_t t=0; t < tris.size(); t+=3)
+		{
+			uint32_t i = tris[t];
+			uint32_t j = tris[t+1];
+			uint32_t k = tris[t+2];
+
+			// calculate tri area
+			Vec2 a = gParticles[i].p;
+			Vec2 b = gParticles[j].p;
+			Vec2 c = gParticles[k].p;
+
+			float area = 0.5f*Cross(b-a, c-a);
+			float mass = density*area/3.0f;
+
+			gParticles[i].invMass += mass;
+			gParticles[j].invMass += mass;
+			gParticles[k].invMass += mass;	
+
+			gTriangles.push_back(Triangle(i, j, k));
+		}
+
+		// convert mass to invmass
+		for (uint32_t i=0; i < gParticles.size(); ++i)
+			if (gParticles[i].invMass > 0.0f)
+				gParticles[i].invMass = 1.0f/gParticles[i].invMass;
 	}
 
 	/* Donut */
@@ -514,7 +543,17 @@ void Update()
 	glColor3f(0.0f, 1.0f, 0.0f);
 
 	for (size_t i=0; i < gParticles.size(); ++i)
+	{
 		glVertex2fv(gParticles[i].p);
+	}
+	
+	glColor3f(1.0f, 0.0f, 0.0f);
+
+	for (size_t i=0; i < gBounds.size(); ++i)
+	{
+		glVertex2fv(gBounds[i]);
+	}
+	
 
 	glEnd();
 
@@ -661,6 +700,11 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			gShowTexture = !gShowTexture;
 			break;
 		}
+		case 'f':
+		{
+			gSceneParams.mFriction += 0.1f;
+			break;
+		}	
 		case 'r':
 		{
 			++gExtra;

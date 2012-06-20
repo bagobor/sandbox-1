@@ -18,6 +18,7 @@ struct Particle
 	Vec2 p;
 	Vec2 v;
 	Vec2 f;
+    Vec2 c;
 	float invMass;
 	uint32_t index;
 };
@@ -32,7 +33,7 @@ struct Triangle
 
 struct SceneParams
 {
-	Vec2 mGravity;
+	Vec2  mGravity;
 	float mLameLambda; 
 	float mLameMu;
 	float mDamping;

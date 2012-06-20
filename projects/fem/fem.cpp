@@ -485,7 +485,7 @@ uint32_t UpdateForces(Particle* particles, uint32_t numParticles,
 
 	for (uint32_t i=0; i < numParticles; ++i)
 	{
-		particles[i].f += (gravity/particles[i].invMass) - drag*particles[i].v;
+		particles[i].f += particles[i].invMass>0.0f?(gravity/particles[i].invMass):Vec2(0.0f) - drag*particles[i].v;
 	}
 
 	uint32_t numFractures = 0;

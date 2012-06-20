@@ -24,9 +24,6 @@ namespace
 		const Vec2r qr = r-q;
 
 		// check winding
-#if DEBUG_PRINT
-		printf("%f\n", Cross(pq, qr));
-#endif
 		assert(Cross(pq, qr) >= 0.0f); 
 
 		// mid-points of  edges 
@@ -35,10 +32,6 @@ namespace
 		const Vec2r u = PerpCCW(pq);
 
 		const real d = Dot(u, qr);
-
-		// check if degenerate
-		assert(d != 0.0f);
-
 		const real t = Dot(b-a, qr)/d;
 		
 		outCircumCenter = a + t*u;
@@ -97,34 +90,10 @@ namespace
 		return 0.5f*(Cross(b-a, c-a)); 
 	}
 
-	real TriMinAngle(const Vec2r& a, const Vec2r& b, const Vec2r& c)
-	{
-		Vec2r e1 = Normalize(b-a);
-		Vec2r e2 = Normalize(c-a);
-	   	Vec2r e3 = Normalize(c-b);
-
-		real alpha(acos(Dot(e1, e2)));
-		real beta(acos(Dot(-e1, e3)));
-		real gamma(kPi-alpha-beta);
-
-		return min(min(alpha, beta), gamma);
-	}
-
-	bool PointInTri(const Vec2r& a, const Vec2r& b, const Vec2r& c, const Vec2r& p)
-	{
-		assert(TriArea(a, b, c) > 0.0f);
-
-		// compute signed area of subtris, assumes tris wound CCW
-		bool outside = TriArea(p, a, b) < 0.0f || TriArea(p, b, c) < 0.0f || TriArea(p, c, a) < 0.0f;
-
-		return !outside;
-	}
-
 	struct Triangulation
 	{
 		vector<Vec2r> vertices;
 		vector<Triangle> triangles;
-		vector<Edge> segments;
 
 		Triangulation() {}
 		
@@ -158,21 +127,6 @@ namespace
 			assert(Valid());
 		}
 
-		/*
-		Triangulation(const Vec2r& lower, const Vec2r& upper) 
-		{
-			Vec2r extents(upper-lower);
-
-			// initialize triangulation with the bounding box
-			vertices.push_back(lower);
-			vertices.push_back(lower + real(2.0)*Vec2r(extents.x, real(0.0)));	
-			vertices.push_back(lower + real(2.0)*Vec2r(real(0.0), extents.y));
-
-			triangles.push_back(Triangle(0, 1, 2, &vertices[0]));
-
-			assert(Valid());
-		}
-*/
 		void Insert(Vec2r p)
 		{
 			vector<Edge> edges;
@@ -239,79 +193,11 @@ namespace
 			for (uint32_t e=0; e < edges.size(); ++e)
 			{
 				
-			//	uint32_t v0 = edges[e][0];
-			//	uint32_t v1 = edges[e][1];
-			//	uint32_t v2 = i;
-
-				//if (fabs(TriArea(vertices[v0], vertices[v1], vertices[v2])) > real(1.e-5))
-				{
-					Triangle t(edges[e][0], edges[e][1], i, &vertices[0]);
-					triangles.push_back(t);
-				}
+				Triangle t(edges[e][0], edges[e][1], i, &vertices[0]);
+				triangles.push_back(t);
 			}
 
 			assert(Valid());
-		}
-
-		bool ContainsPoint(const Vec2r& c) const
-		{
-			for (uint32_t i=0; i < triangles.size(); ++i)
-			{
-				const Triangle& t = triangles[i];
-
-				// ignore border triangles
-				if (t.mVertices[0] < 3 || t.mVertices[1] < 3 || t.mVertices[2] < 3)
-					continue;
-
-				Vec2r u = vertices[t.mVertices[0]];
-				Vec2r v = vertices[t.mVertices[1]];
-				Vec2r w = vertices[t.mVertices[2]];
-				
-				if (PointInTri(u, v, w, c))
-					return true;
-			}
-
-			return false;
-		}
-
-		// finds an encroached segment and return it's diametral circle
-		bool FindEncroachedSegment(Vec2r& c, real& r) const
-		{
-			// try and find an enchroached segment
-			for (uint32_t i=0; i < triangles.size(); ++i)
-			{
-				const Triangle& t = triangles[i];
-
-				for (uint32_t e=0; e < 3; ++e)
-				{
-					uint32_t i0 = t.mVertices[e];
-					uint32_t i1 = t.mVertices[(e+1)%3];
-
-					// ignore border edges 
-					//if (i0 < 3 || i1 < 3)
-				//		continue;
-
-					Vec2r p = vertices[i0];
-					Vec2r q = vertices[i1];
-
-					// calculate edge midpoint and radius
-					Vec2r midpoint = (p+q)*0.5f;
-					real radius = 0.5f*Length(p-q);
-
-					// see check if edge is encroached
-					for (uint32_t v=0; v < vertices.size(); ++v)
-					{
-						if (Length(vertices[v]-midpoint) < radius && v != i0 && v != i1)
-						{
-							c = midpoint;
-							r = radius;	
-							return true;
-						}
-					}	
-				}	
-			}
-
-			return false;
 		}
 
 		real TriangleQuality(uint32_t i)
@@ -334,56 +220,6 @@ namespace
 			real q = t.mCircumRadius / minEdgeLength;
 		
 			return q;	
-		}
-
-
-		int FindPoorQualityTriangle(real minAngle, real maxArea)
-		{
-			const real b = real(1.0)/(real(2.0f)*sin(minAngle));
-			real maxB = b;
-			int worst = -1; 
-
-			for (uint32_t i=0; i < triangles.size(); ++i)
-			{
-				const Triangle& t = triangles[i];
-
-				Vec2r c = t.mCircumCenter;
-		
-				//if (!TestVisiblity(c, t))
-				if (!ContainsPoint(c))
-					continue;
-					
-				// calculate ratio of circumradius to shortest edge
-				real minEdgeLength = FLT_MAX;
-
-				for (uint32_t e=0; e < 3; ++e)
-				{
-					Vec2r p = vertices[t.mVertices[e]];
-					Vec2r q = vertices[t.mVertices[(e+1)%3]];
-
-					minEdgeLength = min(minEdgeLength, Length(p-q));
-				}
-
-				real r = t.mCircumRadius / minEdgeLength;
-				
-				if (r > maxB)
-				{
-					maxB = r;
-					worst = i;
-					return i;
-				}
-	
-				
-				Vec2r u= vertices[t.mVertices[0]];
-				Vec2r v = vertices[t.mVertices[1]];
-				Vec2r w = vertices[t.mVertices[2]];
-				
-				if (TriArea(u, v, w) > maxArea)
-					return i;				
-					
-			}
-		
-			return worst;
 		}
 
 		bool Valid()
@@ -415,14 +251,13 @@ namespace
 
 
 // iterative optimisation algoirthm based on Variational Tetrahedral Meshing 
-void TriangulateVariational(const Vec2* inPoints, uint32_t numPoints, const Vec2* bPoints, uint32_t numBPoints, vector<Vec2>& outPoints, vector<uint32_t>& outTris)
+void TriangulateVariational(const Vec2* inPoints, uint32_t numPoints, const Vec2* bPoints, uint32_t numBPoints, uint32_t iterations, vector<Vec2>& outPoints, vector<uint32_t>& outTris)
 {
 	vector<Vec2r> points(inPoints, inPoints+numPoints);
 	vector<real> weights;
 	
 	Triangulation mesh;
 
-	const uint32_t iterations = 10;
 	for (uint32_t k=0; k < iterations; ++k)
 	{
 		mesh = Triangulation(&points[0], numPoints);
