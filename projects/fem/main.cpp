@@ -50,6 +50,7 @@ vector<Vec2>	 gUVs;
 uint32_t gExtra = 1;
 GLuint gTexture;
 bool gShowTexture = false;
+float gTimeStep = 1.0f/60.0f;
 
 vector<Vec2>	gBounds;
 
@@ -229,14 +230,14 @@ void Init()
 	/* Image */
 	if (1)
 	{
-		gSubsteps = 50;
+		gSubsteps = 20;
 
-		gSceneParams.mLameLambda = 49000.0f;
-		gSceneParams.mLameMu = 49000.0f;
-		gSceneParams.mDamping = 80.0f;
+		gSceneParams.mLameLambda = 79000.0f;
+		gSceneParams.mLameMu = 79000.0f;
+		gSceneParams.mDamping = 180.0f;
 		gSceneParams.mDrag = 0.1f;
 		gSceneParams.mFriction = 0.5f;
-		gSceneParams.mToughness = 0.0f;//40000.0f;
+		gSceneParams.mToughness =40000.0f;
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
@@ -244,7 +245,7 @@ void Init()
 		//gViewWidth = 10.0f;
 
 		TgaImage img;
-		TgaLoad("armadillo.tga", img);
+		TgaLoad("donut1.tga", img);
 		
 		gTexture = CreateTexture(img.m_width, img.m_height, img.m_data);
 
@@ -252,12 +253,11 @@ void Init()
 		vector<Vec2> bpoints;
 
 		// controls how finely the object is sampled
-		const float resolution = 0.08f;
+		const float resolution = 0.05f;
 		const float scale = 2.0f;
 		const float density = 140.5f;
-	
 		const float aspect = float(img.m_height)/img.m_width;
-	
+
 		const uint32_t inc = img.m_width*resolution;
 		const uint32_t margin = max((inc-1)/2, 1U);
 
@@ -372,7 +372,7 @@ void Init()
 		vector<Vec2> torusPoints;
 		vector<uint32_t> torusIndices;
 
-		CreateTorus(torusPoints, torusIndices, 0.2f, 0.5f, 12);
+		CreateDonut(torusPoints, torusIndices, 0.2f, 0.5f, 12);
 	
 		for (size_t i=0; i < torusPoints.size(); ++i)
 			gParticles.push_back(Particle(torusPoints[i], 1.0f));
@@ -438,7 +438,7 @@ void Modify(float dt)
 
 void Update()
 {
-	float dt = 1.0f/60.0f;
+	float dt = gTimeStep;//1.0f/60.0f;
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -642,6 +642,11 @@ void GLUTMouseFunc(int b, int state, int x, int y)
 
 void GLUTKeyboardDown(unsigned char key, int x, int y)
 {
+	if (key > '0' && key < '9')
+	{
+		gTimeStep = 1.0f/(60.0f*(key-'0'));
+	}
+
 	switch (key)
 	{
 		case 'w':

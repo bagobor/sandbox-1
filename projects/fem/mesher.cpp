@@ -396,7 +396,7 @@ void TriangulateDelaunay(const Vec2* points, uint32_t numPoints, vector<Vec2>& o
 }
 
 
-void CreateTorus(std::vector<Vec2>& points, std::vector<uint32_t>& indices, float inner, float outer, uint32_t segments)
+void CreateDonut(std::vector<Vec2>& points, std::vector<uint32_t>& indices, float inner, float outer, uint32_t segments)
 {
 	assert(inner < outer);
 
