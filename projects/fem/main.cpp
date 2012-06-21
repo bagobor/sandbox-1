@@ -13,13 +13,6 @@
 #include <vector>
 #include <stdint.h>
 
-
-// TODO:
-//
-// 1. Implement a 2D triangle based FEM based simulation with explicit integration using Green's non-linear strain measure
-// 2. If stability is a problem then experiment with linear strain measures and implicit integration
-// 3. 
-
 using namespace std;
 using namespace fem;
 
@@ -51,6 +44,8 @@ uint32_t gExtra = 1;
 GLuint gTexture;
 bool gShowTexture = false;
 float gTimeStep = 1.0f/60.0f;
+uint32_t gImageIndex = 0;
+uint32_t gNumImages = 4;
 
 vector<Vec2>	gBounds;
 
@@ -127,6 +122,7 @@ void Init()
 	gParticles.resize(0);
 	gTriangles.resize(0);
 	gPlanes.resize(0);
+	gUVs.resize(0);
 
 	/* Single Tri */
 
@@ -230,22 +226,30 @@ void Init()
 	/* Image */
 	if (1)
 	{
-		gSubsteps = 20;
+		gSubsteps = 50;
 
-		gSceneParams.mLameLambda = 79000.0f;
-		gSceneParams.mLameMu = 79000.0f;
+		gSceneParams.mLameLambda = 59000.0f;
+		gSceneParams.mLameMu = 59000.0f;
 		gSceneParams.mDamping = 180.0f;
 		gSceneParams.mDrag = 0.1f;
 		gSceneParams.mFriction = 0.5f;
-		gSceneParams.mToughness =40000.0f;
+		gSceneParams.mToughness = 0.0f;//40000.0f;
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
 		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
 
-		//gViewWidth = 10.0f;
+		gViewWidth = 10.0f;
+
+		const char* images[] = 
+		{
+			"armadillo.tga",
+			"bunny.tga",
+			"donut1.tga",
+			"donut2.tga"
+		};
 
 		TgaImage img;
-		TgaLoad("donut1.tga", img);
+		TgaLoad(images[gImageIndex], img);
 		
 		gTexture = CreateTexture(img.m_width, img.m_height, img.m_data);
 
@@ -253,7 +257,7 @@ void Init()
 		vector<Vec2> bpoints;
 
 		// controls how finely the object is sampled
-		const float resolution = 0.05f;
+		const float resolution = 0.08f;
 		const float scale = 2.0f;
 		const float density = 140.5f;
 		const float aspect = float(img.m_height)/img.m_width;
@@ -440,6 +444,8 @@ void Update()
 {
 	float dt = gTimeStep;//1.0f/60.0f;
 
+	glViewport(0, 0, gWidth, gHeight);
+
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
@@ -558,6 +564,7 @@ void Update()
 	glEnd();
 
 	// forces
+	/*
 	glBegin(GL_LINES);
 	glColor3f(1.0f, 0.0f, 0.0f);
 
@@ -569,7 +576,9 @@ void Update()
 		glVertex2fv(gParticles[i].p + gParticles[i].f*s);
 	}
 	glEnd();
+	*/
 	}
+
 
 	if (gShowTexture)
 		glDisable(GL_TEXTURE_2D);
@@ -599,9 +608,14 @@ void Update()
 
 	DrawString(x, y, "Lambda: %.2f", gSceneParams.mLameLambda); y += 13;
 	DrawString(x, y, "Mu: %.2f", gSceneParams.mLameMu); y += 13;
-	DrawString(x, y, "Toughness: %.2f", gSceneParams.mToughness); y += 13;
+	DrawString(x, y, "Toughness: %.2f", gSceneParams.mToughness); y += 26;
 
-	
+	DrawString(x, y, "b: Texture on/off"); y += 13;
+	DrawString(x, y, "p: Pause"); y += 13;
+	DrawString(x, y, "space: Step"); y += 13;
+	DrawString(x, y, "1-9: Slow-mo"); y += 13;
+	DrawString(x, y, "F1-F4: Change model"); y += 13;
+		
 	glutSwapBuffers();
 }
 
@@ -642,7 +656,7 @@ void GLUTMouseFunc(int b, int state, int x, int y)
 
 void GLUTKeyboardDown(unsigned char key, int x, int y)
 {
-	if (key > '0' && key < '9')
+	if (key > '0' && key <= '9')
 	{
 		gTimeStep = 1.0f/(60.0f*(key-'0'));
 	}
@@ -756,6 +770,13 @@ void GLUTKeyboardUp(unsigned char key, int x, int y)
 	};
 }
 
+void GLUTReshape(int x, int y)
+{
+	gWidth = x;
+	gHeight = y;
+	gViewAspect = gHeight/float(gWidth);
+}
+
 void GLUTMotionFunc(int x, int y)
 {	
 //	int dx = x-lastx;
@@ -766,6 +787,13 @@ void GLUTMotionFunc(int x, int y)
 	
 	gMousePos = RasterToScene(x, y);
 }
+
+void GLUTSpecialFunc(int key, int x, int y)
+{
+	gImageIndex = min(uint32_t(key-GLUT_KEY_F1), gNumImages-1);
+	Init();
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -789,15 +817,9 @@ int main(int argc, char* argv[])
 	glutMotionFunc(GLUTMotionFunc);
 	glutKeyboardFunc(GLUTKeyboardDown);
 	glutKeyboardUpFunc(GLUTKeyboardUp);
-/*	
-
 	glutReshapeFunc(GLUTReshape);
-	glutDisplayFunc(GLUTUpdate);
-   
-	glutSpecialFunc(GLUTArrowKeys);
-	glutSpecialUpFunc(GLUTArrowKeysUp);
+	glutSpecialFunc(GLUTSpecialFunc);
 
-*/
 #if __APPLE__
 	int swap_interval = 1;
 	CGLContextObj cgl_context = CGLGetCurrentContext();
