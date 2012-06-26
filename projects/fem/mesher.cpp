@@ -40,6 +40,28 @@ namespace
 		return true;
 	}
 
+	real TriangleQuality(Vec2r t[3])
+	{
+		Vec2r c;
+		real r;
+		CalculateCircumcircle(t[0], t[1], t[2], c, r);
+
+		// calculate ratio of circumradius to shortest edge
+		real minEdgeLength = FLT_MAX;
+
+		for (uint32_t e=0; e < 3; ++e)
+		{
+			Vec2r p = t[e];
+			Vec2r q = t[(e+1)%3];
+
+			minEdgeLength = min(minEdgeLength, Length(p-q));
+		}
+
+		real q = r / minEdgeLength;
+
+		return q;	
+	}
+
 	struct Edge
 	{
 		Edge() {};
@@ -298,7 +320,7 @@ void TriangulateVariational(const Vec2* inPoints, uint32_t numPoints, const Vec2
 		{
 			const Triangle& t = mesh.triangles[i];
 			
-			// throw away tris connected to the initial bounding box 
+			// ignore tris connected to the initial bounding box 
 			if (t.mVertices[0] < 3 || t.mVertices[1] < 3 || t.mVertices[2] < 3)
 				continue;
 		

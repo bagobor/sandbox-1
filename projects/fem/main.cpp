@@ -16,8 +16,8 @@
 using namespace std;
 using namespace fem;
 
-int gWidth = 800;
-int gHeight = 600;
+int gWidth = 640;
+int gHeight = 480;
 
 float gViewLeft = -2.0f;
 float gViewBottom = -1.0f;
@@ -60,9 +60,8 @@ GLuint CreateTexture(uint32_t width, uint32_t height, void* data)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//_MIPMAP_LINEAR);
-	///glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);		
+	
 	glVerify(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
-	//glGenerateMipmapEXT(GL_TEXTURE_2D);
 
 	return id;
 }
@@ -111,6 +110,36 @@ bool EdgeDetect(const TgaImage& img, int cx, int cy)
 		return true;
 
 	return false;
+}
+
+void DumpToMathematica(Vec2* points, uint32_t numPoints, uint32_t* triangles, uint32_t numTriangles)
+{
+	printf("points: %d triangles %d\n", numPoints, numTriangles);
+
+	printf("points = {\n");
+	for (uint32_t i=0; i < numPoints; ++i)
+	{
+		printf("{%f, %f}", points[i].x, points[i].y);
+	
+		if (i < numPoints-1)
+			printf(",\n");
+		else
+			printf("};\n");
+	}
+
+	printf("tris = {\n");
+	for (uint32_t i=0; i < numTriangles*3; i+=3)
+	{
+		printf("{ {%f, %f}, {%f, %f}, {%f, %f} }",
+			points[triangles[i+0]].x, points[triangles[i+0]].y,
+			points[triangles[i+1]].x, points[triangles[i+1]].y,
+			points[triangles[i+2]].x, points[triangles[i+2]].y);
+
+		if (i < numTriangles*3-3)
+			printf(",\n");
+		else
+			printf("};\n");
+	}
 }
 
 void Init()
@@ -226,19 +255,20 @@ void Init()
 	/* Image */
 	if (1)
 	{
-		gSubsteps = 50;
+		gSubsteps = 80;
 
-		gSceneParams.mLameLambda = 59000.0f;
-		gSceneParams.mLameMu = 59000.0f;
-		gSceneParams.mDamping = 180.0f;
+		gSceneParams.mLameLambda = 42000.0f;
+		gSceneParams.mLameMu = 42000.0f;
+		gSceneParams.mDamping = 250.0f;
 		gSceneParams.mDrag = 0.1f;
-		gSceneParams.mFriction = 0.5f;
+		gSceneParams.mFriction = 0.8f;
 		gSceneParams.mToughness = 0.0f;//40000.0f;
 
-		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
-		gPlanes.push_back(Vec3(1.0f, 0.0, 1.2f));
+		gPlanes.push_back(Vec3(0.0f, 1.0, 0.8f));
+		gPlanes.push_back(Vec3(1.0f, 0.0, 1.8f));
+		gPlanes.push_back(Vec3(-1.0f, 0.0, 2.8f));
 
-		gViewWidth = 10.0f;
+		gViewWidth = 5.0f;
 
 		const char* images[] = 
 		{
@@ -297,7 +327,7 @@ void Init()
 
 		
 		// triangulate
-		const uint32_t iterations = 10;
+		const uint32_t iterations = 7;
 
 		vector<uint32_t> tris;
 		TriangulateVariational(&points[0], points.size(), &bpoints[0], bpoints.size(), iterations, points, tris);
@@ -321,6 +351,8 @@ void Init()
 			else
 				i += 3;
 		}
+		//DumpToMathematica(&points[0], points.size(), &tris[0], tris.size()/3);
+		//tris.clear();
 
 		// generate particles
 		for (uint32_t i=0; i < points.size(); ++i)
@@ -481,6 +513,12 @@ void Update()
 		gStep = false;
 	}
 	
+	glEnable (GL_LINE_SMOOTH);
+	glEnable (GL_BLEND);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+	glLineWidth (1.0);	
+
 	// planes
 	glBegin(GL_LINES);
 	glColor3f(0.0f, 0.0f, 1.0f);
@@ -495,6 +533,21 @@ void Update()
 	}
 
 	glEnd();
+
+	// mouse spring
+	if (gMouseIndex != -1)
+	{
+		glBegin(GL_LINES);
+		glColor3f(1.0f, 0.0f, 0.0f);
+		glVertex2fv(gMousePos);
+		glVertex2fv(gParticles[gMouseIndex].p);
+		glEnd();
+
+		glBegin(GL_POINTS);
+		glColor3f(1.0f, 1.0f, 0.0f);
+		glVertex2fv(gMousePos);
+		glEnd();
+	}
 	
 	// tris
 	if (gTexture && gShowTexture)
@@ -510,7 +563,6 @@ void Update()
 	{
 		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		glDisable(GL_TEXTURE_2D);
-		glDisable(GL_BLEND);
 	}
 
 	glDisable(GL_CULL_FACE);
@@ -559,7 +611,6 @@ void Update()
 	{
 		glVertex2fv(gBounds[i]);
 	}
-	
 
 	glEnd();
 
@@ -584,16 +635,6 @@ void Update()
 		glDisable(GL_TEXTURE_2D);
 
 
-	// mouse spring
-	if (gMouseIndex != -1)
-	{
-		glBegin(GL_LINES);
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glVertex2fv(gMousePos);
-		glVertex2fv(gParticles[gMouseIndex].p);
-		glEnd();
-	}
-	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glMatrixMode(GL_PROJECTION);
@@ -604,19 +645,40 @@ void Update()
 	int y = 15;
 	
 	glColor3f(1.0f, 1.0f, 1.0f);
-	DrawString(x, y, "Time: %.2fms", float(elapsedTime)*1000.0f); y += 13;
 
-	DrawString(x, y, "Lambda: %.2f", gSceneParams.mLameLambda); y += 13;
-	DrawString(x, y, "Mu: %.2f", gSceneParams.mLameMu); y += 13;
-	DrawString(x, y, "Toughness: %.2f", gSceneParams.mToughness); y += 26;
+	if (1)
+	{
+		DrawString(x, y, "Time: %.2fms", float(elapsedTime)*1000.0f); y += 13;
 
-	DrawString(x, y, "b: Texture on/off"); y += 13;
-	DrawString(x, y, "p: Pause"); y += 13;
-	DrawString(x, y, "space: Step"); y += 13;
-	DrawString(x, y, "1-9: Slow-mo"); y += 13;
-	DrawString(x, y, "F1-F4: Change model"); y += 13;
-		
+		DrawString(x, y, "Lambda: %.2f", gSceneParams.mLameLambda); y += 13;
+		DrawString(x, y, "Mu: %.2f", gSceneParams.mLameMu); y += 13;
+		DrawString(x, y, "Toughness: %.2f", gSceneParams.mToughness); y += 26;
+
+		DrawString(x, y, "b: Texture on/off"); y += 13;
+		DrawString(x, y, "p: Pause"); y += 13;
+		DrawString(x, y, "space: Step"); y += 13;
+		DrawString(x, y, "1-9: Slow-mo"); y += 13;
+		DrawString(x, y, "F1-F4: Change model"); y += 13;
+	}
+
 	glutSwapBuffers();
+
+	if (0)
+	{	
+		static int i=0;
+		char buffer[255];
+		sprintf(buffer, "dump/frame%d.tga", ++i);
+			
+		TgaImage img;
+		img.m_width = gWidth;
+		img.m_height = gHeight;
+		img.m_data = new uint32_t[gWidth*gHeight];
+			
+		glReadPixels(0, 0, gWidth, gHeight, GL_RGBA, GL_UNSIGNED_BYTE, img.m_data);
+			
+		TgaSave(buffer, img);
+	}
+
 }
 
 Vec2 RasterToScene(int x, int y)
