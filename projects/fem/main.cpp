@@ -16,8 +16,8 @@
 using namespace std;
 using namespace fem;
 
-int gWidth = 640;
-int gHeight = 480;
+int gWidth = 800;
+int gHeight = 600;
 
 float gViewLeft = -2.0f;
 float gViewBottom = -1.0f;
@@ -351,13 +351,13 @@ void Init()
 			else
 				i += 3;
 		}
+		
 		//DumpToMathematica(&points[0], points.size(), &tris[0], tris.size()/3);
 		//tris.clear();
 
 		// generate particles
 		for (uint32_t i=0; i < points.size(); ++i)
 		{
-			// todo: mass based on connected element area
 			gParticles.push_back(Particle(points[i]*Vec2(scale, scale*aspect), 0.0f));
 
 			gUVs.push_back(points[i]);

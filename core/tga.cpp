@@ -70,12 +70,11 @@ bool TgaSave(const char* filename, const TgaImage& image)
 		texel* t = (texel*)image.m_data;
 		for (int i=0; i < image.m_width*image.m_height; ++i)
 		{
-			//texel tmp = t[i];
-			//swap(tmp.u8[0], tmp.u8[2]);
-			swap(t[i].u8[0], t[i].u8[2]);
+			texel tmp = t[i];
+			swap(tmp.u8[0], tmp.u8[2]);
+			fwrite(&tmp.u32, 1, 4, f);
 		}
 			 
-		fwrite(t, 1, image.m_width*image.m_height*4, f);
 		fclose(f); 
 
 		return true;
