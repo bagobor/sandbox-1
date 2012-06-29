@@ -656,6 +656,8 @@ void Update()
 
 		DrawString(x, y, "b: Texture on/off"); y += 13;
 		DrawString(x, y, "p: Pause"); y += 13;
+		DrawString(x, y, "u,j: Mu"); y += 13;
+		DrawString(x, y, "i,k: Lambda"); y += 13;
 		DrawString(x, y, "space: Step"); y += 13;
 		DrawString(x, y, "1-9: Slow-mo"); y += 13;
 		DrawString(x, y, "F1-F4: Change model"); y += 13;
@@ -741,34 +743,26 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		{
 			break;
 		}
-		case 't':
-		{
-			gSceneParams.mToughness += 100.0f;
-			break;
-		}
-		case 'g':
-		{
-			gSceneParams.mToughness -= 100.0f;
-			break;
-		}
 		case 'u':
 		{
-			gSceneParams.mLameMu += 100.0f;
+			gSceneParams.mLameMu += 1000.0f;
 			break;
 		}
 		case 'j':
 		{
-			gSceneParams.mLameMu -= 100.0f;
+			gSceneParams.mLameMu -= 1000.0f;
+			gSceneParams.mLameMu = max(1000.0f, gSceneParams.mLameMu);
 			break;
 		}
 		case 'i':
 		{
-			gSceneParams.mLameLambda += 100.0f;
+			gSceneParams.mLameLambda += 1000.0f;
 			break;
 		}
 		case 'k':
 		{
-			gSceneParams.mLameLambda -= 100.0f;
+			gSceneParams.mLameLambda -= 1000.0f;
+			gSceneParams.mLameLambda = max(1000.0f, gSceneParams.mLameLambda);
 			break;
 		}
 		case 'p':
