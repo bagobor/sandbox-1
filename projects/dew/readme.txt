@@ -35,4 +35,4 @@ l - Decrease path thickness
 
 b - Show wirefame 
 n - Show normals
-
+y - Export mesh at current frame to dew.obj
