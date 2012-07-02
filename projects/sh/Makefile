@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 CC = g++
 
-CFLAGS = -g -Wall -I"../.."
+CFLAGS = -g -Wall -I"../.." -D_DEBUG
 LDFLAGS = -g -framework GLUT -framework OpenGL -framework Cocoa
 
 TARGET  = SHTest 

@@ -157,7 +157,24 @@ namespace
 			vertices.push_back(p);
 
 #if DEBUG_PRINT
-			printf("tris = {\n");
+
+			printf("circles = {\n");
+
+			for (uint32_t j=0; j < triangles.size(); ++j)
+			{
+				const Triangle& t = triangles[j];
+
+				Vec2r a = vertices[t.mVertices[0]];
+				Vec2r b = vertices[t.mVertices[1]];
+				Vec2r c = vertices[t.mVertices[2]];
+
+				if (Length(t.mCircumCenter-p) < t.mCircumRadius)
+				{
+					printf("{ { %f, %f }, %f}\n", t.mCircumCenter.x, t.mCircumCenter.y, t.mCircumRadius);
+				}
+			}
+		
+			printf("}\ntris = {\n");
 #endif
 
 			// find all triangles for which inserting this point would
@@ -171,7 +188,9 @@ namespace
 					Vec2r b = vertices[t.mVertices[1]];
 					Vec2r c = vertices[t.mVertices[2]];
 #if DEBUG_PRINT
-					printf("{{%f, %f}, {%f, %f}, {%f, %f}},\n",a.x, a.y, b.x, b.y, c.x, c.y); 
+					if (t.mVertices[0] > 2 && t.mVertices[1] > 2 && t.mVertices[2] > 2)
+						printf("{{%f, %f}, {%f, %f}, {%f, %f}},\n",a.x, a.y, b.x, b.y, c.x, c.y); 
+
 #endif
 
 				if (Length(t.mCircumCenter-p) < t.mCircumRadius)
@@ -204,6 +223,7 @@ namespace
 
 			for (uint32_t e=0; e < edges.size(); ++e)
 			{
+				if (edges[e][0] > 2 && edges[e][1] > 2)
 				printf("{{%f, %f}, {%f, %f}},\n",
 					vertices[edges[e][0]].x, vertices[edges[e][0]].y,
 				vertices[edges[e][1]].x, vertices[edges[e][1]].y);

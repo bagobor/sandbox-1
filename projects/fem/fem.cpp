@@ -12,15 +12,12 @@
 // Todo List
 // --------- 
 //
-// * Fracturing based on Eigenvalues of deformation gradient
-// * Semi-implicit solver 
+// * Implicit solver 
 // * Amortized polar decomposition / SVD if possible 
 // * Plasticity model
-// * Barycentric skinning of a graphics mesh
 // * Stress averaging, temporal and spatial
-// * Delaunay triangulation 
-// * Image based shape generation
 // * CUDA implementation
+// * Self-collision
 
 using namespace std;
 
@@ -34,45 +31,6 @@ void Print(const Matrix22& m)
 	printf("%f, %f\n", m(0,0), m(0, 1));
 	printf("%f, %f\n", m(1,0), m(1, 1));
 }	
-
-struct Edge
-{
-	Edge() {}
-	Edge(uint32_t v0, uint32_t v1)
-	{
-		mVertices[0] = min(v0, v1);
-		mVertices[1] = max(v0, v1);
-
-		mTriangles[0] = kInvalidIndex;
-		mTriangles[1] = kInvalidIndex;
-	}
-
-	bool operator < (const Edge& rhs) const
-	{
-		if (mVertices[0] == rhs.mVertices[0])
-			return mVertices[1] < rhs.mVertices[1];	
-		else
-			return mVertices[0] < rhs.mVertices[0];
-	}
-
-	void AddTri(uint32_t t)
-	{
-		for (uint32_t i=0; i < 2; ++i)
-		{
-			if (mTriangles[i] == kInvalidIndex)
-			{
-				mTriangles[i] = t;
-				return;
-			}
-		}
-
-		// non-manifold mesh
-		assert(0);
-	}
-
-	uint32_t mVertices[2];
-	uint32_t mTriangles[2];
-};
 
 struct Element
 {
@@ -92,31 +50,10 @@ struct Element
 		mB[0] = PerpCCW(e3);
 		mB[1] = PerpCW(e2);
 		mB[2] = PerpCCW(e1);
-
-		mEdges[0] = kInvalidIndex;
-		mEdges[1] = kInvalidIndex;
-		mEdges[2] = kInvalidIndex;
-	}
-
-	void AddEdge(uint32_t e)
-	{
-		for (uint32_t i=0; i < 3; ++i)
-		{
-			if (mEdges[i] == kInvalidIndex)
-			{
-				mEdges[i] = e;
-				return;
-			}
-		}	
-
-		// non-manifold	
-		assert(0);
 	}
 
 	Matrix22 mInvDm; // inverse rest configuration
 	Vec2 mB[3];		 // area weighted normals in material space
-
-	uint32_t mEdges[3];
 };
 
 struct FractureEvent
@@ -607,9 +544,6 @@ Scene* CreateScene(
 	Scene* scene = new Scene();
 
 	scene->mElements.reserve(numTriangles);
-
-	// sorted array of edges
-	set<Edge> edges;
 
 	// calculate inverse of the initial configuration
 	for (uint32_t i=0; i < numTriangles; ++i)

@@ -266,7 +266,7 @@ Mesh* ImportMeshFromObj(const char* path)
     while (file)
     {
         file >> buffer;
-
+	
         if (strcmp(buffer, "vn") == 0)
         {
             // normals
@@ -321,62 +321,67 @@ Mesh* ImportMeshFromObj(const char* path)
 
                 file >> key.v;
 
-                // failed to read another index continue on
-                if (file.fail() && !file.eof())
-                {
-                    file.clear();
-                    break;
-                }
+				if (!file.eof())
+				{
+					// failed to read another index continue on
+					if (file.fail())
+					{
+						file.clear();
+						break;
+					}
 
-                if (file.peek() == '/')
-                {
-                    file.ignore();
+					if (file.peek() == '/')
+					{
+						file.ignore();
 
-                    if (file.peek() != '/')
-                    {
-                        file >> key.vt;
-                    }
+						if (file.peek() != '/')
+						{
+							file >> key.vt;
+						}
 
-                    if (file.peek() == '/')
-                    {
-                        file.ignore();
-                        file >> key.vn;
-                    }
-                }
+						if (file.peek() == '/')
+						{
+							file.ignore();
+							file >> key.vn;
+						}
+					}
 
-                // find / add vertex, index
-                VertexMap::iterator iter = vertexLookup.find(key);
+					// find / add vertex, index
+					VertexMap::iterator iter = vertexLookup.find(key);
 
-                if (iter != vertexLookup.end())
-                {
-                    faceIndices[faceIndexCount++] = iter->second;
-                }
-                else
-                {
-                    // add vertex
-                    uint32_t newIndex = m->m_positions.size();
-                    faceIndices[faceIndexCount++] = newIndex;
+					if (iter != vertexLookup.end())
+					{
+						faceIndices[faceIndexCount++] = iter->second;
+					}
+					else
+					{
+						// add vertex
+						uint32_t newIndex = m->m_positions.size();
+						faceIndices[faceIndexCount++] = newIndex;
 
-                    vertexLookup.insert(make_pair(key, newIndex)); 	
+						vertexLookup.insert(make_pair(key, newIndex)); 	
 
-                    // push back vertex data
-                    m->m_positions.push_back(positions[key.v-1]);
-                    
-                    // obj format doesn't support mesh colours so add default value
-                    m->m_colours.push_back(Colour(1.0f, 1.0f, 1.0f));
+						// push back vertex data
+						assert(key.v > 0);
 
-                    // normal [optional]
-                    if (key.vn)
-                    {
-                        m->m_normals.push_back(normals[key.vn-1]);
-                    }
+						m->m_positions.push_back(positions[key.v-1]);
+						
+						// obj format doesn't support mesh colours so add default value
+						m->m_colours.push_back(Colour(1.0f, 1.0f, 1.0f));
 
-                    // texcoord [optional]
-                    if (key.vt)
-                    {
-                        m->m_texcoords[0].push_back(texcoords[key.vt-1]);
-                    }
-                }
+						// normal [optional]
+						if (key.vn)
+						{
+							m->m_normals.push_back(normals[key.vn-1]);
+						}
+
+						// texcoord [optional]
+						if (key.vt)
+						{
+							m->m_texcoords[0].push_back(texcoords[key.vt-1]);
+						}
+					}
+				}
             }
 
             if (faceIndexCount == 3)
@@ -436,6 +441,48 @@ Mesh* ImportMeshFromObj(const char* path)
     //cout << "Imported mesh " << path << " in " << (GetSeconds()-startTime)*1000.f << "ms" << endl;
 
     return m;
+}
+
+void ExportToObj(const char* path, const Mesh& m)
+{
+	ofstream file(path);
+
+    if (!file)
+        return;
+
+	file << "# positions" << endl;
+
+	for (uint32_t i=0; i < m.m_positions.size(); ++i)
+	{
+		Point3 v = m.m_positions[i];
+		file << "v " << v.x << " " << v.y << " " << v.z << endl;
+	}
+
+	file << "# texcoords" << endl;
+
+	for (uint32_t i=0; i < m.m_texcoords[0].size(); ++i)
+	{
+		Vec2 t = m.m_texcoords[0][i];
+		file << "vt " << t.x << " " << t.y << endl;
+	}
+
+	file << "# normals" << endl;
+
+	for (uint32_t i=0; i < m.m_normals.size(); ++i)
+	{
+		Vec3 n = m.m_normals[0][i];
+		file << "vn " << n.x << " " << n.y << " " << n.z << endl;
+	}
+
+	file << "# faces" << endl;
+
+	for (uint32_t i=0; i < m.m_indices.size()/3; ++i)
+	{
+		uint32_t j = i+1;
+
+		// no sharing, assumes there is a unique position, texcoord and normal for each vertex
+		file << "f " << j << "/" << j << "/" << j << endl;
+	}
 }
 
 void Mesh::AddMesh(Mesh& m)

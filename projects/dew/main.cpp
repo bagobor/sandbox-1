@@ -215,7 +215,9 @@ size_t CurrentFrame()
 
 void Init()
 {
-#if _APPLE_
+#if __APPLE__
+
+	char path[PATH_MAX];
 	uint32_t size = sizeof(path);
 	_NSGetExecutablePath(path, &size);
 
@@ -438,6 +440,7 @@ struct Tag
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);
 
+		// draw cap
 		glBegin(GL_TRIANGLE_FAN);
 
 		SquareBrush(1.f, brush);
@@ -467,6 +470,44 @@ struct Tag
 
 		glEnd();
 
+	}
+
+	void ExportToObj(const char* path)
+	{
+		FILE* f = fopen(path, "w");
+
+		if (!f)
+			return;
+
+		fprintf(f, "# %d positions\n", int(vertices.size()));
+
+		for (uint32_t i=0; i < vertices.size(); ++i)
+		{
+			Point3 p = vertices[i].position;
+			fprintf(f, "v %f %f %f\n", p.x, p.y, p.z);
+		}
+
+		fprintf(f, "# %d normals\n", int(vertices.size()));
+
+		for (uint32_t i=0; i < vertices.size(); ++i)
+		{
+			Vec3 n = vertices[i].normal;
+			fprintf(f, "vn %f %f %f\n", n.x, n.y, n.z);
+		}
+
+		fprintf(f, "# %d faces\n", int(indices.size()/3));
+
+		for (uint32_t t=0; t < indices.size(); t+=3)
+		{
+			// obj is 1 based
+			uint32_t i = indices[t+0]+1;
+			uint32_t j = indices[t+1]+1;
+			uint32_t k = indices[t+2]+1;
+
+			fprintf(f, "f %d//%d %d//%d %d//%d\n", i, i, j, j, k, k); 
+		}	
+
+		fclose(f);
 	}
 
 	void Clear()
@@ -603,8 +644,6 @@ void Advance(float dt)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-float g_dt;
-
 void Update()
 {
 	const float dt = 1.0f/60.0f;
@@ -676,6 +715,8 @@ void Update()
 
 	glutSwapBuffers();
 
+	/* enable to dump frames for video
+	
 	static int i=0;
 	char buffer[255];
 	sprintf(buffer, "dump/frame%d.tga", ++i);
@@ -690,7 +731,7 @@ void Update()
 	TgaSave(buffer, img);
 		
 	delete[] img.m_data;
-
+	*/
 }
 
 int lastx = 0;
@@ -795,6 +836,21 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		case 'g':
 		{
 			gFreeCam = !gFreeCam;
+			break;
+		}
+		case 'y':
+		{
+			Tag tag;
+
+			// build tag mesh
+			for (size_t i=0; i < CurrentFrame(); ++i)
+			{
+				Matrix44 m = TranslationMatrix(Point3(gFrames[i].pos));
+				tag.PushSample(0.0f, m); 
+			}
+
+			// export
+			tag.ExportToObj("dew.obj");	
 			break;
 		}
 		case 27:
