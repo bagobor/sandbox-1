@@ -207,15 +207,14 @@ void ShowMatrix(const Matrix22& p, const Matrix22& q, Vec2 c)
 	float e1, e2;
 	EigenDecompose(p, e1, e2);
 
-	DrawString(0, 0, "%f %f", e1, e2);
+	DrawString(0, -1, "%f %f", e1, e2);
 
 	// calculate Eigenvectors
-	Vec2 ev1 = q*e1*0.0001f*(Vec2(p(0,1), e1-p(0,0)));
-	Vec2 ev2 = q*e2*0.0001f*(Vec2(e2-p(1,1), p(0,1)));
+	Vec2 ev1 = q*Normalize(Vec2(p(0,1), e1-p(0,0)));
+	Vec2 ev2 = q*Normalize(Vec2(e2-p(1,1), p(0,1)));
 
-	DrawString(1, 1, "%f %f %f %f", p(0,0), p(0,1), p(1,0), p(1,1));
-
-	DrawString(0, 1.5, "%f", Dot(p*ev2, ev2));
+	//DrawString(1, 1, "%f %f %f %f", p(0,0), p(0,1), p(1,0), p(1,1));
+	//DrawString(0, 1.5, "%f", Dot(p*ev2, ev2));
 
 	glBegin(GL_LINES);
 	glColor3f(1.0f, 0.0f, 0.0f);
@@ -451,11 +450,14 @@ uint32_t UpdateForces(Particle* particles, uint32_t numParticles,
 			Matrix22 dsdt = CalcStressTensor(dedt, damp, damp);
 
 			Matrix22 p = s + dsdt;
-
-				
-			//Vec2 c = (x[0]+x[1]+x[2])/3.0f;
-			//ShowMatrix(p, q, c);
-				
+			
+			static int z = 0;
+		   	if (1)
+			{	
+				Vec2 c = (x[0]+x[1]+x[2])/3.0f;
+				ShowMatrix(e, q, c);
+			}
+			++z;	
 			
 			float e1, e2;
 			EigenDecompose(p, e1, e2);

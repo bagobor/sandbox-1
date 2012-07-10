@@ -196,6 +196,7 @@ T SafeNormalize(const T& v, const T& fallback=T())
 #include "vec4.h"
 #include "point3.h"
 #include "mat22.h"
+#include "mat33.h"
 #include "mat44.h"
 
 // represents a plane in the form ax + by + cz - d = 0

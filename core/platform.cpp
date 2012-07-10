@@ -148,6 +148,10 @@ double GetSeconds()
 
 	struct timeval time_now;
 	gettimeofday(&time_now, NULL);
+
+	if (last_idle_time.tv_usec == 0)
+		last_idle_time = time_now;
+
 	float dt = (float)(time_now.tv_sec - last_idle_time.tv_sec) + 1.0e-6*(time_now.tv_usec - last_idle_time.tv_usec);
 
 	time += dt;

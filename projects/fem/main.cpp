@@ -170,20 +170,23 @@ void Init()
 
 	/* Cantilever Beam */
 
-	if (0)
+	if (1)
 	{
 		gSubsteps = 40;
 
 		gSceneParams.mDrag = 1.0f;
-		gSceneParams.mLameLambda = 80000.0f;
-		gSceneParams.mLameMu = 80000.0f;
+		gSceneParams.mLameLambda = 1000.0f;
+		gSceneParams.mLameMu = 1000.0f;
 		gSceneParams.mDamping = 200.0f;
 		gSceneParams.mDrag = 0.0f;
 		gSceneParams.mToughness = 0.0f;//8000.0f;
 
 		const float kDim = 0.1;
 
-		for (int i=0; i < 10; ++i)
+		gViewLeft = -1.0f; 
+		gViewWidth = 2.0f;
+
+		for (int i=0; i < 2; ++i)
 		{
 			gParticles.push_back(Particle(Vec2(kDim, i*kDim), 1.0f));
 			gParticles.push_back(Particle(Vec2(0.0f, i*kDim), 1.0f));
@@ -202,8 +205,8 @@ void Init()
 		{
 			gParticles[0].invMass = 0.0f;
 			gParticles[1].invMass = 0.0f;
-			gParticles[2].invMass = 0.0f;
-			gParticles[3].invMass = 0.0f;
+		//	gParticles[2].invMass = 0.0f;
+		//	gParticles[3].invMass = 0.0f;
 		}
 
 		gPlanes.push_back(Vec3(0.0f, 1.0, 0.5f));
@@ -253,7 +256,7 @@ void Init()
 
 
 	/* Image */
-	if (1)
+	if (0)
 	{
 		gSubsteps = 80;
 
