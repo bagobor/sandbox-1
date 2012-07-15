@@ -13,12 +13,12 @@ Directory Structure:
 		dew/			- prototype for live motion captured graffiti demo
 		empty/			- base for a project 
 		fem/			- co-rotational finite element demo with fracture
-		fluid/			- implementation of Fedkiw's Visual Simulation of Smoke, particles and black-body rendering
+		fluid/			- implementation of Fedkiw's Visual Simulation of Smoke, vortexx particles and black-body rendering
 		fog/			- analytic integration of inscattering from a point light
 		gi/				- real-time point based illumination implementation
 		granular2d/		- granular materials in CUDA
 		granular3d/		- granular materials in CUDA 
-		mathematica/	- misc notebooks
+		mathematica/		- misc notebooks
 		metaballs/		- old 2d metaballs effect
 		nanoray/		- path tracer I wrote while reading PBRT
 		probeview/		- app to view Debevec format HDR light probes
