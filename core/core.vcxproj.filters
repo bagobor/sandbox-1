@@ -132,5 +132,8 @@
     <ClInclude Include="mat44.h">
       <Filter>Source Files\Math</Filter>
     </ClInclude>
+    <ClInclude Include="mat33.h">
+      <Filter>Source Files\Math</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

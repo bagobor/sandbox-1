@@ -30,6 +30,7 @@ void glAssert(const char* msg, long line, const char* file);
 
 GLuint CompileProgramFromFile(const char *vertexPath, const char *fragmentPath);
 GLuint CompileProgram(const char *vsource, const char *fsource);
+GLuint CompileProgram(const char *vsource, const char* csource, const char* esource, const char* fsource);
 
 void DrawPlane(const Vec4& p);
 void DrawString(int x, int y, const char* s, ...);

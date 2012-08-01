@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "..\..\Core\Core.vcxproj", "{81732CB7-6059-4E5C-8B57-5576137CE73D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Empty", "Empty.vcxproj", "{A7D2A448-3C70-48E6-84F5-B1CDDEDD5693}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Upsample", "Upsample.vcxproj", "{A7D2A448-3C70-48E6-84F5-B1CDDEDD5693}"
 	ProjectSection(ProjectDependencies) = postProject
 		{81732CB7-6059-4E5C-8B57-5576137CE73D} = {81732CB7-6059-4E5C-8B57-5576137CE73D}
 	EndProjectSection

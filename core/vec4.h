@@ -40,11 +40,11 @@ public:
 
 	void Set(T x_, T y_, T z_, T w_) { VEC4_VALIDATE(); x = x_; y = y_; z = z_; w = w_; }
 
-	XVector4<T> operator * (T scale) const { XVector4<T> r(*this); r *= scale; return r; VEC4_VALIDATE();}
-	XVector4<T> operator / (T scale) const { XVector4<T> r(*this); r /= scale; return r; VEC4_VALIDATE();}
-	XVector4<T> operator + (const XVector4<T>& v) const { XVector4<T> r(*this); r += v; return r; VEC4_VALIDATE();}
-	XVector4<T> operator - (const XVector4<T>& v) const { XVector4<T> r(*this); r -= v; return r; VEC4_VALIDATE();}
-	XVector4<T> operator * (XVector4<T> scale) const { XVector4<T> r(*this); r *= scale; return r; VEC4_VALIDATE();}
+	XVector4<T> operator * (T scale) const { XVector4<T> r(*this); r *= scale; VEC4_VALIDATE(); return r;}
+	XVector4<T> operator / (T scale) const { XVector4<T> r(*this); r /= scale; VEC4_VALIDATE(); return r; }
+	XVector4<T> operator + (const XVector4<T>& v) const { XVector4<T> r(*this); r += v; VEC4_VALIDATE(); return r; }
+	XVector4<T> operator - (const XVector4<T>& v) const { XVector4<T> r(*this); r -= v; VEC4_VALIDATE(); return r; }
+	XVector4<T> operator * (XVector4<T> scale) const { XVector4<T> r(*this); r *= scale; VEC4_VALIDATE(); return r; }
 
 	XVector4<T>& operator *=(T scale) {x *= scale; y *= scale; z*= scale; w*= scale; VEC4_VALIDATE(); return *this;}
 	XVector4<T>& operator /=(T scale) {T s(1.0f/scale); x *= s; y *= s; z *= s; w *=s; VEC4_VALIDATE(); return *this;}

@@ -22,39 +22,39 @@ public:
 
 	typedef T value_type;
 
-	XVector3() : x(0), y(0), z(0) {}
-	XVector3(T a) : x(a), y(a), z(a) {}
-	XVector3(const T* p) : x(p[0]), y(p[1]), z(p[2]) {}
-	XVector3(T x_, T y_, T z_) : x(x_), y(y_), z(z_) 
+	CUDA_CALLABLE XVector3() : x(0), y(0), z(0) {}
+	CUDA_CALLABLE XVector3(T a) : x(a), y(a), z(a) {}
+	CUDA_CALLABLE XVector3(const T* p) : x(p[0]), y(p[1]), z(p[2]) {}
+	CUDA_CALLABLE XVector3(T x_, T y_, T z_) : x(x_), y(y_), z(z_) 
 	{
 		VEC3_VALIDATE();
 	}
 
-	operator T* () { return &x; }
-	operator const T* () const { return &x; };
+	CUDA_CALLABLE operator T* () { return &x; }
+	CUDA_CALLABLE operator const T* () const { return &x; };
 
-	void Set(T x_, T y_, T z_) { VEC3_VALIDATE(); x = x_; y = y_; z = z_;}
+	CUDA_CALLABLE void Set(T x_, T y_, T z_) { VEC3_VALIDATE(); x = x_; y = y_; z = z_;}
 
-	XVector3<T> operator * (T scale) const { XVector3<T> r(*this); r *= scale; return r; VEC3_VALIDATE();}
-	XVector3<T> operator / (T scale) const { XVector3<T> r(*this); r /= scale; return r; VEC3_VALIDATE();}
-	XVector3<T> operator + (const XVector3<T>& v) const { XVector3<T> r(*this); r += v; return r; VEC3_VALIDATE();}
-	XVector3<T> operator - (const XVector3<T>& v) const { XVector3<T> r(*this); r -= v; return r; VEC3_VALIDATE();}
-    XVector3<T> operator /(const XVector3<T>& v) const { XVector3<T> r(*this); r /= v; return r; VEC3_VALIDATE();}
-    XVector3<T> operator *(const XVector3<T>& v) const { XVector3<T> r(*this); r *= v; return r; VEC3_VALIDATE();}
+	CUDA_CALLABLE XVector3<T> operator * (T scale) const { XVector3<T> r(*this); r *= scale; return r; VEC3_VALIDATE();}
+	CUDA_CALLABLE XVector3<T> operator / (T scale) const { XVector3<T> r(*this); r /= scale; return r; VEC3_VALIDATE();}
+	CUDA_CALLABLE XVector3<T> operator + (const XVector3<T>& v) const { XVector3<T> r(*this); r += v; return r; VEC3_VALIDATE();}
+	CUDA_CALLABLE XVector3<T> operator - (const XVector3<T>& v) const { XVector3<T> r(*this); r -= v; return r; VEC3_VALIDATE();}
+    CUDA_CALLABLE XVector3<T> operator /(const XVector3<T>& v) const { XVector3<T> r(*this); r /= v; return r; VEC3_VALIDATE();}
+    CUDA_CALLABLE XVector3<T> operator *(const XVector3<T>& v) const { XVector3<T> r(*this); r *= v; return r; VEC3_VALIDATE();}
 
-	XVector3<T>& operator *=(T scale) {x *= scale; y *= scale; z*= scale; VEC3_VALIDATE(); return *this;}
-	XVector3<T>& operator /=(T scale) {T s(1.0f/scale); x *= s; y *= s; z *= s; VEC3_VALIDATE(); return *this;}
-	XVector3<T>& operator +=(const XVector3<T>& v) {x += v.x; y += v.y; z += v.z; VEC3_VALIDATE(); return *this;}
-	XVector3<T>& operator -=(const XVector3<T>& v) {x -= v.x; y -= v.y; z -= v.z; VEC3_VALIDATE(); return *this;}
-    XVector3<T>& operator /=(const XVector3<T>& v) {x /= v.x; y /= v.y; z /= v.z; VEC3_VALIDATE(); return *this; }
-    XVector3<T>& operator *=(const XVector3<T>& v) {x *= v.x; y *= v.y; z *= v.z; VEC3_VALIDATE(); return *this; }
+	CUDA_CALLABLE XVector3<T>& operator *=(T scale) {x *= scale; y *= scale; z*= scale; VEC3_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector3<T>& operator /=(T scale) {T s(1.0f/scale); x *= s; y *= s; z *= s; VEC3_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector3<T>& operator +=(const XVector3<T>& v) {x += v.x; y += v.y; z += v.z; VEC3_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector3<T>& operator -=(const XVector3<T>& v) {x -= v.x; y -= v.y; z -= v.z; VEC3_VALIDATE(); return *this;}
+    CUDA_CALLABLE XVector3<T>& operator /=(const XVector3<T>& v) {x /= v.x; y /= v.y; z /= v.z; VEC3_VALIDATE(); return *this; }
+    CUDA_CALLABLE XVector3<T>& operator *=(const XVector3<T>& v) {x *= v.x; y *= v.y; z *= v.z; VEC3_VALIDATE(); return *this; }
 
-	bool operator != (const XVector3<T>& v) const { return (x != v.x || y != v.y || z != v.z); }
+	CUDA_CALLABLE bool operator != (const XVector3<T>& v) const { return (x != v.x || y != v.y || z != v.z); }
 
 	// negate
-	XVector3<T> operator -() const { VEC3_VALIDATE(); return XVector3<T>(-x, -y, -z); }
+	CUDA_CALLABLE XVector3<T> operator -() const { VEC3_VALIDATE(); return XVector3<T>(-x, -y, -z); }
 
-	void Validate()
+	CUDA_CALLABLE void Validate()
 	{
 		VEC3_VALIDATE();
 	}
@@ -71,7 +71,7 @@ typedef XVector3<float> Vector3;
 
 // lhs scalar scale
 template <typename T>
-XVector3<T> operator *(T lhs, const XVector3<T>& rhs)
+CUDA_CALLABLE XVector3<T> operator *(T lhs, const XVector3<T>& rhs)
 {
 	XVector3<T> r(rhs);
 	r *= lhs;
@@ -79,30 +79,30 @@ XVector3<T> operator *(T lhs, const XVector3<T>& rhs)
 }
 
 template <typename T>
-bool operator==(const XVector3<T>& lhs, const XVector3<T>& rhs)
+CUDA_CALLABLE bool operator==(const XVector3<T>& lhs, const XVector3<T>& rhs)
 {
 	return (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z);
 }
 
 template <typename T>
-typename T::value_type Dot3(const T& v1, const T& v2)
+CUDA_CALLABLE typename T::value_type Dot3(const T& v1, const T& v2)
 {
 	return v1.x * v2.x + v1.y * v2.y + v1.z*v2.z; 
 }
 
-inline float Dot3(const float* v1, const float * v2)
+CUDA_CALLABLE inline float Dot3(const float* v1, const float * v2)
 {
 	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]; 
 }
 
 
 template <typename T>
-inline T Dot(const XVector3<T>& v1, const XVector3<T>& v2)
+CUDA_CALLABLE inline T Dot(const XVector3<T>& v1, const XVector3<T>& v2)
 {
 	return Dot3(v1, v2);
 }
 
-inline Vec3 Cross(const Vec3& b, const Vec3& c)
+CUDA_CALLABLE inline Vec3 Cross(const Vec3& b, const Vec3& c)
 {
 	return Vec3(b.y*c.z - b.z*c.y,
 			    b.z*c.x - b.x*c.z,
@@ -111,13 +111,13 @@ inline Vec3 Cross(const Vec3& b, const Vec3& c)
 
 // component wise min max functions
 template <typename T>
-inline XVector3<T> Max(const XVector3<T>& a, const XVector3<T>& b)
+CUDA_CALLABLE inline XVector3<T> Max(const XVector3<T>& a, const XVector3<T>& b)
 {
 	return XVector3<T>(Max(a.x, b.x), Max(a.y, b.y), Max(a.z, b.z));
 }
 
 template <typename T>
-inline XVector3<T> Min(const XVector3<T>& a, const XVector3<T>& b)
+CUDA_CALLABLE inline XVector3<T> Min(const XVector3<T>& a, const XVector3<T>& b)
 {
 	return XVector3<T>(Min(a.x, b.x), Min(a.y, b.y), Min(a.z, b.z));
 }

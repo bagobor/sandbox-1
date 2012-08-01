@@ -24,10 +24,10 @@ public:
 
 	void Set(float x_, float y_, float z_) { Validate(); x = x_; y = y_; z = z_;}
 
-	Point3 operator * (float scale) const { Point3 r(*this); r *= scale; return r; Validate();}
-	Point3 operator / (float scale) const { Point3 r(*this); r /= scale; return r; Validate();}
-	Point3 operator + (const Vec3& v) const { Point3 r(*this); r += v; return r; Validate();}
-	Point3 operator - (const Vec3& v) const { Point3 r(*this); r -= v; return r; Validate();}
+	Point3 operator * (float scale) const { Point3 r(*this); r *= scale; Validate(); return r; }
+	Point3 operator / (float scale) const { Point3 r(*this); r /= scale; Validate(); return r; }
+	Point3 operator + (const Vec3& v) const { Point3 r(*this); r += v; Validate(); return r; }
+	Point3 operator - (const Vec3& v) const { Point3 r(*this); r -= v; Validate(); return r; }
 
 	Point3& operator *=(float scale) {x *= scale; y *= scale; z*= scale; Validate(); return *this;}
 	Point3& operator /=(float scale) {float s(1.0f/scale); x *= s; y *= s; z *= s; Validate(); return *this;}

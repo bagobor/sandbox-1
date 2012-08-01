@@ -7,6 +7,12 @@
 #include "core.h"
 #include "types.h"
 
+#ifdef __CUDACC__
+#define CUDA_CALLABLE __host__ __device__
+#else
+#define CUDA_CALLABLE
+#endif
+
 const float kPi = 3.1415926535897932384626433832795f;
 const float k2Pi = 2.0f*kPi;
 const float kInvPi = 1.0f/kPi;
@@ -14,146 +20,146 @@ const float kInv2Pi = 0.5f/kPi;
 const float kDegToRad = kPi/180.0f;
 const float kRadToDeg = 180.0f/kPi;
 
-inline float DegToRad(float t)
+CUDA_CALLABLE inline float DegToRad(float t)
 {
 	return t * kDegToRad;
 }
 
-inline float RadToDeg(float t)
+CUDA_CALLABLE inline float RadToDeg(float t)
 {
 	return t * kRadToDeg;
 }
 
-inline float Sin(float theta)
+CUDA_CALLABLE inline float Sin(float theta)
 {
 	return sinf(theta);
 }
 
-inline float Cos(float theta)
+CUDA_CALLABLE inline float Cos(float theta)
 {
 	return cosf(theta);
 }
 
-inline void SinCos(float theta, float& s, float& c)
+CUDA_CALLABLE inline void SinCos(float theta, float& s, float& c)
 {
 	// no optimizations yet
 	s = sinf(theta);
 	c = cosf(theta);
 }
 
-inline float Tan(float theta)
+CUDA_CALLABLE inline float Tan(float theta)
 {
 	return tanf(theta);
 }
 
-inline float Sqrt(float x)
+CUDA_CALLABLE inline float Sqrt(float x)
 {
 	return sqrtf(x);
 }
 
-inline double Sqrt(double x)
+CUDA_CALLABLE inline double Sqrt(double x)
 {
 	return sqrt(x);
 }
 
-inline float ASin(float theta)
+CUDA_CALLABLE inline float ASin(float theta)
 {
 	return asinf(theta);
 }
 
-inline float ACos(float theta)
+CUDA_CALLABLE inline float ACos(float theta)
 {
 	return acosf(theta);
 }
 
-inline float ATan(float theta)
+CUDA_CALLABLE inline float ATan(float theta)
 {
 	return atanf(theta);
 }
 
-inline float ATan2(float x, float y)
+CUDA_CALLABLE inline float ATan2(float x, float y)
 {
 	return atan2f(x, y);
 }
 
-inline float Abs(float x)
+CUDA_CALLABLE inline float Abs(float x)
 {
 	return fabsf(x);
 }
 
-inline float Pow(float b, float e)
+CUDA_CALLABLE inline float Pow(float b, float e)
 {
 	return powf(b, e);
 }
 
-inline float Sgn(float x)
+CUDA_CALLABLE inline float Sgn(float x)
 {
 	return (x < 0.0f ? -1.0f : 1.0f);
 }
 
-inline float Sign(float x)
+CUDA_CALLABLE inline float Sign(float x)
 {
 	return x < 0.0f ? -1.0f : 1.0f;
 }
 
-inline double Sign(double x)
+CUDA_CALLABLE inline double Sign(double x)
 {
 	return x < 0.0f ? -1.0f : 1.0f;
 }
 
-inline float Mod(float x, float y)
+CUDA_CALLABLE inline float Mod(float x, float y)
 {
 	return fmod(x, y);
 }
 
 template <typename T>
-inline T Min(T a, T b)
+CUDA_CALLABLE inline T Min(T a, T b)
 {
 	return a < b ? a : b;
 }
 
 template <typename T>
-inline T Max(T a, T b)
+CUDA_CALLABLE inline T Max(T a, T b)
 {
 	return a > b ? a : b;
 }
 
 template <typename T>
-inline T Clamp(T a, T low, T high)
+CUDA_CALLABLE inline T Clamp(T a, T low, T high)
 {
 	if (low > high)
-		std::swap(low, high);
+		Swap(low, high);
 	
 	return Max(low, Min(a, high));
 }
 
 template <typename V, typename T> 
-inline V Lerp(const V& start, const V& end, const T& t)
+CUDA_CALLABLE inline V Lerp(const V& start, const V& end, const T& t)
 {
 	return start + (end-start)*t;
 }
 
 template <typename T> 
-inline void Swap(T& a, T& b)
+CUDA_CALLABLE inline void Swap(T& a, T& b)
 {
 	T tmp = a;
 	a = b;
 	b = tmp;
 }
 
-inline float InvSqrt(float x)
+CUDA_CALLABLE inline float InvSqrt(float x)
 {
 	return 1.0f / sqrtf(x);
 }
 
 // round towards +infinity
-inline int Round(float f)
+CUDA_CALLABLE inline int Round(float f)
 {
 	return int(f+0.5f);
 }
 
 template <typename T>
-T Normalize(const T& v)
+CUDA_CALLABLE T Normalize(const T& v)
 {
 	T a(v);
 	a /= Length(v);
@@ -161,26 +167,26 @@ T Normalize(const T& v)
 }
 
 template <typename T>
-typename T::value_type LengthSq(const T v)
+CUDA_CALLABLE typename T::value_type LengthSq(const T v)
 {
 	return Dot(v,v);
 }
 
 template <typename T>
-typename T::value_type Length(const T& v)
+CUDA_CALLABLE typename T::value_type Length(const T& v)
 {
 	return Sqrt(LengthSq(v));
 }
 
 // this is mainly a helper function used by script
 template <typename T>
-typename T::value_type Distance(const T& v1, const T& v2)
+CUDA_CALLABLE typename T::value_type Distance(const T& v1, const T& v2)
 {
 	return Length(v1-v2);
 }
 
 template <typename T>
-T SafeNormalize(const T& v, const T& fallback=T())
+CUDA_CALLABLE T SafeNormalize(const T& v, const T& fallback=T())
 {
 	float l = LengthSq(v);
 	if (l > 0.0f)
@@ -927,7 +933,7 @@ inline bool IntersectRaySphere(const Point3& sphereOrigin, float sphereRadius, c
 }
 
 template <typename T>
-inline bool SolveQuadratic(T a, T b, T c, T& minT, T& maxT)
+CUDA_CALLABLE inline bool SolveQuadratic(T a, T b, T c, T& minT, T& maxT)
 {
 	if (a == 0.0f && b == 0.0f)
 	{
@@ -949,7 +955,7 @@ inline bool SolveQuadratic(T a, T b, T c, T& minT, T& maxT)
 
 	if (minT > maxT)
 	{
-		std::swap(minT, maxT);
+		Swap(minT, maxT);
 	}
 
 	return true;

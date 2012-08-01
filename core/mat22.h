@@ -4,28 +4,28 @@
 
 struct Matrix22
 {
-	Matrix22() {}
-	Matrix22(float a, float b, float c, float d)
+	CUDA_CALLABLE Matrix22() {}
+	CUDA_CALLABLE Matrix22(float a, float b, float c, float d)
 	{
 		cols[0] = Vec2(a, c);
 		cols[1] = Vec2(b, d);
 	}
 
-	Matrix22(const Vec2& c1, const Vec2& c2)
+	CUDA_CALLABLE Matrix22(const Vec2& c1, const Vec2& c2)
 	{
 		cols[0] = c1;
 		cols[1] = c2;
 	}
 
-	float operator()(int i, int j) const { return static_cast<const float*>(cols[j])[i]; }
-	float& operator()(int i, int j) { return static_cast<float*>(cols[j])[i]; }
+	CUDA_CALLABLE float operator()(int i, int j) const { return static_cast<const float*>(cols[j])[i]; }
+	CUDA_CALLABLE float& operator()(int i, int j) { return static_cast<float*>(cols[j])[i]; }
 
 	Vec2 cols[2];
 
 	static inline Matrix22 Identity() { static const Matrix22 sIdentity(Vec2(1.0f, 0.0f), Vec2(0.0f, 1.0f)); return sIdentity; }
 };
 
-inline Matrix22 Multiply(float s, const Matrix22& m)
+CUDA_CALLABLE inline Matrix22 Multiply(float s, const Matrix22& m)
 {
 	Matrix22 r = m;
 	r.cols[0] *= s;
@@ -33,7 +33,7 @@ inline Matrix22 Multiply(float s, const Matrix22& m)
 	return r;
 }
 
-inline Matrix22 Multiply(const Matrix22& a, const Matrix22& b)
+CUDA_CALLABLE inline Matrix22 Multiply(const Matrix22& a, const Matrix22& b)
 {
 	Matrix22 r;
 	r.cols[0] = a.cols[0]*b.cols[0].x + a.cols[1]*b.cols[0].y;
@@ -41,22 +41,22 @@ inline Matrix22 Multiply(const Matrix22& a, const Matrix22& b)
 	return r;
 }
 
-inline Vec2 Multiply(const Matrix22& a, const Vec2& x)
+CUDA_CALLABLE inline Vec2 Multiply(const Matrix22& a, const Vec2& x)
 {
 	return a.cols[0]*x.x + a.cols[1]*x.y;
 }
 
-inline Matrix22 Add(const Matrix22& a, const Matrix22& b)
+CUDA_CALLABLE inline Matrix22 Add(const Matrix22& a, const Matrix22& b)
 {
 	return Matrix22(a.cols[0]+b.cols[0], a.cols[1]+b.cols[1]);
 }
 
-inline float Determinant(const Matrix22& m)
+CUDA_CALLABLE inline float Determinant(const Matrix22& m)
 {
 	return m(0,0)*m(1,1)-m(1,0)*m(0,1);
 }
 
-inline Matrix22 Inverse(const Matrix22& m, float& det)
+CUDA_CALLABLE inline Matrix22 Inverse(const Matrix22& m, float& det)
 {
 	det = Determinant(m); 
 
@@ -77,7 +77,7 @@ inline Matrix22 Inverse(const Matrix22& m, float& det)
 	}
 }
 
-inline Matrix22 Transpose(const Matrix22& a)
+CUDA_CALLABLE inline Matrix22 Transpose(const Matrix22& a)
 {
 	Matrix22 r;
 	r(0,0) = a(0,0);
@@ -87,30 +87,30 @@ inline Matrix22 Transpose(const Matrix22& a)
 	return r;
 }
 
-inline float Trace(const Matrix22& a)
+CUDA_CALLABLE inline float Trace(const Matrix22& a)
 {
 	return a(0,0)+a(1,1);
 }
 
-inline Matrix22 RotationMatrix(float theta)
+CUDA_CALLABLE inline Matrix22 RotationMatrix(float theta)
 {
 	return Matrix22(Vec2(cosf(theta), sinf(theta)), Vec2(-sinf(theta), cosf(theta)));
 }
 
 // outer product of a and b, b is considered a row vector
-inline Matrix22 Outer(const Vec2& a, const Vec2& b)
+CUDA_CALLABLE inline Matrix22 Outer(const Vec2& a, const Vec2& b)
 {
 	return Matrix22(a*b.x, a*b.y);
 }
 
-inline Matrix22 operator*(float s, const Matrix22& a) { return Multiply(s, a); }
-inline Matrix22 operator*(const Matrix22& a, float s) { return Multiply(s, a); }
-inline Matrix22 operator*(const Matrix22& a, const Matrix22& b) { return Multiply(a, b); }
-inline Matrix22 operator+(const Matrix22& a, const Matrix22& b) { return Add(a, b); }
-inline Matrix22 operator-(const Matrix22& a, const Matrix22& b) { return Add(a, -1.0f*b); }
-inline Matrix22& operator+=(Matrix22& a, const Matrix22& b) { a = a+b; return a; }
-inline Matrix22& operator-=(Matrix22& a, const Matrix22& b) { a = a-b; return a; }
+CUDA_CALLABLE inline Matrix22 operator*(float s, const Matrix22& a) { return Multiply(s, a); }
+CUDA_CALLABLE inline Matrix22 operator*(const Matrix22& a, float s) { return Multiply(s, a); }
+CUDA_CALLABLE inline Matrix22 operator*(const Matrix22& a, const Matrix22& b) { return Multiply(a, b); }
+CUDA_CALLABLE inline Matrix22 operator+(const Matrix22& a, const Matrix22& b) { return Add(a, b); }
+CUDA_CALLABLE inline Matrix22 operator-(const Matrix22& a, const Matrix22& b) { return Add(a, -1.0f*b); }
+CUDA_CALLABLE inline Matrix22& operator+=(Matrix22& a, const Matrix22& b) { a = a+b; return a; }
+CUDA_CALLABLE inline Matrix22& operator-=(Matrix22& a, const Matrix22& b) { a = a-b; return a; }
 
-inline Vec2 operator*(const Matrix22& a, const Vec2& x) { return Multiply(a, x); }
+CUDA_CALLABLE inline Vec2 operator*(const Matrix22& a, const Vec2& x) { return Multiply(a, x); }
 
 

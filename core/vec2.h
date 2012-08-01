@@ -1,7 +1,7 @@
 #pragma once
 
-#if _WIN32
-#ifdef _DEBUG
+#if defined(_WIN32) && !defined(__CUDACC__)
+#if defined(_DEBUG)
 
 #define VEC2_VALIDATE() {	assert(_finite(x));\
 	assert(!_isnan(x));\
@@ -36,35 +36,35 @@ public:
 
 	typedef T value_type;
 
-	XVector2(T _x=T(0.0), T _y=T(0.0f)) : x(_x), y(_y) { VEC2_VALIDATE(); }
-	XVector2(const T* p) : x(p[0]), y(p[1]) {}
+	CUDA_CALLABLE XVector2(T _x=T(0.0), T _y=T(0.0f)) : x(_x), y(_y) { VEC2_VALIDATE(); }
+	CUDA_CALLABLE XVector2(const T* p) : x(p[0]), y(p[1]) {}
 
 	template <typename U>
-	explicit XVector2(const XVector2<U>& v) : x(v.x), y(v.y) {}
+	CUDA_CALLABLE explicit XVector2(const XVector2<U>& v) : x(v.x), y(v.y) {}
 
-	operator T* () { return &x; }
-	operator const T* () const { return &x; };
+	CUDA_CALLABLE operator T* () { return &x; }
+	CUDA_CALLABLE operator const T* () const { return &x; };
 
-	void Set(T x_, T y_) { VEC2_VALIDATE(); x = x_; y = y_; }
+	CUDA_CALLABLE void Set(T x_, T y_) { VEC2_VALIDATE(); x = x_; y = y_; }
 
-	XVector2<T> operator * (T scale) const { XVector2<T> r(*this); r *= scale; return r; VEC2_VALIDATE();}
-	XVector2<T> operator / (T scale) const { XVector2<T> r(*this); r /= scale; return r; VEC2_VALIDATE();}
-	XVector2<T> operator + (const XVector2<T>& v) const { XVector2<T> r(*this); r += v; return r; VEC2_VALIDATE();}
-	XVector2<T> operator - (const XVector2<T>& v) const { XVector2<T> r(*this); r -= v; return r; VEC2_VALIDATE();}
+	CUDA_CALLABLE XVector2<T> operator * (T scale) const { XVector2<T> r(*this); r *= scale; VEC2_VALIDATE(); return r; }
+	CUDA_CALLABLE XVector2<T> operator / (T scale) const { XVector2<T> r(*this); r /= scale; VEC2_VALIDATE(); return r; }
+	CUDA_CALLABLE XVector2<T> operator + (const XVector2<T>& v) const { XVector2<T> r(*this); r += v; VEC2_VALIDATE(); return r; }
+	CUDA_CALLABLE XVector2<T> operator - (const XVector2<T>& v) const { XVector2<T> r(*this); r -= v; VEC2_VALIDATE(); return r; }
 
-	XVector2<T>& operator *=(T scale) {x *= scale; y *= scale; VEC2_VALIDATE(); return *this;}
-	XVector2<T>& operator /=(T scale) {T s(1.0f/scale); x *= s; y *= s; VEC2_VALIDATE(); return *this;}
-	XVector2<T>& operator +=(const XVector2<T>& v) {x += v.x; y += v.y; VEC2_VALIDATE(); return *this;}
-	XVector2<T>& operator -=(const XVector2<T>& v) {x -= v.x; y -= v.y; VEC2_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector2<T>& operator *=(T scale) {x *= scale; y *= scale; VEC2_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector2<T>& operator /=(T scale) {T s(1.0f/scale); x *= s; y *= s; VEC2_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector2<T>& operator +=(const XVector2<T>& v) {x += v.x; y += v.y; VEC2_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector2<T>& operator -=(const XVector2<T>& v) {x -= v.x; y -= v.y; VEC2_VALIDATE(); return *this;}
 
-	XVector2<T>& operator *=(const XVector2<T>& scale) {x *= scale.x; y *= scale.y; VEC2_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector2<T>& operator *=(const XVector2<T>& scale) {x *= scale.x; y *= scale.y; VEC2_VALIDATE(); return *this;}
 
 	// negate
-	XVector2<T> operator -() const { VEC2_VALIDATE(); return XVector2<T>(-x, -y); }
+	CUDA_CALLABLE XVector2<T> operator -() const { VEC2_VALIDATE(); return XVector2<T>(-x, -y); }
 
 	// returns this vector
-	void Normalize() { *this /= Length(*this); }
-	void SafeNormalize(const XVector2<T>& v=XVector2<T>(0.0f,0.0f))
+	CUDA_CALLABLE void Normalize() { *this /= Length(*this); }
+	CUDA_CALLABLE void SafeNormalize(const XVector2<T>& v=XVector2<T>(0.0f,0.0f))
 	{
 		T length = Length(*this);
 		*this = (length==0.00001f)?v:(*this /= length);
@@ -79,7 +79,7 @@ typedef XVector2<float> Vector2;
 
 // lhs scalar scale
 template <typename T>
-XVector2<T> operator *(T lhs, const XVector2<T>& rhs)
+CUDA_CALLABLE XVector2<T> operator *(T lhs, const XVector2<T>& rhs)
 {
 	XVector2<T> r(rhs);
 	r *= lhs;
@@ -87,7 +87,7 @@ XVector2<T> operator *(T lhs, const XVector2<T>& rhs)
 }
 
 template <typename T>
-XVector2<T> operator*(const XVector2<T>& lhs, const XVector2<T>& rhs)
+CUDA_CALLABLE XVector2<T> operator*(const XVector2<T>& lhs, const XVector2<T>& rhs)
 {
 	XVector2<T> r(lhs);
 	r *= rhs;
@@ -95,47 +95,47 @@ XVector2<T> operator*(const XVector2<T>& lhs, const XVector2<T>& rhs)
 }
 
 template <typename T>
-bool operator==(const XVector2<T>& lhs, const XVector2<T>& rhs)
+CUDA_CALLABLE bool operator==(const XVector2<T>& lhs, const XVector2<T>& rhs)
 {
 	return (lhs.x == rhs.x && lhs.y == rhs.y);
 }
 
 
 template <typename T>
-T Dot(const XVector2<T>& v1, const XVector2<T>& v2)
+CUDA_CALLABLE T Dot(const XVector2<T>& v1, const XVector2<T>& v2)
 {
 	return v1.x * v2.x + v1.y * v2.y; 
 }
 
 // returns the ccw perpendicular vector 
 template <typename T>
-XVector2<T> PerpCCW(const XVector2<T>& v)
+CUDA_CALLABLE XVector2<T> PerpCCW(const XVector2<T>& v)
 {
 	return XVector2<T>(-v.y, v.x);
 }
 
 template <typename T>
-XVector2<T> PerpCW(const XVector2<T>& v)
+CUDA_CALLABLE XVector2<T> PerpCW(const XVector2<T>& v)
 {
 	return XVector2<T>(v.y, -v.x);
 }
 
 // component wise min max functions
 template <typename T>
-XVector2<T> Max(const XVector2<T>& a, const XVector2<T>& b)
+CUDA_CALLABLE XVector2<T> Max(const XVector2<T>& a, const XVector2<T>& b)
 {
 	return XVector2<T>(Max(a.x, b.x), Max(a.y, b.y));
 }
 
 template <typename T>
-XVector2<T> Min(const XVector2<T>& a, const XVector2<T>& b)
+CUDA_CALLABLE XVector2<T> Min(const XVector2<T>& a, const XVector2<T>& b)
 {
 	return XVector2<T>(Min(a.x, b.x), Min(a.y, b.y));
 }
 
 // 2d cross product, treat as if a and b are in the xy plane and return magnitude of z
 template <typename T>
-T Cross(const XVector2<T>& a, const XVector2<T>& b)
+CUDA_CALLABLE T Cross(const XVector2<T>& a, const XVector2<T>& b)
 {
 	return (a.x*b.y - a.y*b.x);
 }

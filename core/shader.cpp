@@ -165,6 +165,62 @@ GLuint CompileProgram(const char *vsource, const char *fsource)
 	return program;
 }
 
+#if _WIN32
+
+GLuint CompileProgram(const char *vsource, const char* csource, const char* esource, const char* fsource)
+{
+	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	GLuint controlShader = glCreateShader(GL_TESS_CONTROL_SHADER);
+	GLuint evaluationShader = glCreateShader(GL_TESS_EVALUATION_SHADER);
+	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+	glShaderSource(vertexShader, 1, &vsource, 0);
+	glShaderSource(controlShader, 1, &csource, 0);
+	glShaderSource(evaluationShader, 1, &esource, 0);
+	glShaderSource(fragmentShader, 1, &fsource, 0);
+	
+	glCompileShader(vertexShader);
+	GlslPrintShaderLog(vertexShader);
+	
+	glCompileShader(controlShader);
+	GlslPrintShaderLog(controlShader);
+
+	glCompileShader(evaluationShader);
+	GlslPrintShaderLog(evaluationShader);
+
+	glCompileShader(fragmentShader);
+	GlslPrintShaderLog(fragmentShader);
+
+	GLuint program = glCreateProgram();
+
+	glAttachShader(program, vertexShader);
+	glAttachShader(program, controlShader);
+	glAttachShader(program, evaluationShader);
+	glAttachShader(program, fragmentShader);
+
+	glLinkProgram(program);
+
+	// check if program linked
+	GLint success = 0;
+	glGetProgramiv(program, GL_LINK_STATUS, &success);
+
+	if (!success) {
+		char temp[256];
+		glGetProgramInfoLog(program, 256, 0, temp);
+		printf("Failed to link program:\n%s\n", temp);
+		glDeleteProgram(program);
+		program = 0;
+	}
+	else
+	{
+		printf("Created shader program: %d\n", program);
+	}
+
+	return program;
+}
+
+#endif
+
 void DrawPlane(const Vec4& p)
 {
 	Vec3 u, v;

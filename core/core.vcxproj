@@ -109,7 +109,8 @@
     <ClInclude Include="hashGrid.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="mat22.h" />
-	<ClInclude Include="mat44.h" />
+    <ClInclude Include="mat33.h" />
+    <ClInclude Include="mat44.h" />
     <ClInclude Include="maths.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="perlin.h" />
