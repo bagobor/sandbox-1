@@ -13,6 +13,9 @@
 #include <vector>
 #include <stdint.h>
 
+#include "tag.h"
+#include "shaders.h"
+
 #if __APPLE__
 #include <mach-o/dyld.h>
 #endif
@@ -25,138 +28,36 @@ int gScreenHeight = 720;
 // default file
 const char* gFile = "Drawing001.bvh";
 
-Vec3 gCamPos(0.0f, 150.0f, -357.0f);
+Vec3 gCamPos(0.0f);//, 150.0f, -357.0f);
 Vec3 gCamVel(0.0f);
 Vec3 gCamAngle(kPi, 0.0f, 0.0f);
 float gTagWidth = 5.0f;
 float gTagHeight = 8.0f;
 Point3 gTagCenter;
+Point3 gTagLower;
+Point3 gTagUpper;
+float gTagSmoothing = 0.8f;
 
 GLuint gMainShader;
 GLuint gDebugShader;
 GLuint gShadowFrameBuffer;
 GLuint gShadowTexture;
 
-// spherical harmonic coefficients for the 'beach' light probe
-Vec3 gShDiffuse[] = 
+enum EventType
 {
-	Vec3(1.51985, 1.53785, 1.56834),
-	Vec3(-0.814902, -0.948101, -1.13014),
-	Vec3(-0.443242, -0.441047, -0.421306),
-	Vec3(1.16161, 1.07284, 0.881858),
-	Vec3(-0.36858, -0.37136, -0.332637),
-	Vec3(0.178697, 0.200577, 0.219209),
-	Vec3(-0.0204381, -0.0136351, -0.00920174),
-	Vec3(-0.349078, -0.292836, -0.214752),
-	Vec3(0.399496, 0.334641, 0.219389),
+	eStartPaint,
+	eStopPaint
 };
 
-// vertex shader
-const char* vertexShader = STRINGIFY
-(
-	uniform mat4 lightTransform; 
-	
-	void main()
-	{
-		vec3 n = gl_Normal;//normalize(gl_Normal);
+struct Control
+{
+	double time;
+	EventType event;
+};
 
-		gl_Position = gl_ModelViewProjectionMatrix*vec4(gl_Vertex.xyz, 1.0);
-		gl_TexCoord[0] = vec4(n, 0.0);
-		gl_TexCoord[1] = vec4(gl_Vertex.xyz, 1.0);
-		gl_TexCoord[2] = lightTransform*vec4(gl_Vertex.xyz+n, 1.0);
-	}
-);
-
-// pixel shader
-const char* fragmentShaderMain = STRINGIFY
-(
-	uniform vec3 shDiffuse[9];
-	uniform vec3 color;
-
-	uniform vec3 lightDir;
-	uniform vec3 lightPos;
-
-	uniform sampler2DShadow shadowTex;
-	uniform vec2 shadowTaps[12];
-
-	// evaluate spherical harmonic function
-	vec3 shEval(vec3 dir, vec3 sh[9])
-	{
-		// evaluate irradiance
-		vec3 e = sh[0];
-
-		e += -dir.y*sh[1];
-		e +=  dir.z*sh[2];
-		e += -dir.x*sh[3];
-
-		e +=  dir.x*dir.y*sh[4];
-		e += -dir.y*dir.z*sh[5];
-		e += -dir.x*dir.z*sh[7];
-
-		e += (3.0*dir.z*dir.z-1.0)*sh[6];
-		e += (dir.x*dir.x - dir.y*dir.y)*sh[8];
-
-		return max(e, vec3(0.0));
-	}
-
-	// sample shadow map
-	float shadowSample()
-	{
-		vec3 pos = vec3(gl_TexCoord[2].xyz/gl_TexCoord[2].w);
-		vec3 uvw = (pos.xyz*0.5)+vec3(0.5);
-
-		// user clip
-		if (uvw.x  < 0.0 || uvw.x > 1.0)
-			return 0.0;
-		if (uvw.y < 0.0 || uvw.y > 1.0)
-			return 0.0;
-		
-		float s = 0.0;
-		float radius = 0.003;
-
-		for (int i=0; i < 12; i++)
-		{
-			s += shadow2D(shadowTex, vec3(uvw.xy + shadowTaps[i]*radius, uvw.z)).r;
-		}
-
-		s /= 12.0;
-		return s;
-	}
-
-	void main()
-	{
-		vec3 n = gl_TexCoord[0].xyz;
-		vec3 shadePos = gl_TexCoord[1].xyz;
-		vec3 eyePos = gl_ModelViewMatrixInverse[3].xyz;
-		vec3 eyeDir = normalize(eyePos-shadePos);
-	
-		vec3 lightCol = vec3(1.0, 1.0, 1.0)*0.8; 
-
-		// SH-ambient	
-		float ambientExposure = 0.04;
-		vec3 ambient = shEval(n, shDiffuse)*ambientExposure;
-
-		// wrapped spot light 
-		float w = 0.1;
-		float s = shadowSample();
-		vec3 direct = clamp((dot(n, -lightDir) + w) / (1.0 + w), 0.0, 1.0)*lightCol*smoothstep(0.9, 1.0, dot(lightDir, normalize(shadePos-lightPos))); 
-
-		vec3 l = (ambient + s*direct)*color;//*(n*vec3(0.5) + vec3(0.5));//color;
-
-		// convert from linear light space to SRGB
-		gl_FragColor = vec4(pow(l, vec3(0.5)), 1.0);
-	}
-);
-
-// pixel shader
-const char* fragmentShaderDebug = STRINGIFY
-(
-	void main()
-	{
-		vec3 n = gl_TexCoord[0].xyz;
-		gl_FragColor = vec4(n*0.5 + vec3(0.5), 1.0);
-	}
-);
+vector<Control> gControlTrack; 
+bool gControlRecord = true;
+double gControlStartTime;
 
 struct Frame
 {
@@ -164,10 +65,13 @@ struct Frame
 	Vec3 rot;
 };
 
-bool LoadBvh(const char* filename, std::vector<Frame>& frames, Point3& center)
+bool LoadBvh(const char* filename, std::vector<Frame>& frames, Point3& center, Point3& lower, Point3& upper)
 {
 	FILE* f = fopen(filename, "r");
 	
+	lower = Point3(FLT_MAX);
+	upper = Point3(-FLT_MAX);
+
 	if (f)
 	{
 		while (!feof(f))
@@ -180,13 +84,23 @@ bool LoadBvh(const char* filename, std::vector<Frame>& frames, Point3& center)
 					&frame.rot.z,	
 					&frame.rot.x,	
 					&frame.rot.y);	
-		
+	
+			if (n == EOF)
+				break;	
+
 			if (n != 6)
-				break;
+			{
+				char buf[1024];
+				fgets(buf, 1024, f);
+			}
+			else
+			{
+				frames.push_back(frame);
 
-			frames.push_back(frame);
-
-			center += frame.pos;
+				center += frame.pos;
+				lower = Min(lower, Point3(frame.pos));
+				upper = Max(upper, Point3(frame.pos));
+			}
 		}
 
 		fclose(f);
@@ -200,45 +114,45 @@ bool LoadBvh(const char* filename, std::vector<Frame>& frames, Point3& center)
 }
 
 vector<Frame> gFrames;
-float gFrameRate = 0.005f;
+float gFrameRate = 0.01f;
 float gFrameTime = 0.0f;
 size_t gMaxFrame = 4000;
 bool gPause = false;
 bool gWireframe = false;
-bool gShowNormals = false;
-bool gFreeCam = false;
+bool gShowNormals = true;
+bool gFreeCam = true;
 
 size_t CurrentFrame()
 {
 	return gFrameTime / gFrameRate;
 }
 
-void Init()
+const char* GetPath(const char* file)
 {
 #if __APPLE__
 
-	char path[PATH_MAX];
+	static char path[PATH_MAX];
 	uint32_t size = sizeof(path);
 	_NSGetExecutablePath(path, &size);
 
 	char* lastSlash = strrchr(path, '/');
-	strcpy(lastSlash+1, gFile);
+	strcpy(lastSlash+1, file);
+	return path;
 #else
-	const char* path = gFile;
+	return file;
 #endif
-	
-	LoadBvh(path, gFrames, gTagCenter);
+}
+
+void Init()
+{
+	const char* path = GetPath(gFile);
+
+	LoadBvh(path, gFrames, gTagCenter, gTagLower, gTagUpper);
 
 	printf("Finished loading %s.\n", path); 
-}
-struct Vertex
-{
-	Vertex() {}
-	Vertex(Point3 p, Vec3 n) : position(p), normal(n) {}
 
-	Point3 position;
-	Vec3 normal;
-};
+	gCamPos = Vec3(gTagCenter - Vec3(0.0f, 0.0f, gTagUpper.z-gTagLower.z));
+}
 
 void DrawBasis(const Matrix44& m)
 {
@@ -325,207 +239,6 @@ void ShadowEnd()
 	glViewport(0, 0, gScreenWidth, gScreenHeight);
 }
 
-void SquareBrush(float t, vector<Vertex>& verts)
-{
-	float w = gTagWidth;
-	float h = gTagHeight;
-
-	const Vertex shape[] = 
-	{
-		Vertex(Point3(-w,  h, 0.0f), Vec3(-1.0f, 0.0f, 0.0f)),
-		Vertex(Point3(-w,  -h, 0.0f), Vec3(-1.0f, 0.0f, 0.0f)),
-	
-		Vertex(Point3( -w, -h, 0.0f), Vec3( 0.0f, -1.0f, 0.0f)),
-		Vertex(Point3( w,  -h, 0.0f), Vec3( 0.0f, -1.0f, 0.0f)),
-	
-		Vertex(Point3( w, -h, 0.0f), Vec3( 1.0f, 0.0f, 0.0f)),
-		Vertex(Point3( w,  h, 0.0f), Vec3( 1.0f, 0.0f, 0.0f)),
-		
-		Vertex(Point3( w,  h, 0.0f), Vec3( 0.0f, 1.0f, 0.0f)),
-		Vertex(Point3( -w, h, 0.0f), Vec3( 0.0f, 1.0f, 0.0f))
-	};
-
-	verts.assign(shape, shape+8);
-
-}
-
-struct Tag
-{
-	Tag() : basis(Matrix44::kIdentity) 
-	{
-		samples.reserve(4096);
-		vertices.reserve(100000);
-		indices.reserve(100000);
-	}
-
-	void PushSample(float t, Matrix44 m)
-	{
-		// evaluate brush
-		SquareBrush(t, brush);
-
-		size_t startIndex = vertices.size();
-
-		samples.push_back(m.GetTranslation());
-
-		// need at least 4 points to construct valid tangents
-		if (samples.size() < 4)
-			return;
-
-		// the point we are going to output
-		size_t c = samples.size()-3;
-
-		// calculate the tangents for the two samples using central differencing
-		Vec3 tc = Normalize(samples[c+1]-samples[c-1]);
-		Vec3 td = Normalize(samples[c+2]-samples[c]);
-		float a = acosf(Dot(tc, td));
-
-		if (fabsf(a) > 0.001f)
-		{
-			// use the parallel transport method to move the reference frame along the curve
-			Vec3 n = Normalize(Cross(tc, td));
-
-			if (samples.size() == 4)
-				basis = TransformFromVector(Normalize(tc));
-		
-			// 'transport' the basis forward
-			basis = RotationMatrix(a, n)*basis;
-			
-			m = basis;
-			m.SetTranslation(samples[c]);
-			basis = m;
-		}
-		
-		// transform verts and create faces
-		for (size_t i=0; i < brush.size(); ++i)
-		{
-			// transform position and normal to world space
-			Vertex v(m*brush[i].position, m*brush[i].normal);
-
-			vertices.push_back(v);
-		}
-
-		if (startIndex != 0)
-		{
-			size_t b = brush.size();
-
-			for (size_t i=0; i < b; ++i)
-			{
-				size_t curIndex = startIndex + i;
-				size_t nextIndex = startIndex + (i+1)%b; 
-
-				indices.push_back(curIndex);
-				indices.push_back(curIndex-b);
-				indices.push_back(nextIndex-b);
-				
-				indices.push_back(nextIndex-b);
-				indices.push_back(nextIndex);
-				indices.push_back(curIndex);			
-			}	
-		}
-	}
-
-	void Draw()
-	{
-		if (vertices.empty())
-			return;
-
-		// draw the tag
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(Vertex), &vertices[0].position);
-		glEnableClientState(GL_NORMAL_ARRAY);
-		glNormalPointer(GL_FLOAT, sizeof(Vertex), &vertices[0].normal);
-
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, &indices[0]);
-
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableClientState(GL_NORMAL_ARRAY);
-
-		// draw cap
-		glBegin(GL_TRIANGLE_FAN);
-
-		SquareBrush(1.f, brush);
-
-		Point3 center(0.0f);
-
-		// transform verts and create faces
-		for (size_t i=0; i < brush.size(); ++i)		
-		{
-			center += Vec3(brush[i].position);
-		}
-		
-		center /= brush.size();
-		
-		glNormal3fv(basis.GetCol(2));
-		glVertex3fv(basis*center);
-
-		// transform verts and create faces
-		for (size_t i=0; i < brush.size(); ++i)
-		{
-			// transform position and normal to world space
-			Vertex v(basis*brush[i].position, basis*brush[i].normal);
-
-			glVertex3fv(v.position);
-			
-		}
-
-		glEnd();
-
-	}
-
-	void ExportToObj(const char* path)
-	{
-		FILE* f = fopen(path, "w");
-
-		if (!f)
-			return;
-
-		fprintf(f, "# %d positions\n", int(vertices.size()));
-
-		for (uint32_t i=0; i < vertices.size(); ++i)
-		{
-			Point3 p = vertices[i].position;
-			fprintf(f, "v %f %f %f\n", p.x, p.y, p.z);
-		}
-
-		fprintf(f, "# %d normals\n", int(vertices.size()));
-
-		for (uint32_t i=0; i < vertices.size(); ++i)
-		{
-			Vec3 n = vertices[i].normal;
-			fprintf(f, "vn %f %f %f\n", n.x, n.y, n.z);
-		}
-
-		fprintf(f, "# %d faces\n", int(indices.size()/3));
-
-		for (uint32_t t=0; t < indices.size(); t+=3)
-		{
-			// obj is 1 based
-			uint32_t i = indices[t+0]+1;
-			uint32_t j = indices[t+1]+1;
-			uint32_t k = indices[t+2]+1;
-
-			fprintf(f, "f %d//%d %d//%d %d//%d\n", i, i, j, j, k, k); 
-		}	
-
-		fclose(f);
-	}
-
-	void Clear()
-	{
-		samples.resize(0);
-		brush.resize(0);
-		vertices.resize(0);
-		indices.resize(0);
-	}
-
-	Matrix44 basis;
-
-	std::vector<Point3> samples;
-	std::vector<Vertex> brush;
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
-};
-
 void Advance(float dt)
 {
 	if (!gPause)
@@ -540,11 +253,29 @@ void Advance(float dt)
 	}
 
 	// re-create the tag each frame
-	Tag tag;
+	Tag tag(gTagSmoothing, gTagWidth, gTagHeight);
+
+	uint32_t control = 0;
 
 	// build tag mesh
 	for (size_t i=0; i < currentFrame; ++i)
 	{
+		double t = i*gFrameRate;
+		while (control < gControlTrack.size() && gControlTrack[control].time < t)
+		{
+			if (gControlTrack[control].event == eStartPaint)
+			{
+				tag.Start();
+			}
+			else
+				tag.Stop();
+
+			++control;
+		}
+
+		// let it run a few frames
+	//	if (i == 10)
+	//j		tag.Start();
 		/*
 		Matrix44 m = RotationMatrix(DegToRad(gFrames[i].rot.z), Vec3(0.0f, 0.0f, 1.0f))*
 					 RotationMatrix(DegToRad(gFrames[i].rot.x), Vec3(1.0f, 0.0f, 0.0f))*
@@ -554,8 +285,10 @@ void Advance(float dt)
 		*/
 		Matrix44 m = TranslationMatrix(Point3(gFrames[i].pos));
 
-		tag.PushSample(0.0f, m); 
+		tag.PushSample(0.0f, m);
 	}
+
+	tag.Stop();
 
 	glPolygonMode(GL_FRONT_AND_BACK, gWireframe?GL_LINE:GL_FILL);
 
@@ -623,12 +356,24 @@ void Advance(float dt)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gShadowTexture);
 
+	Point3 lower, upper;
+	tag.GetBounds(lower, upper);
+
+	lower = gTagLower;
+	upper = gTagUpper;
+
+	const Vec3 margin(0.5f, 0.1f, 0.5f);
+
+	Vec3 edge = upper-lower;
+	lower -= edge*margin;
+	upper += edge*margin;
+
 	// draw walls 
-	DrawPlane(Vec3(0.0f, 1.0f, 0.0f), 0.0f);	
-	DrawPlane(Vec3(0.0f, 0.0f, -1.0f), -200.0f);
-	DrawPlane(Vec3(1.0f, 0.0f, 0.0f), -200.0f);	
-	DrawPlane(Vec3(-1.0f, 0.0f, 0.0f), -200.0f);
-	DrawPlane(Vec3(0.0f, -1.0f, 0.0f), -400.0f);
+	DrawPlane(Vec3(0.0f, 1.0f, 0.0f), lower.y);	
+	DrawPlane(Vec3(0.0f, 0.0f, -1.0f), -upper.z);
+	DrawPlane(Vec3(1.0f, 0.0f, 0.0f), lower.x);	
+	DrawPlane(Vec3(-1.0f, 0.0f, 0.0f), -upper.x);
+	//DrawPlane(Vec3(0.0f, -1.0f, 0.0f), -gTagUpper.y); 
 
 
 	// draw the tag, in Mountain Dew green 
@@ -642,13 +387,15 @@ void Advance(float dt)
 	glDisable(GL_TEXTURE_2D);
 	glUseProgram(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	DrawBasis(tag.basis);
 }
 
 void Update()
 {
 	const float dt = 1.0f/60.0f;
 	static float t = 0.0f;
-	t += dt;
+	//t += dt;
 
 	// update camera
 	const Vec3 forward(-sinf(gCamAngle.x)*cosf(gCamAngle.y), sinf(gCamAngle.y), -cosf(gCamAngle.x)*cosf(gCamAngle.y));
@@ -711,7 +458,15 @@ void Update()
 	DrawString(x, y, line); y += 13;
 
 	sprintf(line, "Anim Frame: %d", int(CurrentFrame()));
-	DrawString(x, y, line); y += 13;
+	DrawString(x, y, line); y += 26;
+
+	DrawString(x, y, "1 - New Control Track"); y += 13;
+
+	if (gControlRecord)
+	{
+		glColor3f(1.0f, 0.0f, 0.0f);
+		DrawString(x, y, "recording");
+	}
 
 	glutSwapBuffers();
 
@@ -745,13 +500,31 @@ void GLUTMouseFunc(int b, int state, int x, int y)
 		{
 			lastx = x;
 			lasty = y;
-			
+		
+			if (gControlRecord)
+			{	
+				Control c;
+				c.time = gFrameTime;//GetSeconds()-gControlStartTime;
+			    c.event = eStopPaint;
+
+				gControlTrack.push_back(c);
+			}
 			break;
 		}	
 		case GLUT_DOWN:
 		{
 			lastx = x;
 			lasty = y;
+
+			if (gControlRecord)
+			{	
+				Control c;
+				c.time = gFrameTime;//GetSeconds()-gControlStartTime;
+			    c.event = eStartPaint;	
+
+				gControlTrack.push_back(c);
+			}
+			break;
 		}
 	};
 }
@@ -838,9 +611,40 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			gFreeCam = !gFreeCam;
 			break;
 		}
+		case '1':
+		{
+			if (!gControlRecord)
+			{
+				gFrameTime = 0.0f;
+
+				gControlTrack.clear();
+				gControlRecord = true;
+				gControlStartTime = GetSeconds();
+			}
+			else
+			{
+				const char* path = GetPath("control.txt");
+
+				FILE* f = fopen(path, "w");
+		
+				if (f)
+				{	
+					for (uint32_t i=0; i < gControlTrack.size(); ++i)
+					{
+						fprintf(f, "%f %i\n", gControlTrack[i].time, gControlTrack[i].event);	
+					}
+
+					fclose(f);
+				}
+
+				gControlRecord = false;
+			}
+			break;
+		}
+
 		case 'y':
 		{
-			Tag tag;
+			Tag tag(gTagSmoothing, gTagWidth, gTagHeight);
 
 			// build tag mesh
 			for (size_t i=0; i < CurrentFrame(); ++i)

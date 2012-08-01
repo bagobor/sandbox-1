@@ -159,7 +159,32 @@ double GetSeconds()
 
 	return time;
 }
+/*
+string FileOpenDialog(const char* filter)
+{
+	 OSStatus   err;
+	 NavDialogRef  openDialog;
+	 NavDialogCreationOptions dialogAttributes;
 
+	 err = NavGetDefaultDialogCreationOptions( &dialogAttributes );
+
+	 dialogAttributes.modality = kWindowModalityAppModal;	
+
+	 gNavEventHandlerPtr = NewNavEventUPP( MyNavEventCallback );	
+
+	 err = NavCreateGetFileDialog( &dialogAttributes, NULL, 
+		 gNavEventHandlerPtr, NULL, NULL, 
+		 NULL, &openDialog );
+
+	 err = NavDialogRun( openDialog );
+
+	 if ( err != noErr )
+	 {
+	 NavDialogDispose( openDialog );
+	 DisposeNavEventUPP( gNavEventHandlerPtr );
+	 }
+}
+*/
 #endif
 
 
