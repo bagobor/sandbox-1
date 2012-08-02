@@ -22,10 +22,12 @@ Controls
 mouse - Rotate camera
 w,a,s,d - Translate camera
 
-1 - Open Animation
-2 - Open Can Track
+1 - Open Animation (.bvh)
+2 - Open Can Track (.txt)
 3 - Export .obj mesh at current frame
-4 - Start Can Record
+4 - Start/Stop Can Record (saves to control.txt)
+
++/- Adjust can-track sync forward/back in time
 
 j - Speed up animation
 u - Slow down animation
