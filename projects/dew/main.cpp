@@ -569,8 +569,8 @@ void Update()
 		DrawString(x, y, "Track: %s", GetFile(gControlFile.c_str())); y += 26;
 		glColor3f(1.0f, 1.0f, 1.0f);
 
-		DrawString(x, y, "1 - Open Animation"); y += 13;
-		DrawString(x, y, "2 - Open Can Track"); y += 13;
+		DrawString(x, y, "1 - Open Animation (.bvh)"); y += 13;
+		DrawString(x, y, "2 - Open Can Track (.txt)"); y += 13;
 		DrawString(x, y, "3 - Export .obj mesh"); y += 13;
 		
 		if (gControlRecord)
