@@ -22,9 +22,15 @@ Controls
 mouse - Rotate camera
 w,a,s,d - Translate camera
 
+1 - Open Animation
+2 - Open Can Track
+3 - Export .obj mesh at current frame
+4 - Start Can Record
+
 j - Speed up animation
 u - Slow down animation
-r - Reset animation
+r - Rewind to beginning
+f - Fast forward to end
 space - Pause animation
 
 i - Increase path width
@@ -35,4 +41,5 @@ l - Decrease path thickness
 
 b - Show wirefame 
 n - Show normals
-y - Export mesh at current frame to dew.obj
+h - Hide help text
+

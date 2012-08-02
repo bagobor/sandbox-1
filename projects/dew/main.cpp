@@ -26,7 +26,8 @@ int gScreenWidth = 1280;
 int gScreenHeight = 720;
 
 // default file
-const char* gFile = "Drawing001.bvh";
+string gAnimFile;// = "drawing001.bvh";
+string gControlFile;
 
 Vec3 gCamPos(0.0f);//, 150.0f, -357.0f);
 Vec3 gCamVel(0.0f);
@@ -34,9 +35,10 @@ Vec3 gCamAngle(kPi, 0.0f, 0.0f);
 float gTagWidth = 5.0f;
 float gTagHeight = 8.0f;
 Point3 gTagCenter;
-Point3 gTagLower;
-Point3 gTagUpper;
+Point3 gTagLower(-20.0f);
+Point3 gTagUpper(20.0f);
 float gTagSmoothing = 0.8f;
+bool gShowHelp = true;
 
 GLuint gMainShader;
 GLuint gDebugShader;
@@ -45,19 +47,19 @@ GLuint gShadowTexture;
 
 enum EventType
 {
-	eStartPaint,
-	eStopPaint
+	eStopPaint,
+	eStartPaint	
 };
 
 struct Control
 {
-	double time;
+	float time;
 	EventType event;
 };
 
 vector<Control> gControlTrack; 
-bool gControlRecord = true;
-double gControlStartTime;
+bool gControlRecord = false;
+float gControlStartTime;
 
 struct Frame
 {
@@ -113,10 +115,30 @@ bool LoadBvh(const char* filename, std::vector<Frame>& frames, Point3& center, P
 		return false;
 }
 
+void LoadControl(const char* path, std::vector<Control>& clicks)
+{
+	FILE* f = fopen(path, "r");
+
+	if (f)
+	{
+		while (!feof(f))
+		{
+			Control c;
+			int r = fscanf(f, "%f %d", &c.time, &c.event);
+
+			if (r != 2)
+				break;
+
+			clicks.push_back(c);
+		}
+
+		fclose(f);
+	}
+}
+
 vector<Frame> gFrames;
 float gFrameRate = 0.01f;
 float gFrameTime = 0.0f;
-size_t gMaxFrame = 4000;
 bool gPause = false;
 bool gWireframe = false;
 bool gShowNormals = true;
@@ -143,15 +165,38 @@ const char* GetPath(const char* file)
 #endif
 }
 
+const char* GetFile(const char* path)
+{
+	const char* p = strrchr(path, '\\');
+	if (p)
+		return p+1;
+	else
+		return path;
+}
+
 void Init()
 {
-	const char* path = GetPath(gFile);
+	gFrames.clear();
+	gFrameTime = 0.0f;
+	
+	if (!gAnimFile.empty())
+	{
+		const char* path = GetPath(gAnimFile.c_str());
+		LoadBvh(path, gFrames, gTagCenter, gTagLower, gTagUpper);
 
-	LoadBvh(path, gFrames, gTagCenter, gTagLower, gTagUpper);
+		printf("Finished loading BVH: %s.\n", path); 
+	}
 
-	printf("Finished loading %s.\n", path); 
+	if (!gControlFile.empty())
+	{
+		const char* path = GetPath(gControlFile.c_str());
+		LoadControl(path, gControlTrack);
 
+		printf("Finished loading Control: %s.\n", path); 
+	}
+	
 	gCamPos = Vec3(gTagCenter - Vec3(0.0f, 0.0f, gTagUpper.z-gTagLower.z));
+	gCamAngle = Vec3(kPi, 0.0f, 0.0f);
 }
 
 void DrawBasis(const Matrix44& m)
@@ -239,38 +284,36 @@ void ShadowEnd()
 	glViewport(0, 0, gScreenWidth, gScreenHeight);
 }
 
-void Advance(float dt)
+Tag* CreateTag(const vector<Frame>& frames, const vector<Control> controls, float smoothing, float width, float height, uint32_t maxFrame)
 {
-	if (!gPause)
-		gFrameTime += dt;
-
-	size_t currentFrame = CurrentFrame();
-
-	if (currentFrame >= gFrames.size() || currentFrame > gMaxFrame)
-	{
-		gFrameTime = 0.0f;
-		currentFrame = CurrentFrame();
-	}
-
 	// re-create the tag each frame
-	Tag tag(gTagSmoothing, gTagWidth, gTagHeight);
+	Tag* tag = new Tag(smoothing, width, height);
 
-	uint32_t control = 0;
+	uint32_t c = 0;
 
 	// build tag mesh
-	for (size_t i=0; i < currentFrame; ++i)
+	for (size_t i=0; i < maxFrame; ++i)
 	{
-		double t = i*gFrameRate;
-		while (control < gControlTrack.size() && gControlTrack[control].time < t)
+		// always draw if no control track 
+		if (controls.empty() && i == 10)
 		{
-			if (gControlTrack[control].event == eStartPaint)
+			tag->Start();
+		}
+		else
+		{
+			// check if we need to apply any control track events
+			float t = i*gFrameRate;
+			while (c < controls.size() && controls[c].time < t)
 			{
-				tag.Start();
-			}
-			else
-				tag.Stop();
+				if (controls[c].event == eStartPaint)
+				{
+					tag->Start();
+				}
+				else
+					tag->Stop();
 
-			++control;
+				++c;
+			}
 		}
 
 		// let it run a few frames
@@ -283,12 +326,32 @@ void Advance(float dt)
 
 		m.SetTranslation(Point3(gFrames[i].pos));
 		*/
-		Matrix44 m = TranslationMatrix(Point3(gFrames[i].pos));
+		Matrix44 m = TranslationMatrix(Point3(frames[i].pos));
 
-		tag.PushSample(0.0f, m);
+		tag->PushSample(0.0f, m);
+	}	
+	
+	// output end cap if in draw mode
+	if (tag->draw)
+		tag->Stop();
+
+	return tag;
+}
+
+void Advance(float dt)
+{
+	if (!gPause)
+		gFrameTime += dt;
+
+	size_t currentFrame = CurrentFrame();
+
+	if (currentFrame >= gFrames.size())
+	{
+		gFrameTime = 0.0f;
+		currentFrame = CurrentFrame();
 	}
 
-	tag.Stop();
+	Tag* tag = CreateTag(gFrames, gControlTrack, gTagSmoothing, gTagWidth, gTagHeight, currentFrame);
 
 	glPolygonMode(GL_FRONT_AND_BACK, gWireframe?GL_LINE:GL_FILL);
 
@@ -310,7 +373,7 @@ void Advance(float dt)
 	glPushMatrix();
 	glLoadMatrixf(lightView);
 
-	tag.Draw();
+	tag->Draw();
 
 	ShadowEnd();
 
@@ -357,7 +420,7 @@ void Advance(float dt)
 	glBindTexture(GL_TEXTURE_2D, gShadowTexture);
 
 	Point3 lower, upper;
-	tag.GetBounds(lower, upper);
+	tag->GetBounds(lower, upper);
 
 	lower = gTagLower;
 	upper = gTagUpper;
@@ -382,13 +445,53 @@ void Advance(float dt)
 	if (gShowNormals)
 		glUseProgram(gDebugShader);
 
-	tag.Draw();
+	tag->Draw();
 		
 	glDisable(GL_TEXTURE_2D);
 	glUseProgram(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	DrawBasis(tag.basis);
+	DrawBasis(tag->basis);
+
+	delete tag;
+}
+
+void DrawTimeline(int x, int y, int w, const vector<Control>& controls, float cursor, float startTime, float endTime)
+{
+	glDisable(GL_DEPTH_TEST);
+	glBegin(GL_LINES);
+
+
+	// time line
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glVertex2i(x, y);
+	glVertex2i(x+w, y);
+	// terminators
+	glVertex2i(x, y+5);
+	glVertex2i(x, y-5);
+	glVertex2i(x+w, y+5);
+	glVertex2i(x+w, y-5);
+
+	// cursor
+	glColor3f(0.0f, 0.0f, 1.0f);
+	int c = w*cursor;
+	for (int i=-1; i<=1; ++i)
+	{
+		glVertex2i(x + c + i, y+5);
+		glVertex2i(x + c + i, y-5);
+	}
+
+	// draw control marks
+	glColor3f(1.0f, 0.0f, 0.0f);
+
+	for (uint32_t i=0; i < controls.size(); ++i)
+	{
+		int p = (controls[i].time / (endTime-startTime))*w;
+	
+		glVertex2i(x + p, y);
+	}
+
+	glEnd();
 }
 
 void Update()
@@ -445,28 +548,80 @@ void Update()
 	glLoadIdentity();
 	gluOrtho2D(0, gScreenWidth, gScreenHeight, 0);
 
-	int x = 10;
-	int y = 15;
-	
-	char line[1024];
-
-	glColor3f(1.0f, 1.0f, 1.0f);
-	sprintf(line, "Draw Time: %.2fms", float(elapsedTime)*1000.0f);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Anim Time: %.2fs", gFrameTime);
-	DrawString(x, y, line); y += 13;
-
-	sprintf(line, "Anim Frame: %d", int(CurrentFrame()));
-	DrawString(x, y, line); y += 26;
-
-	DrawString(x, y, "1 - New Control Track"); y += 13;
-
-	if (gControlRecord)
+	if (gShowHelp)
 	{
-		glColor3f(1.0f, 0.0f, 0.0f);
-		DrawString(x, y, "recording");
+		int x = 10;
+		int y = 15;
+	
+		char line[1024];
+
+		glColor3f(1.0f, 1.0f, 1.0f);
+		sprintf(line, "Draw Time: %.2fms", float(elapsedTime)*1000.0f);
+		DrawString(x, y, line); y += 13;
+
+		sprintf(line, "Anim Time: %.2fs", gFrameTime);
+		DrawString(x, y, line); y += 13;
+		sprintf(line, "Anim Frame: %d", int(CurrentFrame()));
+		DrawString(x, y, line); y += 26;
+
+		glColor3f(1.0f, 1.0f, 0.0f);
+		DrawString(x, y, "Anim : %s", GetFile(gAnimFile.c_str())); y += 13;
+		DrawString(x, y, "Track: %s", GetFile(gControlFile.c_str())); y += 26;
+		glColor3f(1.0f, 1.0f, 1.0f);
+
+		DrawString(x, y, "1 - Open Animation"); y += 13;
+		DrawString(x, y, "2 - Open Can Track"); y += 13;
+		DrawString(x, y, "3 - Export .obj mesh"); y += 13;
+		
+		if (gControlRecord)
+		{
+			DrawString(x, y, "4 - Stop Can Record"); y += 26;			
+		}
+		else
+		{
+			DrawString(x, y, "4 - Start Can Record"); y += 26;
+		}
+
+		DrawString(x, y, "space - Pause/Play"); y += 13;
+		DrawString(x, y, "r - Goto Start"); y += 13;
+		DrawString(x, y, "f - Goto End"); y += 13;
+		DrawString(x, y, "u,j - Speed (%.3f)", gFrameRate); y += 13;
+		DrawString(x, y, "+/- Adjust Track Sync"); y += 26;
+
+		DrawString(x, y, "i,k - Tag Width (%.2f)", gTagWidth); y += 13;
+		DrawString(x, y, "o,l - Tag Height (%.2f)", gTagHeight); y += 26;
+
+		DrawString(x, y, "h - Hide Help"); y += 13;
+		DrawString(x, y, "b - Show Wireframe", gTagWidth); y += 13;
+		DrawString(x, y, "n - Show Normals", gTagHeight); y += 26;
+
+		if (gControlRecord)
+		{
+			glColor3f(1.0f, 0.0f, 0.0f);
+			DrawString(x, y, "Recording"); 
+			glColor3f(1.0f, 1.0f, 1.0f);
+		}
+
+		if (gPause)
+		{
+			glColor3f(1.0f, 0.0f, 0.0f);
+			DrawString(x, y, "Paused"); 
+			glColor3f(1.0f, 1.0f, 1.0f);
+		}
+
+		// time lines
+		y = gScreenHeight-60;
+		x = 60;
+		//DrawTimeline(x, y, gScreenWidth-x*2, vector<Control>(), CurrentFrame()/float(gFrames.size()), 0.0f, gFrames.size()*gFrameRate); y += 20;
+		DrawTimeline(x, y, gScreenWidth-x*2, gControlTrack, CurrentFrame()/float(gFrames.size()), 0.0f, gFrames.size()*gFrameRate); y += 20;
+
+		if (gControlRecord)
+		{
+			glColor3f(1.0f, 0.0f, 0.0f);
+			DrawString(x, y, "recording");
+		}
 	}
+
 
 	glutSwapBuffers();
 
@@ -501,10 +656,10 @@ void GLUTMouseFunc(int b, int state, int x, int y)
 			lastx = x;
 			lasty = y;
 		
-			if (gControlRecord)
+			if (gControlRecord && b == GLUT_LEFT_BUTTON)
 			{	
 				Control c;
-				c.time = gFrameTime;//GetSeconds()-gControlStartTime;
+				c.time = GetSeconds()-gControlStartTime;
 			    c.event = eStopPaint;
 
 				gControlTrack.push_back(c);
@@ -516,10 +671,10 @@ void GLUTMouseFunc(int b, int state, int x, int y)
 			lastx = x;
 			lasty = y;
 
-			if (gControlRecord)
+			if (gControlRecord && b == GLUT_LEFT_BUTTON)
 			{	
 				Control c;
-				c.time = gFrameTime;//GetSeconds()-gControlStartTime;
+				c.time = GetSeconds()-gControlStartTime;
 			    c.event = eStartPaint;	
 
 				gControlTrack.push_back(c);
@@ -566,9 +721,21 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			gFrameRate = max(0.001f, gFrameRate);
 			break;
 		}
+		case 'h':
+		{
+			gShowHelp = !gShowHelp;
+			break;
+		}
 		case 'r':
 		{
 			gFrameTime = 0.0f;
+			gPause = true;
+			break;
+		}
+		case 'f':
+		{
+			gFrameTime = gFrames.size()*gFrameRate;
+			gPause = true;
 			break;
 		}
 		case ' ':
@@ -606,13 +773,72 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			gTagHeight -= 0.1f;
 			break;
 		}
+		case '=':
+		{
+			for (uint32_t i=0; i < gControlTrack.size(); ++i)
+				gControlTrack[i].time += 0.01f;
+			break;
+		}
+		case '-':
+		{
+			for (uint32_t i=0; i < gControlTrack.size(); ++i)
+				gControlTrack[i].time -= 0.01f;
+			break;
+		};
+
+		/*
 		case 'g':
 		{
 			gFreeCam = !gFreeCam;
 			break;
 		}
+		*/
 		case '1':
 		{
+#ifdef _WIN32
+			string path = FileOpenDialog();
+
+			if (!path.empty())
+			{
+				gAnimFile = path;
+
+				// re-init
+				Init();
+			}
+#endif
+			break;
+		}
+
+		case '2':
+		{
+#ifdef _WIN32
+			string path = FileOpenDialog();
+
+			if (!path.empty())
+			{
+				gControlFile = path;
+
+				// re-init
+				Init();
+			}
+#endif
+			break;
+		}
+		case '3':
+		{
+			// create tag copy
+			Tag* tag = CreateTag(gFrames, gControlTrack, gTagSmoothing, gTagWidth, gTagHeight, CurrentFrame());
+			
+			// export
+			tag->ExportToObj("dew.obj");
+			delete tag;
+
+			printf("Exported dew.obj mesh\n");
+
+			break;
+		}
+		case '4':
+		{			
 			if (!gControlRecord)
 			{
 				gFrameTime = 0.0f;
@@ -637,26 +863,11 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 					fclose(f);
 				}
 
-				gControlRecord = false;
+				gControlRecord = false;				
+				gControlFile = "control.txt";
 			}
 			break;
-		}
-
-		case 'y':
-		{
-			Tag tag(gTagSmoothing, gTagWidth, gTagHeight);
-
-			// build tag mesh
-			for (size_t i=0; i < CurrentFrame(); ++i)
-			{
-				Matrix44 m = TranslationMatrix(Point3(gFrames[i].pos));
-				tag.PushSample(0.0f, m); 
-			}
-
-			// export
-			tag.ExportToObj("dew.obj");	
-			break;
-		}
+		}		
 		case 27:
 		case 'q':
 		{
@@ -701,10 +912,13 @@ void GLUTMotionFunc(int x, int y)
 	lastx = x;
 	lasty = y;
 
-	const float kSensitivity = DegToRad(0.1f);
+	if (!gControlRecord)
+	{
+		const float kSensitivity = DegToRad(0.1f);
 
-	gCamAngle.x -= dx*kSensitivity;
-	gCamAngle.y += dy*kSensitivity;
+		gCamAngle.x -= dx*kSensitivity;
+		gCamAngle.y += dy*kSensitivity;
+	}
 }
 
 void GLUTReshape(int x, int y)
@@ -716,9 +930,14 @@ void GLUTReshape(int x, int y)
 int main(int argc, char* argv[])
 {
 	if (argc < 2)
-		printf("BVH file not specified, defaulting to %s.\n", gFile);
+		printf("BVH file not specified, defaulting to %s.\n", gAnimFile.c_str());
 	else
-		gFile = argv[1];
+	{
+		gAnimFile = argv[1];
+
+		if (argc > 2)
+			gControlFile = argv[2];
+	}
 
 	// init gl
 	glutInit(&argc, argv);
