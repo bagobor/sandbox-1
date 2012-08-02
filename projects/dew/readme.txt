@@ -24,7 +24,7 @@ w,a,s,d - Translate camera
 
 1 - Open Animation (.bvh)
 2 - Open Can Track (.txt)
-3 - Export .obj mesh at current frame (creates dew.obj)
+3 - Export mesh at current frame (creates dew.obj)
 4 - Start/Stop Can Record (saves mouse clicks to control.txt)
 
 +/- Adjust can-track sync forward/back in time
