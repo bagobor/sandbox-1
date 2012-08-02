@@ -23,11 +23,11 @@ mouse - Rotate camera
 w,a,s,d - Translate camera
 
 1 - Open Animation (.bvh)
-2 - Open Can Track (.txt)
+2 - Open Mouse Track (.txt)
 3 - Export mesh at current frame (creates dew.obj)
-4 - Start/Stop Can Record (saves mouse clicks to control.txt)
+4 - Start/Stop Mouse Record (saves mouse clicks to control.txt)
 
-+/- Adjust Can track sync forward/back in time
++/- Adjust Mouse track sync forward/back in time
 
 j - Speed up animation
 u - Slow down animation

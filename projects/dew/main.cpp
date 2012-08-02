@@ -566,27 +566,27 @@ void Update()
 
 		glColor3f(1.0f, 1.0f, 0.0f);
 		DrawString(x, y, "Anim : %s", GetFile(gAnimFile.c_str())); y += 13;
-		DrawString(x, y, "Track: %s", GetFile(gControlFile.c_str())); y += 26;
+		DrawString(x, y, "Mouse Track: %s", GetFile(gControlFile.c_str())); y += 26;
 		glColor3f(1.0f, 1.0f, 1.0f);
 
 		DrawString(x, y, "1 - Open Animation (.bvh)"); y += 13;
-		DrawString(x, y, "2 - Open Can Track (.txt)"); y += 13;
-		DrawString(x, y, "3 - Export .obj mesh"); y += 13;
+		DrawString(x, y, "2 - Open Mouse Track (.txt)"); y += 13;
+		DrawString(x, y, "3 - Export Mesh (dew.obj)"); y += 13;
 		
 		if (gControlRecord)
 		{
-			DrawString(x, y, "4 - Stop Can Record"); y += 26;			
+			DrawString(x, y, "4 - Stop Mouse Record  (control.txt)"); y += 26;			
 		}
 		else
 		{
-			DrawString(x, y, "4 - Start Can Record"); y += 26;
+			DrawString(x, y, "4 - Start Mouse Record (control.txt)"); y += 26;
 		}
 
 		DrawString(x, y, "space - Pause/Play"); y += 13;
 		DrawString(x, y, "r - Goto Start"); y += 13;
 		DrawString(x, y, "f - Goto End"); y += 13;
 		DrawString(x, y, "u,j - Speed (%.3f)", gFrameRate); y += 13;
-		DrawString(x, y, "+/- Adjust Track Sync"); y += 26;
+		DrawString(x, y, "+/- Adjust Mouse Track Sync"); y += 26;
 
 		DrawString(x, y, "i,k - Tag Width (%.2f)", gTagWidth); y += 13;
 		DrawString(x, y, "o,l - Tag Height (%.2f)", gTagHeight); y += 26;
