@@ -27,7 +27,7 @@ w,a,s,d - Translate camera
 3 - Export mesh at current frame (creates dew.obj)
 4 - Start/Stop Can Record (saves mouse clicks to control.txt)
 
-+/- Adjust can-track sync forward/back in time
++/- Adjust Can track sync forward/back in time
 
 j - Speed up animation
 u - Slow down animation
