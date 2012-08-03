@@ -354,7 +354,7 @@ Tag* CreateTag(const vector<Frame>& frames, const vector<Control> controls, floa
 
 void DrawMesh(Mesh* m, Point3 p, GLuint shader)
 {
-	if (!gShowCan)
+	if (!gShowCan || gFrames.empty())
 		return;
 
 	glPushMatrix();	
