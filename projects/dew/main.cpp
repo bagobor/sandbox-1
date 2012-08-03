@@ -27,19 +27,19 @@ int gScreenWidth = 1280;
 int gScreenHeight = 720;
 
 // default file
-string gAnimFile = "drawing001.bvh";
+string gAnimFile;
 string gControlFile;
 
 Vec3 gCamPos(0.0f);//, 150.0f, -357.0f);
 Vec3 gCamVel(0.0f);
 Vec3 gCamAngle(kPi, 0.0f, 0.0f);
-float gTagWidth = 5.0f;
-float gTagHeight = 8.0f;
+float gTagWidth = 2.0f;
+float gTagHeight = 4.0f;
 Point3 gTagCenter;
 Point3 gTagLower(-20.0f);
 Point3 gTagUpper(20.0f);
 float gTagSmoothing = 0.8f;
-float gTagVelocityScale = 0.1f;
+float gTagVelocityScale = 0.2f;
 bool gShowHelp = true;
 bool gShowCan = true;
 
@@ -132,7 +132,7 @@ void LoadControl(const char* path, std::vector<Control>& clicks)
 		while (!feof(f))
 		{
 			Control c;
-			int r = fscanf(f, "%f %d", &c.time, &c.event);
+			int r = fscanf(f, "%f %d", &c.time, (int*)&c.event);
 
 			if (r != 2)
 				break;

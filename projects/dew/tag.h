@@ -165,7 +165,7 @@ struct CircleBrush : public Brush
 
 struct Tag
 {
-	Tag(float smoothing, float width, float height, float velscale, Brush* b) : basis(Matrix44::kIdentity), smoothing(smoothing), width(width), height(height), draw(false), velscale(velscale), shape(b)
+	Tag(float smoothing, float width, float height, float velscale, Brush* b) : basis(Matrix44::kIdentity), smoothing(smoothing), width(width), height(height), velscale(velscale), velocity(0.0f), draw(false), shape(b)
 	{
 		samples.reserve(4096);
 		vertices.reserve(100000);
@@ -267,6 +267,9 @@ struct Tag
 		Vec3 td = Normalize(samples[c+2]-samples[c]);
 		float a = acosf(Dot(tc, td));
 
+		// calculate moving average of velocity
+		velocity = 0.8f*Length(samples[c+2]-samples[c])+0.2f*velocity;
+
 		// save rotations
 		rotations.push_back(a);
 
@@ -324,7 +327,7 @@ struct Tag
 	{
 		// scale size inversely proportionally to velocity
 		//float s = Max(0.0f, 1.0f-velscale*avgSpeed);//Min(1.0f, 1.0f / (velscale*avgSpeed));
-		float s = Min(1.0f, velscale*GetAvgSpeed());		
+		float s = Lerp(1.0f, GetAvgSpeed(), velscale);//Min(1.0f, (1.0f-velscale)*GetAvgSpeed());		
 		//float s = Max(1.0f, 1.0f-velscale*GetAvgAngularSpeed());		
 		//float s = 1.0f;
 		return s;
@@ -333,12 +336,15 @@ struct Tag
 	// returns brush size based on current velocity
 	float GetAvgSpeed()
 	{
+		return velocity;
+
+		/*
 		if (velscale == 0.0f)
 			return 1.0f;
 
 		const int numSamples = 10;
 
-		int start = Max(0U, samples.size()-numSamples);
+		int start = Max(int(0), int(samples.size())-numSamples);
 		int end = Min(size_t(start+numSamples), samples.size());
 
 		float avgSpeed = 0.0f;
@@ -350,30 +356,8 @@ struct Tag
 
 		avgSpeed /= numSamples;
 		return avgSpeed;
+		*/
 	}
-
-		// returns brush size based on current velocity
-	float GetAvgAngularSpeed()
-	{
-		if (velscale == 0.0f)
-			return 1.0f;
-
-		const int numSamples = 10;
-
-		int start = Max(0U, rotations.size()-numSamples);
-		int end = Min(size_t(start+numSamples), rotations.size());
-
-		float avgSpeed = 0.0f;
-
-		for (int i=start+1; i < end; ++i)
-		{
-			avgSpeed += fabsf(rotations[i]) - fabsf(rotations[rotations.size()-1]);
-		}
-
-		avgSpeed /= numSamples;
-		return avgSpeed;
-	}
-
 
 	void Draw()
 	{
@@ -469,6 +453,7 @@ struct Tag
 	float width;
 	float height;		
 	float velscale;
+	float velocity;
 	bool draw;	
 	
 	Brush* shape;
