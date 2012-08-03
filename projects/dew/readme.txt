@@ -37,11 +37,14 @@ space - Pause animation
 
 i - Increase path width
 k - Decrease path width
-
 o - Increase path thickness
 l - Decrease path thickness
+p - Increase the effect velocity has on path thickness
+; - Decrease the effect velocity has on path thickness
+/ - Cycle brushes
 
+h - Hide help text
+c - Hide can
 b - Show wirefame 
 n - Show normals
-h - Hide help text
-
+b - Toggle fullscreen

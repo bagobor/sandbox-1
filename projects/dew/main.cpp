@@ -3,6 +3,7 @@
 #include <core/platform.h>
 #include <core/shader.h>
 #include <core/tga.h>
+#include <core/mesh.h>
 
 #define STRINGIFY(A) #A
 
@@ -26,7 +27,7 @@ int gScreenWidth = 1280;
 int gScreenHeight = 720;
 
 // default file
-string gAnimFile;// = "drawing001.bvh";
+string gAnimFile = "drawing001.bvh";
 string gControlFile;
 
 Vec3 gCamPos(0.0f);//, 150.0f, -357.0f);
@@ -38,7 +39,14 @@ Point3 gTagCenter;
 Point3 gTagLower(-20.0f);
 Point3 gTagUpper(20.0f);
 float gTagSmoothing = 0.8f;
+float gTagVelocityScale = 0.1f;
 bool gShowHelp = true;
+bool gShowCan = true;
+
+vector<Brush*> gTagBrushes;
+uint32_t gTagBrushIndex;
+
+Mesh* gMeshCan;
 
 GLuint gMainShader;
 GLuint gDebugShader;
@@ -197,6 +205,23 @@ void Init()
 	
 	gCamPos = Vec3(gTagCenter - Vec3(0.0f, 0.0f, gTagUpper.z-gTagLower.z));
 	gCamAngle = Vec3(kPi, 0.0f, 0.0f);
+
+	// create brushes
+	
+	gTagBrushes.push_back(new SquareBrush());
+	gTagBrushes.push_back(new TriangleBrush());
+	gTagBrushes.push_back(new CircleBrush());
+	gTagBrushes.push_back(new SquareColorBrush(colors1));
+	gTagBrushes.push_back(new SquareColorBrush(colors2));
+	gTagBrushes.push_back(new SquareColorBrush(colors3));
+
+	gMeshCan = ImportMeshFromObj("can.obj");	
+
+	// translate the can so it's nozzle is at the origin
+	Vec3 minExtents, maxExtents;
+	gMeshCan->GetBounds(minExtents, maxExtents);
+	gMeshCan->Transform(TranslationMatrix(Point3(0.0f, -(maxExtents.y-minExtents.y), 0.0f)));
+
 }
 
 void DrawBasis(const Matrix44& m)
@@ -284,10 +309,10 @@ void ShadowEnd()
 	glViewport(0, 0, gScreenWidth, gScreenHeight);
 }
 
-Tag* CreateTag(const vector<Frame>& frames, const vector<Control> controls, float smoothing, float width, float height, uint32_t maxFrame)
+Tag* CreateTag(const vector<Frame>& frames, const vector<Control> controls, float smoothing, float width, float height, float velscale, uint32_t maxFrame)
 {
 	// re-create the tag each frame
-	Tag* tag = new Tag(smoothing, width, height);
+	Tag* tag = new Tag(smoothing, width, height, velscale, gTagBrushes[gTagBrushIndex]);
 
 	uint32_t c = 0;
 
@@ -316,18 +341,7 @@ Tag* CreateTag(const vector<Frame>& frames, const vector<Control> controls, floa
 			}
 		}
 
-		// let it run a few frames
-	//	if (i == 10)
-	//j		tag.Start();
-		/*
-		Matrix44 m = RotationMatrix(DegToRad(gFrames[i].rot.z), Vec3(0.0f, 0.0f, 1.0f))*
-					 RotationMatrix(DegToRad(gFrames[i].rot.x), Vec3(1.0f, 0.0f, 0.0f))*
-					 RotationMatrix(DegToRad(gFrames[i].rot.y), Vec3(0.0f, 1.0f, 0.0f));
-
-		m.SetTranslation(Point3(gFrames[i].pos));
-		*/
 		Matrix44 m = TranslationMatrix(Point3(frames[i].pos));
-
 		tag->PushSample(0.0f, m);
 	}	
 	
@@ -336,6 +350,57 @@ Tag* CreateTag(const vector<Frame>& frames, const vector<Control> controls, floa
 		tag->Stop();
 
 	return tag;
+}
+
+void DrawMesh(Mesh* m, Point3 p, GLuint shader)
+{
+	if (!gShowCan)
+		return;
+
+	glPushMatrix();	
+		
+	// use current BVH rotation frame for can
+	Matrix44 x = RotationMatrix(DegToRad(gFrames[CurrentFrame()].rot.z), Vec3(0.0f, 0.0f, 1.0f))*
+				 RotationMatrix(DegToRad(gFrames[CurrentFrame()].rot.x), Vec3(1.0f, 0.0f, 0.0f))*
+				 RotationMatrix(DegToRad(gFrames[CurrentFrame()].rot.y), Vec3(0.0f, 1.0f, 0.0f));	
+
+	// comment out to flip the can 180 degress back
+	x *= RotationMatrix(DegToRad(180.0f), Vec3(1.0f, 0.0f, 0.0f));
+
+	// set to anim head
+	x.SetTranslation(p);
+	
+	glMultMatrixf(x);
+	glScalef(2.0f, 2.0f, 2.0f);
+
+	if (shader == gMainShader)
+	{
+		GLint uworldTransform = glGetUniformLocation(shader, "worldTransform");
+		glUniformMatrix4fv(uworldTransform, 1, false, x);
+	}
+
+	glColor3f(1.5f, 1.5f, 1.5f);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, &m->m_positions.front());
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glNormalPointer(GL_FLOAT, 0, &m->m_normals.front());
+	
+	glDrawElements(GL_TRIANGLES, m->GetNumFaces()*3, GL_UNSIGNED_INT, &m->m_indices.front());
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+
+	glPopMatrix();
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+	// reset world transform
+	if (shader == gMainShader)
+	{
+		GLint uworldTransform = glGetUniformLocation(shader, "worldTransform");
+		glUniformMatrix4fv(uworldTransform, 1, false, Matrix44::kIdentity);
+	}
 }
 
 void Advance(float dt)
@@ -351,7 +416,7 @@ void Advance(float dt)
 		currentFrame = CurrentFrame();
 	}
 
-	Tag* tag = CreateTag(gFrames, gControlTrack, gTagSmoothing, gTagWidth, gTagHeight, currentFrame);
+	Tag* tag = CreateTag(gFrames, gControlTrack, gTagSmoothing, gTagWidth, gTagHeight, gTagVelocityScale, currentFrame);
 
 	glPolygonMode(GL_FRONT_AND_BACK, gWireframe?GL_LINE:GL_FILL);
 
@@ -374,6 +439,8 @@ void Advance(float dt)
 	glLoadMatrixf(lightView);
 
 	tag->Draw();
+
+	DrawMesh(gMeshCan, tag->basis.GetTranslation(), -1);
 
 	ShadowEnd();
 
@@ -402,6 +469,9 @@ void Advance(float dt)
 	GLint uColor = glGetUniformLocation(gMainShader, "color");
 	glUniform3fv(uColor, 1, Vec3(235.0f/255.0f, 244.0f/255.0f, 223.0f/255.0f));	
 
+	GLint uworldTransform = glGetUniformLocation(gMainShader, "worldTransform");
+	glUniformMatrix4fv(uworldTransform, 1, false, Matrix44::kIdentity);
+	
 	const Vec2 taps[] = 
 	{ 
 	   	Vec2(-0.326212,-0.40581),Vec2(-0.840144,-0.07358),
@@ -432,18 +502,26 @@ void Advance(float dt)
 	upper += edge*margin;
 
 	// draw walls 
+	glColor3f(1.0f, 1.0f, 1.0f);
+
 	DrawPlane(Vec3(0.0f, 1.0f, 0.0f), lower.y);	
 	DrawPlane(Vec3(0.0f, 0.0f, -1.0f), -upper.z);
 	DrawPlane(Vec3(1.0f, 0.0f, 0.0f), lower.x);	
 	DrawPlane(Vec3(-1.0f, 0.0f, 0.0f), -upper.x);
 	//DrawPlane(Vec3(0.0f, -1.0f, 0.0f), -gTagUpper.y); 
 
+	DrawMesh(gMeshCan, tag->basis.GetTranslation(), gMainShader);
 
 	// draw the tag, in Mountain Dew green 
 	glUniform3fv(uColor, 1, Vec3(1.0f));//Vec3(0.1f, 1.0f, 0.1f));	
 	
 	if (gShowNormals)
+	{
 		glUseProgram(gDebugShader);
+
+		GLint uworldTransform = glGetUniformLocation(gDebugShader, "worldTransform");
+		glUniformMatrix4fv(uworldTransform, 1, false, Matrix44::kIdentity);
+	}
 
 	tag->Draw();
 		
@@ -451,7 +529,7 @@ void Advance(float dt)
 	glUseProgram(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	DrawBasis(tag->basis);
+	//DrawBasis(tag->basis);
 
 	delete tag;
 }
@@ -589,11 +667,16 @@ void Update()
 		DrawString(x, y, "+/- Adjust Mouse Track Sync"); y += 26;
 
 		DrawString(x, y, "i,k - Tag Width (%.2f)", gTagWidth); y += 13;
-		DrawString(x, y, "o,l - Tag Height (%.2f)", gTagHeight); y += 26;
+		DrawString(x, y, "o,l - Tag Height (%.2f)", gTagHeight); y += 13;
+		DrawString(x, y, "p,; - Tag Velocity Scale (%.2f)", gTagVelocityScale); y += 13;
+		DrawString(x, y, "/   - Next Brush"); y += 26;
 
 		DrawString(x, y, "h - Hide Help"); y += 13;
+		DrawString(x, y, "c - Hide Can"); y += 13;
 		DrawString(x, y, "b - Show Wireframe", gTagWidth); y += 13;
-		DrawString(x, y, "n - Show Normals", gTagHeight); y += 26;
+		DrawString(x, y, "n - Show Normals", gTagHeight); y += 13;
+		DrawString(x, y, "b - Toggle Fullscreen"); y += 13;
+		
 
 		if (gControlRecord)
 		{
@@ -726,6 +809,11 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			gShowHelp = !gShowHelp;
 			break;
 		}
+		case 'c':
+		{
+			gShowCan = !gShowCan;
+			break;
+		}
 		case 'r':
 		{
 			gFrameTime = 0.0f;
@@ -773,6 +861,16 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			gTagHeight -= 0.1f;
 			break;
 		}
+		case 'p':
+		{
+			gTagVelocityScale += 0.01f;
+			break;
+		}
+		case ';':
+		{
+			gTagVelocityScale -= 0.01f;
+			break;
+		}
 		case '=':
 		{
 			for (uint32_t i=0; i < gControlTrack.size(); ++i)
@@ -784,7 +882,29 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			for (uint32_t i=0; i < gControlTrack.size(); ++i)
 				gControlTrack[i].time -= 0.01f;
 			break;
-		};
+		}
+		case 'm':
+		{
+			static bool fullscreen = false;
+			if (!fullscreen)
+			{
+				glutFullScreen();
+				fullscreen = true;
+			}
+			else
+			{
+				glutReshapeWindow(1280, 720);
+				fullscreen = false;
+			}
+
+			break;
+		}
+		case '/':
+		{
+			gTagBrushIndex = (gTagBrushIndex+1)%gTagBrushes.size();
+			break;
+		}
+
 
 		/*
 		case 'g':
@@ -827,7 +947,7 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		case '3':
 		{
 			// create tag copy
-			Tag* tag = CreateTag(gFrames, gControlTrack, gTagSmoothing, gTagWidth, gTagHeight, CurrentFrame());
+			Tag* tag = CreateTag(gFrames, gControlTrack, gTagSmoothing, gTagWidth, gTagHeight, gTagVelocityScale, CurrentFrame());
 			
 			// export
 			tag->ExportToObj("dew.obj");

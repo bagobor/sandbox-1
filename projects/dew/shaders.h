@@ -18,15 +18,17 @@ Vec3 gShDiffuse[] =
 const char* vertexShader = STRINGIFY
 (
 	uniform mat4 lightTransform; 
-	
+	uniform mat4 worldTransform;
+
 	void main()
 	{
 		vec3 n = gl_Normal;//normalize(gl_Normal);
 
-		gl_Position = gl_ModelViewProjectionMatrix*vec4(gl_Vertex.xyz, 1.0);
-		gl_TexCoord[0] = vec4(n, 0.0);
+		gl_Position = gl_ModelViewProjectionMatrix*vec4(gl_Vertex.xyz, 1.0);		
+		gl_TexCoord[0] = worldTransform*vec4(n, 0.0);
 		gl_TexCoord[1] = vec4(gl_Vertex.xyz, 1.0);
 		gl_TexCoord[2] = lightTransform*vec4(gl_Vertex.xyz+n, 1.0);
+		gl_TexCoord[3].xyz = gl_Color.xyz;
 	}
 );
 
@@ -92,6 +94,7 @@ const char* fragmentShaderMain = STRINGIFY
 		vec3 shadePos = gl_TexCoord[1].xyz;
 		vec3 eyePos = gl_ModelViewMatrixInverse[3].xyz;
 		vec3 eyeDir = normalize(eyePos-shadePos);
+		vec3 vcolor = gl_TexCoord[3].xyz;
 	
 		vec3 lightCol = vec3(1.0, 1.0, 1.0)*0.8; 
 
@@ -104,7 +107,7 @@ const char* fragmentShaderMain = STRINGIFY
 		float s = shadowSample();
 		vec3 direct = clamp((dot(n, -lightDir) + w) / (1.0 + w), 0.0, 1.0)*lightCol*smoothstep(0.9, 1.0, dot(lightDir, normalize(shadePos-lightPos))); 
 
-		vec3 l = (ambient + s*direct)*color;//*(n*vec3(0.5) + vec3(0.5));//color;
+		vec3 l = (ambient + s*direct)*vcolor;//*(n*vec3(0.5) + vec3(0.5));//color;
 
 		// convert from linear light space to SRGB
 		gl_FragColor = vec4(pow(l, vec3(0.5)), 1.0);

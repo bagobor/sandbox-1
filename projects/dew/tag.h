@@ -6,40 +6,173 @@
 struct Vertex
 {
 	Vertex() {}
-	Vertex(Point3 p, Vec3 n) : position(p), normal(n) {}
+	Vertex(Point3 p, Vec3 n, Vec3 c=Vec3(1.0f)) : position(p), normal(n), color(c) {}
 
 	Point3 position;
 	Vec3 normal;
+	Vec3 color;
 };
 
-void SquareBrush(float t, std::vector<Vertex>& verts, float w, float h)
+struct Brush
 {
-	const Vertex shape[] = 
+	virtual void Eval(float t, std::vector<Vertex>& verts, float w, float h)
 	{
-		Vertex(Point3(-w,  h, 0.0f), Vec3(-1.0f, 0.0f, 0.0f)),
-		Vertex(Point3(-w,  -h, 0.0f), Vec3(-1.0f, 0.0f, 0.0f)),
+
+	}
+};
+
+struct SquareBrush: public Brush
+{
+	virtual void Eval(float t, std::vector<Vertex>& verts, float w, float h)
+	{
+		const Vertex shape[] = 
+		{
+			Vertex(Point3(-w,  h, 0.0f), Vec3(-1.0f, 0.0f, 0.0f)),
+			Vertex(Point3(-w,  -h, 0.0f), Vec3(-1.0f, 0.0f, 0.0f)),
 	
-		Vertex(Point3( -w, -h, 0.0f), Vec3( 0.0f, -1.0f, 0.0f)),
-		Vertex(Point3( w,  -h, 0.0f), Vec3( 0.0f, -1.0f, 0.0f)),
+			Vertex(Point3( -w, -h, 0.0f), Vec3( 0.0f, -1.0f, 0.0f)),
+			Vertex(Point3( w,  -h, 0.0f), Vec3( 0.0f, -1.0f, 0.0f)),
 	
-		Vertex(Point3( w, -h, 0.0f), Vec3( 1.0f, 0.0f, 0.0f)),
-		Vertex(Point3( w,  h, 0.0f), Vec3( 1.0f, 0.0f, 0.0f)),
+			Vertex(Point3( w, -h, 0.0f), Vec3( 1.0f, 0.0f, 0.0f)),
+			Vertex(Point3( w,  h, 0.0f), Vec3( 1.0f, 0.0f, 0.0f)),
 		
-		Vertex(Point3( w,  h, 0.0f), Vec3( 0.0f, 1.0f, 0.0f)),
-		Vertex(Point3( -w, h, 0.0f), Vec3( 0.0f, 1.0f, 0.0f))
-	};
+			Vertex(Point3( w,  h, 0.0f), Vec3( 0.0f, 1.0f, 0.0f)),
+			Vertex(Point3( -w, h, 0.0f), Vec3( 0.0f, 1.0f, 0.0f))
+		};
 
-	verts.assign(shape, shape+8);
+		verts.assign(shape, shape+8);
+	}
+};
 
+static Vec3 FromHex(uint32_t rgba)
+{
+	float r = ((rgba>>24)&0xff)/255.0f;
+	float g = ((rgba>>16)&0xff)/255.0f;
+	float b = ((rgba>>8)&0xff)/255.0f;
+
+	float gamma = 2.0f;
+	float scale = 2.0f;
+
+	return Vec3(powf(r, gamma), powf(g, gamma), powf(b, gamma))*scale;
 }
+
+static Vec3 colors1[4] =  {
+
+	FromHex(0x93E46300),
+	FromHex(0xCCE2BE00),
+	FromHex(0x70A53E00),
+	FromHex(0xFF701A00),
+ };
+
+static Vec3 colors2[4] =  {
+
+	FromHex(0xFFF7A900),
+	FromHex(0xF98D0400),
+	FromHex(0xFE9B1E00),
+	FromHex(0xF44E9000),
+ };
+
+static Vec3 colors3[4] =  {
+
+	FromHex(0xDEE8FC00),
+	FromHex(0x4C55FF00),
+	FromHex(0x93E46300),
+	FromHex(0x4856C300),
+ };
+
+struct SquareColorBrush: public Brush
+{
+	SquareColorBrush(Vec3* scheme) : colors(scheme) {}
+
+	virtual void Eval(float t, std::vector<Vertex>& verts, float w, float h)
+	{
+		const Vertex shape[] = 
+		{
+			Vertex(Point3(-w,  h, 0.0f), Vec3(-1.0f, 0.0f, 0.0f), colors[0]),
+			Vertex(Point3(-w,  -h, 0.0f), Vec3(-1.0f, 0.0f, 0.0f),colors[0]),
+	
+			Vertex(Point3( -w, -h, 0.0f), Vec3( 0.0f, -1.0f, 0.0f), colors[1]),
+			Vertex(Point3( w,  -h, 0.0f), Vec3( 0.0f, -1.0f, 0.0f), colors[1]),
+	
+			Vertex(Point3( w, -h, 0.0f), Vec3( 1.0f, 0.0f, 0.0f), colors[2]),
+			Vertex(Point3( w,  h, 0.0f), Vec3( 1.0f, 0.0f, 0.0f), colors[2]),
+		
+			Vertex(Point3( w,  h, 0.0f), Vec3( 0.0f, 1.0f, 0.0f), colors[3]),
+			Vertex(Point3( -w, h, 0.0f), Vec3( 0.0f, 1.0f, 0.0f), colors[3])
+		};
+
+		verts.assign(shape, shape+8);
+	}
+
+	Vec3* colors;
+};
+
+struct TriangleBrush: public Brush
+{
+	virtual void Eval(float t, std::vector<Vertex>& verts, float w, float h)
+	{
+		/*
+		Point3 s[] = { Point3(0.0f, -h*0.5f, 0.0f),
+					   Point3(w, -h, 0.0f),
+					   Point3(0.0f, h*0.5f, 0.0f),
+					   Point3(-w, -h, 0.0f) };
+					   */
+
+		Point3 s[] = { Point3(0.0f, h*0.5f, 0.0f),
+					   Point3(-w, -h, 0.0f),				   
+					   Point3(w, -h, 0.0f) };
+
+
+		verts.resize(0);
+
+		const uint32_t numPoints = sizeof(s)/sizeof(Point3);
+
+		// output edges
+		for (uint32_t i=0; i < numPoints; ++i)
+		{		
+			uint32_t first = i;
+			uint32_t next = (i+1)%numPoints;
+
+			Vec3 n = Normalize(Cross(s[next]-s[first], Vec3(0.0f, 0.0f, 1.0f)));
+			Vertex v0(s[first], n);
+			Vertex v1(s[next], n);
+
+			verts.push_back(v0);
+			verts.push_back(v1);
+		}
+	}
+};
+
+struct CircleBrush : public Brush
+{
+	virtual void Eval(float t, std::vector<Vertex>& verts, float w, float h)
+	{
+		const uint32_t k = 8;
+		const float kinc = -k2Pi/k;
+
+		verts.resize(0);
+
+		for (uint32_t i=0; i <= 8; ++i)
+		{
+			float x = sinf(i*kinc);
+			float y = cosf(i*kinc);
+			Vertex v(Point3(x*w, y*h, 0.0f), Vec3(x, y, 0.0f));
+			verts.push_back(v);
+		}
+	}
+};
+
+
 struct Tag
 {
-	Tag(float smoothing, float width, float height) : basis(Matrix44::kIdentity), smoothing(smoothing), width(width), height(height), draw(false) 
+	Tag(float smoothing, float width, float height, float velscale, Brush* b) : basis(Matrix44::kIdentity), smoothing(smoothing), width(width), height(height), draw(false), velscale(velscale), shape(b)
 	{
 		samples.reserve(4096);
 		vertices.reserve(100000);
 		indices.reserve(100000);
 	}
+
+	void SetBrush(Brush* b) { shape = b; }
 
 	void Start()
 	{
@@ -58,7 +191,7 @@ struct Tag
 	void OutputCap(bool flip)
 	{
 		// draw cap
-		SquareBrush(1.f, brush, width, height);
+		shape->Eval(1.0f, brush, width, height);
 
 		Point3 center(0.0f);
 
@@ -81,8 +214,10 @@ struct Tag
 		// transform verts and create faces
 		for (size_t i=0; i < brush.size(); ++i)
 		{
+			float s = GetCurrentSize();
+
 			// transform position and normal to world space
-			Vertex v(basis*brush[i].position, n);
+			Vertex v(basis*(brush[i].position*s), n);
 
 			vertices.push_back(v);
 			
@@ -107,7 +242,7 @@ struct Tag
 	void PushSample(float t, Matrix44 m)
 	{
 		// evaluate brush
-		SquareBrush(t, brush, width, height);
+		shape->Eval(t, brush, width, height);
 
 		size_t startIndex = vertices.size();
 
@@ -132,6 +267,9 @@ struct Tag
 		Vec3 td = Normalize(samples[c+2]-samples[c]);
 		float a = acosf(Dot(tc, td));
 
+		// save rotations
+		rotations.push_back(a);
+
 		if (fabsf(a) > 0.001f)
 		{
 			// use the parallel transport method to move the reference frame along the curve
@@ -154,8 +292,10 @@ struct Tag
 		// transform verts and create faces
 		for (size_t i=0; i < brush.size(); ++i)
 		{
+			float s = GetCurrentSize();
+
 			// transform position and normal to world space
-			Vertex v(m*brush[i].position, m*brush[i].normal);
+			Vertex v(m*(brush[i].position*s), m*brush[i].normal, brush[i].color);
 
 			vertices.push_back(v);
 		}
@@ -180,6 +320,61 @@ struct Tag
 		}
 	}
 
+	float GetCurrentSize()
+	{
+		// scale size inversely proportionally to velocity
+		//float s = Max(0.0f, 1.0f-velscale*avgSpeed);//Min(1.0f, 1.0f / (velscale*avgSpeed));
+		float s = Min(1.0f, velscale*GetAvgSpeed());		
+		//float s = Max(1.0f, 1.0f-velscale*GetAvgAngularSpeed());		
+		//float s = 1.0f;
+		return s;
+	}
+
+	// returns brush size based on current velocity
+	float GetAvgSpeed()
+	{
+		if (velscale == 0.0f)
+			return 1.0f;
+
+		const int numSamples = 10;
+
+		int start = Max(0U, samples.size()-numSamples);
+		int end = Min(size_t(start+numSamples), samples.size());
+
+		float avgSpeed = 0.0f;
+
+		for (int i=start+1; i < end; ++i)
+		{
+			avgSpeed += Length(samples[i] - samples[samples.size()-1]);
+		}
+
+		avgSpeed /= numSamples;
+		return avgSpeed;
+	}
+
+		// returns brush size based on current velocity
+	float GetAvgAngularSpeed()
+	{
+		if (velscale == 0.0f)
+			return 1.0f;
+
+		const int numSamples = 10;
+
+		int start = Max(0U, rotations.size()-numSamples);
+		int end = Min(size_t(start+numSamples), rotations.size());
+
+		float avgSpeed = 0.0f;
+
+		for (int i=start+1; i < end; ++i)
+		{
+			avgSpeed += fabsf(rotations[i]) - fabsf(rotations[rotations.size()-1]);
+		}
+
+		avgSpeed /= numSamples;
+		return avgSpeed;
+	}
+
+
 	void Draw()
 	{
 		if (vertices.empty())
@@ -190,11 +385,14 @@ struct Tag
 		glVertexPointer(3, GL_FLOAT, sizeof(Vertex), &vertices[0].position);
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glNormalPointer(GL_FLOAT, sizeof(Vertex), &vertices[0].normal);
-
+		glEnableClientState(GL_COLOR_ARRAY);
+		glColorPointer(3, GL_FLOAT, sizeof(Vertex), &vertices[0].color);
+		
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, &indices[0]);
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
 
 	}
 
@@ -261,6 +459,7 @@ struct Tag
 
 	Matrix44 basis;
 
+	std::vector<float> rotations;
 	std::vector<Point3> samples;
 	std::vector<Vertex> brush;
 	std::vector<Vertex> vertices;
@@ -268,8 +467,11 @@ struct Tag
 
 	float smoothing;
 	float width;
-	float height;
-	bool draw;
+	float height;		
+	float velscale;
+	bool draw;	
+	
+	Brush* shape;
 };
 
 
