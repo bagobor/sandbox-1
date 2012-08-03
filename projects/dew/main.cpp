@@ -216,7 +216,7 @@ void Init()
 	gTagBrushes.push_back(new SquareColorBrush(colors2));
 	gTagBrushes.push_back(new SquareColorBrush(colors3));
 
-	gMeshCan = ImportMeshFromObj("can.obj");	
+	gMeshCan = ImportMeshFromObj(GetPath("can.obj"));	
 
 	// translate the can so it's nozzle is at the origin
 	Vec3 minExtents, maxExtents;
