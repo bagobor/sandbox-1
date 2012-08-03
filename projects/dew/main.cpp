@@ -42,6 +42,7 @@ float gTagSmoothing = 0.8f;
 float gTagVelocityScale = 0.2f;
 bool gShowHelp = true;
 bool gShowCan = true;
+bool gFullscreen = false;
 
 vector<Brush*> gTagBrushes;
 uint32_t gTagBrushIndex;
@@ -222,6 +223,20 @@ void Init()
 	gMeshCan->GetBounds(minExtents, maxExtents);
 	gMeshCan->Transform(TranslationMatrix(Point3(0.0f, -(maxExtents.y-minExtents.y), 0.0f)));
 
+}
+
+void ToggleFullscreen()
+{
+	if (!gFullscreen)
+	{
+		glutFullScreen();
+		gFullscreen = true;
+	}
+	else
+	{
+		glutReshapeWindow(1280, 720);
+		gFullscreen = false;
+	}
 }
 
 void DrawBasis(const Matrix44& m)
@@ -420,7 +435,8 @@ void Advance(float dt)
 
 	glPolygonMode(GL_FRONT_AND_BACK, gWireframe?GL_LINE:GL_FILL);
 
-	Point3 lightPos = gTagCenter + Vec3(0.0, 250.0, -100.0);
+	Vec3 tagExtents = gTagUpper-gTagLower;
+	Point3 lightPos = gTagCenter + Vec3(0.0f, 2.0f*tagExtents.y, -1.2f*tagExtents.z);
 	Point3 lightTarget = gTagCenter;
 
 	Matrix44 lightPerspective = ProjectionMatrix(60.0f, 1.0f, 1.0f, 1000.0f);
@@ -885,18 +901,7 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		}
 		case 'm':
 		{
-			static bool fullscreen = false;
-			if (!fullscreen)
-			{
-				glutFullScreen();
-				fullscreen = true;
-			}
-			else
-			{
-				glutReshapeWindow(1280, 720);
-				fullscreen = false;
-			}
-
+			ToggleFullscreen();
 			break;
 		}
 		case '/':
@@ -915,7 +920,10 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		*/
 		case '1':
 		{
-#ifdef _WIN32
+#ifndef _WIN32
+			if (gFullscreen)
+				break;	
+#endif
 			string path = FileOpenDialog();
 
 			if (!path.empty())
@@ -925,13 +933,17 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 				// re-init
 				Init();
 			}
-#endif
+//#endif
 			break;
 		}
 
 		case '2':
 		{
-#ifdef _WIN32
+#ifndef _WIN32
+			if (gFullscreen)
+				break;	
+#endif
+
 			string path = FileOpenDialog();
 
 			if (!path.empty())
@@ -941,7 +953,6 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 				// re-init
 				Init();
 			}
-#endif
 			break;
 		}
 		case '3':
