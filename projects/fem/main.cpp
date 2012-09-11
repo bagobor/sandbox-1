@@ -170,7 +170,7 @@ void Init()
 
 	/* Cantilever Beam */
 
-	if (1)
+	if (0)
 	{
 		gSubsteps = 40;
 
@@ -214,7 +214,7 @@ void Init()
 
 	/* Random convex */
 	
-	if (0)
+	if (1)
 	{	
 		gSubsteps = 80;
 

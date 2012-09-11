@@ -110,6 +110,7 @@ CUDA_CALLABLE inline Matrix22 operator+(const Matrix22& a, const Matrix22& b) { 
 CUDA_CALLABLE inline Matrix22 operator-(const Matrix22& a, const Matrix22& b) { return Add(a, -1.0f*b); }
 CUDA_CALLABLE inline Matrix22& operator+=(Matrix22& a, const Matrix22& b) { a = a+b; return a; }
 CUDA_CALLABLE inline Matrix22& operator-=(Matrix22& a, const Matrix22& b) { a = a-b; return a; }
+CUDA_CALLABLE inline Matrix22& operator*=(Matrix22& a, float s) { a = a*s; return a; }
 
 CUDA_CALLABLE inline Vec2 operator*(const Matrix22& a, const Vec2& x) { return Multiply(a, x); }
 

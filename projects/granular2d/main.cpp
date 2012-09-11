@@ -13,7 +13,7 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize+10;
+const float kZoom = kWorldSize*3.5f;
 
 int kNumParticles = 0;
 const int kNumIterations = 10;
@@ -56,9 +56,10 @@ void Init()
 	g_velocities.resize(0);
 	g_radii.resize(0);
 
-	for (int x=0; x < 64; ++x)
+
+	for (int x=0; x < 32; ++x)
 	{
-		float s = -10.0f;
+		float s = -5.0f;
 
 		for (int i=0; i < 32; ++i)
 		{
@@ -69,6 +70,19 @@ void Init()
 			g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 		}
 	}
+	
+
+/*	
+	g_positions.push_back(Vec2(0.0f, 1.0f));
+	g_velocities.push_back(Vec2());
+	g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+	
+		
+	g_positions.push_back(Vec2(0.0f, 1.0f + 2.0f*kRadius));
+	g_velocities.push_back(Vec2());
+	g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+*/	
+
 
 	kNumParticles = g_positions.size();
 
@@ -186,12 +200,18 @@ void GLUTUpdate()
 	glPointSize(kRadius*kWidth/viewWidth);
 	glEnable(GL_BLEND);
 
+	Colour colors[] = { Colour(0.5f, 0.5f, 0.8f),
+					Colour(0.8f, 0.5f, 0.5f),
+					Colour(0.5f, 0.8f, 0.5f) };
+
+	
 	glBegin(GL_POINTS);
 
 	for (int i=0; i < kNumParticles; ++i)
 	{
-		glColor3f(0.5f, 0.5f, 0.8f);
+		glColor3fv(colors[i%3]);
 		glVertex2fv(g_positions[i]);
+//		DrawCircle(g_positions[i], kRadius, colors[i%3]);
 	}
 
 	glEnd();
@@ -259,7 +279,7 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			g_step = true;
 			break;
 		}
-			
+		case 'q':
 		case 27:
 			exit(0);
 			break;

@@ -36,6 +36,8 @@ struct SceneParams
 	Vec2  mGravity;
 	float mLameLambda; 
 	float mLameMu;
+	float mYield;
+	float mCreep;
 	float mDamping;
 	float mDrag;
 	float mFriction;
@@ -45,6 +47,8 @@ struct SceneParams
 		mGravity(0.0f, -9.8f),
 		mLameLambda(1000.0f),
 		mLameMu(1000.0f),
+		mYield(0.5f),
+		mCreep(25.0f),
 		mDamping(10.0f),
 		mDrag(0.0f),
 		mFriction(0.5f),

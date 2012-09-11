@@ -50,9 +50,19 @@ struct Element
 		mB[0] = PerpCCW(e3);
 		mB[1] = PerpCW(e2);
 		mB[2] = PerpCCW(e1);
+
+		printf("mInvDm:\n");
+		Print(mInvDm);
+
+		printf("mB:\n");
+		printf("%f, %f\n", mB[0].x, mB[0].y);
+		printf("%f, %f\n", mB[1].x, mB[1].y);
+		printf("%f, %f\n", mB[2].x, mB[2].y);
 	}
 
 	Matrix22 mInvDm; // inverse rest configuration
+	Matrix22 mEp;	 // plastic strain
+
 	Vec2 mB[3];		 // area weighted normals in material space
 };
 
@@ -78,6 +88,17 @@ struct Scene
 
 namespace 
 {
+
+float FrobeniusNorm(const Matrix22& m)
+{
+	float f = 0.0f;
+
+	for (uint32_t i=0; i < 2; ++i)
+		for (uint32_t j=0; j < 2; ++j)
+			f += m(i, j)*m(i, j);
+
+	return sqrtf(f);
+}
 
 // deformation gradient
 Matrix22 CalcDeformation(const Vec2 x[3], const Matrix22& invM)
@@ -414,9 +435,9 @@ uint32_t Fracture(Particle* particles, uint32_t numParticles,
 
 
 uint32_t UpdateForces(Particle* particles, uint32_t numParticles, 
-	const Triangle* triangles, const Element* elements, uint32_t numTriangles,
+	const Triangle* triangles, Element* elements, uint32_t numTriangles,
    	Vec2 gravity, float lameLambda, float lameMu, float damp, float drag, float dt, 
-	FractureEvent* fractures, uint32_t maxFractures, float toughness)
+	FractureEvent* fractures, uint32_t maxFractures, float toughness, float yield, float creep)
 {
 
 	for (uint32_t i=0; i < numParticles; ++i)
@@ -429,7 +450,7 @@ uint32_t UpdateForces(Particle* particles, uint32_t numParticles,
 	for (uint32_t i=0; i < numTriangles; ++i)
 	{
 		const Triangle& tri = triangles[i];
-		const Element& elem = elements[i];
+		Element& elem = elements[i];
 
 		// read particles into a local array
 		Vec2 x[3] = { particles[tri.i].p, particles[tri.j].p, particles[tri.k].p };
@@ -438,10 +459,29 @@ uint32_t UpdateForces(Particle* particles, uint32_t numParticles,
 		if (1)
 		{
 			Matrix22 f = CalcDeformation(x, elem.mInvDm);
-			Matrix22 q = PolarDecomposition(f);
+			Matrix22 q = QRDecomposition(f);
 
-			// elastic forces
+			// strain 
 			Matrix22 e = CalcCauchyStrainTensor(Transpose(q)*f);
+			//if (FrobeniusNorm(e) > 0.2f)
+			//	printf("%f\n", FrobeniusNorm(e));
+
+			// update plastic strain
+			float ef = FrobeniusNorm(e);
+		
+			//if (ef > yield)
+			//	printf("%f\n", ef);
+
+			if (ef > yield)
+				elem.mEp += dt*creep*e;
+			
+			const float epmax = 0.6f;	
+			if (ef > epmax)	
+				elem.mEp *= epmax / ef;  
+
+			// adjust strain
+			e -= elem.mEp;
+
 			Matrix22 s = CalcStressTensor(e, lameLambda, lameMu);
 
 			// damping forces	
@@ -450,7 +490,8 @@ uint32_t UpdateForces(Particle* particles, uint32_t numParticles,
 			Matrix22 dsdt = CalcStressTensor(dedt, damp, damp);
 
 			Matrix22 p = s + dsdt;
-			
+		
+			/*	
 			static int z = 0;
 		   	if (1)
 			{	
@@ -458,7 +499,8 @@ uint32_t UpdateForces(Particle* particles, uint32_t numParticles,
 				ShowMatrix(e, q, c);
 			}
 			++z;	
-			
+			*/
+
 			float e1, e2;
 			EigenDecompose(p, e1, e2);
 
@@ -618,7 +660,7 @@ void Update(Scene* scene, float dt)
 {
 	Particle* particles = &scene->mParticles[0];
 	Triangle* triangles = &scene->mTriangles[0];
-	const Element* elements = &scene->mElements[0];
+	Element* elements = &scene->mElements[0];
 	const Vec3* planes = &scene->mPlanes[0];
 
 	uint32_t numParticles = NumParticles(scene);
@@ -632,7 +674,7 @@ void Update(Scene* scene, float dt)
 
 	uint32_t numFractures = UpdateForces(particles, numParticles, triangles, elements, numTriangles,
 		params.mGravity, params.mLameLambda, params.mLameMu, params.mDamping, params.mDrag, dt, 
-		fractures, maxFractures, params.mToughness);
+		fractures, maxFractures, params.mToughness, params.mYield, params.mCreep);
 
 	CollidePlanes(particles, numParticles, planes, numPlanes, params.mFriction);
 
