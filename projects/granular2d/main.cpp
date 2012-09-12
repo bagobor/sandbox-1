@@ -13,10 +13,11 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*3.5f;
+const float kZoom = kWorldSize*2.5f;
 
 int kNumParticles = 0;
 const int kNumIterations = 10;
+const float kDt = 1.0f/60.0f;
 const float kRadius = 0.05f;
 
 GrainSystem* g_grains;
@@ -56,47 +57,47 @@ void Init()
 	g_velocities.resize(0);
 	g_radii.resize(0);
 
-
-	for (int x=0; x < 32; ++x)
+	if (true)
 	{
-		float s = -5.0f;
-
-		for (int i=0; i < 32; ++i)
+		for (int x=0; x < 64; ++x)
 		{
-			s += 2.0f*kRadius;// + Randf(0.0f, 0.05f)*kRadius;
+			float s = -5.0f;
 
-			g_positions.push_back(Vec2(s, kRadius +  kRadius + x*2.0f*kRadius));
-			g_velocities.push_back(Vec2());
-			g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+			for (int i=0; i < 32; ++i)
+			{
+				s += 2.1f*kRadius;// + Randf(0.0f, 0.05f)*kRadius;
+
+				g_positions.push_back(Vec2(s, kRadius +  kRadius + x*2.0f*kRadius));
+				g_velocities.push_back(Vec2());
+				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+			}
 		}
 	}
-	
-
-/*	
-	g_positions.push_back(Vec2(0.0f, 1.0f));
-	g_velocities.push_back(Vec2());
-	g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
-	
+	else
+	{
+		g_positions.push_back(Vec2(0.0f, 1.0f));
+		g_velocities.push_back(Vec2());
+		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 		
-	g_positions.push_back(Vec2(0.0f, 1.0f + 2.0f*kRadius));
-	g_velocities.push_back(Vec2());
-	g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
-*/	
-
+			
+		g_positions.push_back(Vec2(0.0f, 1.0f + 2.5f*kRadius));
+		g_velocities.push_back(Vec2());
+		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+	}	
 
 	kNumParticles = g_positions.size();
 
 	g_grains = grainCreateSystem(kNumParticles);
 		
 	g_params.mGravity = Vec2(0.0f, -9.8f);
-	g_params.mDamp = powf(0.1f, float(kNumIterations));
+	g_params.mDamp = 0.0f;//powf(0.1f, float(kNumIterations));
 	g_params.mBaumgarte = 0.5f;
 	g_params.mFriction = 0.8f;
 	g_params.mRestitution = 0.1f;
 	g_params.mOverlap = kRadius*0.1f;
 	g_params.mPlanes[0] = Vec3(0.0f, 1.0f, 0.0f);
-	g_params.mPlanes[1] = Vec3(1.0f, 0.0f, -15.0f);
-	g_params.mPlanes[2] = Vec3(-1.0f, 0.0f, -15.0f);
+	g_params.mPlanes[1] = Vec3(1.0f, 0.0f, -5.0f);
+	g_params.mPlanes[2] = Vec3(-1.0f, 0.0f, -5.0f);
 	g_params.mNumPlanes = 3;
 
 	//g_radii[0] = 2.0f;
@@ -159,11 +160,6 @@ bool g_step = false;
 
 void GLUTUpdate()
 {
-	GrainTimers timers;
-
-	grainSetParams(g_grains, &g_params);
-	grainUpdateSystem(g_grains, 1.0f/60.0f, kNumIterations, &timers);
-
 	//---------------------------
 
 	glDisable(GL_CULL_FACE);
@@ -177,6 +173,14 @@ void GLUTUpdate()
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(OrthographicMatrix(-viewWidth, viewWidth, -0.5, 2*kZoom-0.5f, 0.0f, 1.0f));
+
+
+	// Step
+	GrainTimers timers;
+
+	grainSetParams(g_grains, &g_params);
+	grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
+
 
 	for (int i=0; i < g_params.mNumPlanes; ++i)
 	{	
@@ -360,7 +364,7 @@ int main(int argc, char* argv[])
 	
     glutInitWindowSize(kWidth, kHeight);
     glutCreateWindow("Granular");
-    glutPositionWindow(200, 200);
+    glutPositionWindow(200, 100);
 		
     glutMouseFunc(GLUTMouseFunc);
     glutReshapeFunc(GLUTReshape);
