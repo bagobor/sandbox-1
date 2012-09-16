@@ -27,6 +27,9 @@ vector<Vec2> g_positions;
 vector<Vec2> g_velocities;
 vector<float> g_radii;
 
+bool g_pause = false;
+bool g_step = false;
+
 // mouse
 static int lastx;
 static int lasty;
@@ -57,17 +60,19 @@ void Init()
 	g_velocities.resize(0);
 	g_radii.resize(0);
 
-	if (true)
+	if (1)
 	{
-		for (int x=0; x < 64; ++x)
+		for (int x=0; x < 32; ++x)
 		{
-			float s = -5.0f;
+			float s = -3.0f;
+
+			const float sep = 0.8f*kRadius;
 
 			for (int i=0; i < 32; ++i)
 			{
-				s += 2.1f*kRadius;// + Randf(0.0f, 0.05f)*kRadius;
+				s += 2.001f*sep;// + Randf(0.0f, 0.05f)*kRadius;
 
-				g_positions.push_back(Vec2(s, kRadius +  kRadius + x*2.0f*kRadius));
+				g_positions.push_back(Vec2(s, sep + 2.0f*x*sep));
 				g_velocities.push_back(Vec2());
 				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 			}
@@ -80,7 +85,7 @@ void Init()
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 		
 			
-		g_positions.push_back(Vec2(0.0f, 1.0f + 2.5f*kRadius));
+		//g_positions.push_back(Vec2(0.0f, 1.0f + 2.5f*kRadius));
 		g_velocities.push_back(Vec2());
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 	}	
@@ -95,7 +100,7 @@ void Init()
 	g_params.mFriction = 0.8f;
 	g_params.mRestitution = 0.1f;
 	g_params.mOverlap = kRadius*0.1f;
-	g_params.mPlanes[0] = Vec3(0.0f, 1.0f, 0.0f);
+	g_params.mPlanes[0] = Normalize(Vec3(0.0f, 1.0f, 0.0f));
 	g_params.mPlanes[1] = Vec3(1.0f, 0.0f, -5.0f);
 	g_params.mPlanes[2] = Vec3(-1.0f, 0.0f, -5.0f);
 	g_params.mNumPlanes = 3;
@@ -156,8 +161,6 @@ void DrawString(int x, int y, const char* s)
 	}
 }
 
-bool g_step = false;
-
 void GLUTUpdate()
 {
 	//---------------------------
@@ -178,8 +181,13 @@ void GLUTUpdate()
 	// Step
 	GrainTimers timers;
 
-	grainSetParams(g_grains, &g_params);
-	grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
+	if (!g_pause || g_step)
+	{
+		grainSetParams(g_grains, &g_params);
+		grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
+
+		g_step = false;
+	}
 
 
 	for (int i=0; i < g_params.mNumPlanes; ++i)
@@ -281,6 +289,11 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		case 's':
 		{
 			g_step = true;
+			break;
+		}
+		case ' ':
+		{
+			g_pause = !g_pause;
 			break;
 		}
 		case 'q':
