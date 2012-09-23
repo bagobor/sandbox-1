@@ -3,6 +3,7 @@
 #include <core/platform.h>
 #include <core/hashgrid.h>
 #include <core/shader.h>
+#include <core/tga.h>
 
 #include "solve.h"
 
@@ -13,10 +14,10 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*2.5f;
+const float kZoom = kWorldSize*2.0;
 
 int kNumParticles = 0;
-const int kNumIterations = 10;
+const int kNumIterations = 5;
 const float kDt = 1.0f/60.0f;
 const float kRadius = 0.05f;
 
@@ -26,6 +27,9 @@ GrainParams g_params;
 vector<Vec2> g_positions;
 vector<Vec2> g_velocities;
 vector<float> g_radii;
+
+vector<uint32_t> g_springIndices;
+vector<float> g_springLengths;
 
 bool g_pause = false;
 bool g_step = false;
@@ -51,26 +55,23 @@ Vec2 ScreenToScene(int x, int y)
 
 void Init()
 {	
-	// push back world particle
-//	g_positions.push_back(Vec2());
-//	g_velocities.push_back(Vec2());
-//	g_radii.push_back(0.0f);
-	
 	g_positions.resize(0);
 	g_velocities.resize(0);
 	g_radii.resize(0);
+	g_springIndices.resize(0);
+	g_springLengths.resize(0);
 
-	if (1)
+	if (0)
 	{
 		for (int x=0; x < 32; ++x)
 		{
 			float s = -3.0f;
 
-			const float sep = 0.8f*kRadius;
+			const float sep = 1.f*kRadius;
 
-			for (int i=0; i < 32; ++i)
+			for (int i=0; i < 16; ++i)
 			{
-				s += 2.001f*sep;// + Randf(0.0f, 0.05f)*kRadius;
+				s += 2.0f*sep;// + Randf(0.0f, 0.05f)*kRadius;
 
 				g_positions.push_back(Vec2(s, sep + 2.0f*x*sep));
 				g_velocities.push_back(Vec2());
@@ -78,7 +79,71 @@ void Init()
 			}
 		}
 	}
-	else
+	else if (1)
+	{
+		TgaImage img;
+		if (TgaLoad("armadillo.tga", img))
+		{
+			float xstart = -3.0f;
+
+			float step = kRadius*1.0f;
+			float x = xstart;
+			float y = 0.0f;
+			int dim = 64;
+
+			float dpx = float(img.m_width) / dim;
+			float dpy = float(img.m_height) / dim;
+
+			vector<uint32_t> lookup(dim*dim, -1);	
+
+			for (int i=0; i < dim; ++i)
+			{
+				int py = i*dpy;
+
+				for (int j=0; j < dim; ++j)
+				{
+					int px = j*dpx;
+
+					uint32_t c = img.SampleClamp(px, py);
+					
+					if (c != 0)
+					{
+						uint32_t newIndex = g_positions.size(); 
+						lookup[i*dim + j] = newIndex;
+
+						float r = Randf(0.0f, 0.005f)*step;
+						g_positions.push_back(Vec2(x + r , y));
+						g_velocities.push_back(Vec2());
+						g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+
+						// add springs
+						for (int ny=i-1; ny <= i+1; ++ny)
+						{
+							for (int nx=j-1; nx <= j+1; ++nx)
+							{
+								uint32_t r = lookup[ny*dim + nx];
+
+								if (r != uint32_t(-1) && r != newIndex)
+								{	
+									g_springIndices.push_back(newIndex);
+									g_springIndices.push_back(r);
+
+									g_springLengths.push_back(Distance(g_positions[newIndex], g_positions[r]));
+								}
+							}
+						}
+					}
+
+					x += 2.0f*step;
+				}
+
+				x = xstart;
+
+				y += 2.0f*step; 
+			}	
+		}
+	}
+	else if (0)
 	{
 		g_positions.push_back(Vec2(0.0f, 1.0f));
 		g_velocities.push_back(Vec2());
@@ -89,20 +154,35 @@ void Init()
 		g_velocities.push_back(Vec2());
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 	}	
+	else if (1)
+	{
+		// pyramid
+		const int kLevels = 30;
+
+		for (int y=0; y < kLevels; ++y)
+		{
+			for (int x=0; x < kLevels-y; ++x)
+			{
+				g_positions.push_back(Vec2(-1.5f + y*kRadius + x*2.0f*kRadius, kRadius + 1.6f*y*kRadius));
+				g_velocities.push_back(Vec2());
+				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+			}
+		}
+	}
 
 	kNumParticles = g_positions.size();
 
 	g_grains = grainCreateSystem(kNumParticles);
 		
 	g_params.mGravity = Vec2(0.0f, -9.8f);
-	g_params.mDamp = 0.0f;//powf(0.1f, float(kNumIterations));
+	g_params.mDamp = 0.0f;//powf(1.1f, float(kNumIterations));
 	g_params.mBaumgarte = 0.5f;
 	g_params.mFriction = 0.8f;
 	g_params.mRestitution = 0.1f;
 	g_params.mOverlap = kRadius*0.1f;
+	g_params.mPlanes[2] = Vec3(1.0f, 0.0f, -5.0f);
+	g_params.mPlanes[1] = Vec3(-1.0f, 0.0f, -5.0f);
 	g_params.mPlanes[0] = Normalize(Vec3(0.0f, 1.0f, 0.0f));
-	g_params.mPlanes[1] = Vec3(1.0f, 0.0f, -5.0f);
-	g_params.mPlanes[2] = Vec3(-1.0f, 0.0f, -5.0f);
 	g_params.mNumPlanes = 3;
 
 	//g_radii[0] = 2.0f;
@@ -111,6 +191,9 @@ void Init()
 	grainSetPositions(g_grains, (float*)&g_positions[0], kNumParticles);
 	grainSetVelocities(g_grains, (float*)&g_velocities[0], kNumParticles);
 	grainSetRadii(g_grains, &g_radii[0]);
+
+	if (!g_springIndices.empty())
+		grainSetSprings(g_grains, &g_springIndices[0], &g_springLengths[0], g_springLengths.size());
 }
 
 void Shutdown()
@@ -216,12 +299,16 @@ void GLUTUpdate()
 					Colour(0.8f, 0.5f, 0.5f),
 					Colour(0.5f, 0.8f, 0.5f) };
 
-	
+
+	std::vector<float> mass(g_positions.size());
+	grainGetMass(g_grains, &mass[0]);
+
 	glBegin(GL_POINTS);
 
 	for (int i=0; i < kNumParticles; ++i)
 	{
 		glColor3fv(colors[i%3]);
+		//glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), (mass[i]-1.0f)*0.2f));
 		glVertex2fv(g_positions[i]);
 //		DrawCircle(g_positions[i], kRadius, colors[i%3]);
 	}
@@ -289,6 +376,16 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		case 's':
 		{
 			g_step = true;
+			break;
+		}
+		case '=':
+		{
+			g_params.mNumPlanes++;
+			break;
+		}
+		case '-':
+		{
+			g_params.mNumPlanes--;
 			break;
 		}
 		case ' ':

@@ -1,3 +1,4 @@
+#if 1
 
 #include <core/maths.h>
 #include <core/shader.h>
@@ -22,9 +23,11 @@ public:
 	float2* mPositions;
 	float2* mVelocities;
 	float* mRadii;
+	float* mMass;
 
 	float2* mCandidatePositions;
 	float2* mNewPositions;
+	float*  mNewMass;
 
 	float2* mForces;
 
@@ -33,6 +36,10 @@ public:
 	unsigned int* mCellStarts;
 	unsigned int* mCellEnds;
 	unsigned int* mIndices;
+
+	uint32_t* mSpringIndices;
+	float* mSpringLengths;
+	int mNumSprings;
 
 	int* mContacts;
 	int* mContactCounts;	
@@ -130,7 +137,7 @@ inline float CollideSweptSpherePlane(const Vec2& a, const Vec2& b, const Vec3& p
 
 inline float norm(const Matrix22& m) { return sqrtf(Dot(m.cols[0], m.cols[0]) + Dot(m.cols[1], m.cols[1])); }
 inline float sqr(float x) { return x*x; }
-inline float kernel(float x) { return x; }//return x*sqr(max(1.0f-x*20.0f, 0.0f)); } 
+inline float kernel(float x) { return x; } //return x*sqr(max(1.0f-x*20.0f, 0.0f)); } 
 
 inline int Collide(
 		float2 xi, float ri,
@@ -190,20 +197,25 @@ inline float2 SolvePositions(
 		const float2* prevPositions,
 		const float2* positions,
 		const float* radii,
+		const float* mass,
+		float* newMass,
 		const int* contacts, 
 		int numContacts,
 		const float3* planes,
-		int numPlanes)
+		int numPlanes,
+		float& pressure)
+
 {
 	float2 xi = positions[index];
 	float ri = radii[index];
+	//float wi = 1.0f / mass[index];
 
 	// collide particles
 	float2 impulse;
 	float weight = 0.0f;
 
 	float eps = 1.e-3f;
-	float scale = 0.8f;
+	float scale = 0.95f;
 
 	ri *= scale;
 
@@ -213,25 +225,35 @@ inline float2 SolvePositions(
 
 		const float2 xj = positions[particleIndex];
 		const float rj = scale*radii[particleIndex];
+		//const float wj = 1.0f / mass[particleIndex];
 
 		// distance to sphere
 		const float2 xij = xi - xj; 
 		
 		const float dSq = LengthSq(xij);
 		const float rsum = (ri + rj);
+	//	const float wsum = 1.0f / (wi + wj); 
+
+		//if (wsum == 0.0f)
+		//	continue;
 	
 		if (dSq < sqr(rsum) && dSq > 0.001f)
 		{
 			const float d = sqrtf(dSq);
 			const Vec2 n = xij / d;
-
+	
 			// project out of sphere
-			impulse += 0.5f*kernel(rsum-d)*n;	
+			//impulse += float(wi*wsum)*kernel(rsum-d)*n;
+			impulse += 0.5f*kernel(rsum-d)*n;
+		
+			//if (wj < wi)	
+			//	newMass[index] = 0.0f;
 
-			weight += 1.0f; 
+			//weight += wi/wsum;//1.0f; 
+			weight += 1.0f;
 		}
 	}
-
+	
 	// collide planes
 	for (int i=0; i < numPlanes; ++i)
 	{
@@ -241,7 +263,7 @@ inline float2 SolvePositions(
 		float d = xi.x*p.x + xi.y*p.y - p.z;
 		float mtd = d - ri;
 			
-		if (mtd < 0.0f)
+		if (mtd <= 0.0f)
 		{
 			// compute toi
 			float t = CollideSweptSpherePlane(prevPositions[index], positions[index], p, ri); 
@@ -263,15 +285,19 @@ inline float2 SolvePositions(
 			// lerp between both to get varying friction coefficients 
 			impulse += Lerp(staticImpulse, dynamicImpulse, coeff);
 
+			newMass[index] = 0.0f;
+
 			// weight
 			weight += 1.0f;	
 		}
 	}
 
+	pressure = weight;
+
 	if (weight > 0.0f)
 		return impulse / weight;
 	else
-		return 0.0f;
+		return impulse;
 }
 
 
@@ -288,39 +314,46 @@ Vec2 SolveVelocities(
 
 	float2 impulse;
 	float weight = 0.0f;
+	float scale = 1.5f;
 
 	float2 xi = positions[index];
-	float ri = radii[index];
-
+	float ri = scale*radii[index];
 	
 	for (int i=0; i < numContacts; ++i)
 	{
 		const int particleIndex = contacts[i];
 
 		const float2 xj = positions[particleIndex];
-		const float rj = radii[particleIndex];
+		const float rj = scale*radii[particleIndex];
 
 		// vector to sphere
 		const float2 xij = xj - xi; 
 		
 		const float dSq = LengthSq(xij);
-		const float rsum = ri + rj;
+		const float rsum = (ri + rj);
 
-		if (dSq < rsum && dSq > 0.001f)
+		if (dSq < sqr(rsum) && dSq > 0.001f)
 		{
 			const float d = sqrtf(dSq);
 			const Vec2 n = xij / d;
 
+			float2 vr = (velocities[particleIndex] - velocities[index]);
 
-			float w = 0.5f*(1.0f - d/rsum);
-			float2 vij = velocities[particleIndex] - velocities[index];
+			const float kFriction = 0.3f;
+			const float kViscosity = 1.0f;
 
-			// only apply viscosity if not separating
-			//if (Dot(vij, n) < 0.0f)
-			{
-				impulse += vij*w;
-				weight += 1.0f;
-			}
+			float2 vn = Dot(vr, n)*n; 
+			float2 vt = vr - vn;
+
+			// don't apply friction if separating
+			if (Dot(vr, n) < 0.0f)
+				impulse += kFriction*vt;
+
+			// apply viscosity if separating 
+			if (Dot(vr, n) >= 0.0f)
+				impulse += kViscosity*vn;
+
+			weight += 1.0f;
 		}
 	}
 
@@ -331,32 +364,78 @@ Vec2 SolveVelocities(
 						
 		// distance to plane
 		float d = xi.x*p.x + xi.y*p.y - p.z;
-			
 		float mtd = d - ri;
+	
+		const float kFriction = 1.0f;
+		const float kRestitution = 0.0f;
 		
-		if (mtd < 0.0f)
+		if (mtd <= 0.0f)
 		{
 			float2 n(p.x, p.y);
 
 			// friction
 			float2 vn = Dot(velocities[index], n)*n;
+			float2 vt = velocities[index] - vn;
 
-			const float k = 1.0f;
-			
-			impulse -= k*(velocities[index]-vn);
-			//impulse -= 2.0f*vn;
+			// friction
+			impulse -= kFriction*vt;
+
+			// restitution
+			impulse -= (1.0f + kRestitution)*vn;
 
 			weight += 1.0f;
 		}
 	}
 
+
 	if (weight > 0.0f)
+	{
 		return impulse / weight;
+	}
 	else
 		return impulse;
 }
 
-void Integrate(int index, const float2* positions, float2* candidatePositions, float2* velocities, float2 gravity, float damp, float dt)
+void SolveSprings(float2* positions, const uint32_t* indices, float* lengths, int numSprings)
+{
+	const uint32_t* sIt = indices;
+	const uint32_t* sEnd = indices+numSprings*2;
+	float* lIt = lengths; 
+
+	for (; sIt < sEnd; sIt+=2, ++lIt )
+	{
+		float2 xi = positions[sIt[0]];
+		float2 xj = positions[sIt[1]];
+		float2 xij = xi-xj;
+
+		float rij = Dot(xij, xij);
+		float l = *lIt;
+		
+		if (l < 0.0f)
+			continue;
+
+		//if (rij > sqr(l))
+		{
+			float k = 0.1f;	
+			float d = sqrtf(rij);
+		
+			// handle breaking spring	
+			if (d > l*1.15f)
+				*lIt = -1.0f;
+
+			float e = d-l;	
+			xij /= d;
+
+			xi -= 0.5f*k*e*xij;
+			xj += 0.5f*k*e*xij;
+			
+			positions[sIt[0]] = xi;
+			positions[sIt[1]] = xj;
+		}
+	}	
+}
+
+void Integrate(int index, const float2* positions, float2* candidatePositions, float2* velocities, const float* mass, float2 gravity, float damp, float dt)
 {
 	// v += f*dt
 	velocities[index] += (gravity - damp*velocities[index])*dt;
@@ -368,7 +447,7 @@ void Integrate(int index, const float2* positions, float2* candidatePositions, f
 void Update(GrainSystem s, float dt, float invdt)
 {		
 	for (int i=0; i < s.mNumGrains; ++i)
-		Integrate(i, s.mPositions, s.mCandidatePositions, s.mVelocities, s.mParams.mGravity, s.mParams.mDamp, dt);
+		Integrate(i, s.mPositions, s.mCandidatePositions, s.mVelocities, s.mMass, s.mParams.mGravity, s.mParams.mDamp, dt);
 	
 	memset(s.mCellStarts, 0, sizeof(unsigned int)*128*128);
 	memset(s.mCellEnds, 0, sizeof(unsigned int)*128*128);
@@ -390,72 +469,84 @@ void Update(GrainSystem s, float dt, float invdt)
 									  &s.mContacts[i*kMaxContactsPerSphere],
 									  kMaxContactsPerSphere);
 
-		//printf("%d\n", s.mContactCounts[i]);
-	
 	}
 
-	for (int k=0; k < 1; ++k)
+	for (int k=0; k < 3; ++k)
 	{
+		// solve springs (Gauss-Seidel style is cheating)
+		SolveSprings(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings); 
+
 		// solve position constraints
 		//
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
+			float p = 0.0f;
 			float2 j = SolvePositions(
 					i,
 					s.mPositions,
 				   	s.mCandidatePositions,
 				   	s.mRadii,
+					s.mMass,
+					s.mNewMass,
 					&s.mContacts[i*kMaxContactsPerSphere],
 					s.mContactCounts[i],
 				   	s.mParams.mPlanes,
-				   	s.mParams.mNumPlanes);
+				   	s.mParams.mNumPlanes,
+					p);
+
 	
 			s.mNewPositions[i] = s.mCandidatePositions[i] + j;
+			s.mMass[i] = p;
 
 //			printf("%d: np(%f, %f) == cp(%f, %f) + (%f, %f)\n", k, s.mNewPositions[i].x, s.mNewPositions[i].y, s.mCandidatePositions[i].x, s.mCandidatePositions[i].y, j.x, j.y); 
 		}
 
-		//for (int i=0; i < s.mNumGrains; ++i)
-		//	s.mCandidatePositions[i] = s.mNewPositions[i];
-	
+		
+		for (int i=0; i < s.mNumGrains; ++i)
+		{
+			s.mCandidatePositions[i] = s.mNewPositions[i];
+			//s.mMass[i] = s.mNewMass[i];
+		}
 	}
-
-	// 
+	 
 
 	// update velocities 
 	//
 	for (int i=0; i < s.mNumGrains; ++i)
 		s.mVelocities[i] = (s.mNewPositions[i]-s.mPositions[i])*invdt; 
-	// solve velocity constraints
-	//
+	
+	for (int k=0; k < 1; ++k)
+	{	
+		// solve velocity constraints
+		//
+		for (int i=0; i < s.mNumGrains; ++i)
+		{
+			float2 j = SolveVelocities(
+					i,
+					s.mCandidatePositions,
+					s.mVelocities,
+					s.mRadii,
+					&s.mContacts[i*kMaxContactsPerSphere],
+					s.mContactCounts[i],
+					s.mParams.mPlanes,
+					s.mParams.mNumPlanes);
+
+
+			s.mForces[i] = j;
+		}	
+
+		//  apply velocities to positions
+		//
+		for (int i=0; i < s.mNumGrains; ++i)
+			s.mVelocities[i] += s.mForces[i];// (s.mNewPositions[i]-s.mPositions[i])*invdt;
+	}
+
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
-		float2 j = SolveVelocities(
-				i,
-				s.mCandidatePositions,
-				s.mVelocities,
-				s.mRadii,
-				&s.mContacts[i*kMaxContactsPerSphere],
-				s.mContactCounts[i],
-				s.mParams.mPlanes,
-				s.mParams.mNumPlanes);
-
-		s.mForces[i] = j;
-
-	}	
-
-	//  apply velocities to positions
-	//
-	for (int i=0; i < s.mNumGrains; ++i)
-	{
-	//	printf("force: %f, %f velocity: %f, %f\n", s.mForces[i].x, s.mForces[i].y, s.mVelocities[i].x, s.mVelocities[i].y);
-
-		//s.mNewPositions[i] += dt*s.mForces[i];
-
-	//	printf("after force: %f, %f\n", s.mNewPositions[i].x, s.mNewPositions[i].y);
-
-		s.mVelocities[i] += s.mForces[i];// (s.mNewPositions[i]-s.mPositions[i])*invdt;
-
+		s.mVelocities[i] /= max(1.0f, s.mMass[i]*0.3f); 
+		//s.mVelocities[i] /= max(1.0f, s.mContactCounts[i]*0.3f); 
+		
+		s.mMass[i] = 1.0f;//
 		s.mPositions[i] = s.mNewPositions[i];
 	}
 }
@@ -472,7 +563,8 @@ GrainSystem* grainCreateSystem(int numGrains)
 	s->mPositions = (float2*)malloc(numGrains*sizeof(float2));
 	s->mVelocities = (float2*)malloc(numGrains*sizeof(float2));
 	s->mRadii = (float*)malloc(numGrains*sizeof(float));
-
+	s->mMass = (float*)malloc(numGrains*sizeof(float));
+	
 	s->mForces = (float2*)malloc(numGrains*sizeof(float2));
 
 	s->mContacts = (int*)malloc(numGrains*kMaxContactsPerSphere*sizeof(int));
@@ -481,7 +573,13 @@ GrainSystem* grainCreateSystem(int numGrains)
 	s->mCandidatePositions = (float2*)malloc(numGrains*sizeof(float2));
 	s->mNewPositions = (float2*)malloc(numGrains*sizeof(float2));
 
-	s->mStress = (Matrix22*)malloc(numGrains*sizeof(Matrix22));
+	s->mNewMass = (float*)malloc(numGrains*sizeof(float));
+
+	for (int i=0; i < s->mNumGrains; ++i)
+	{
+		s->mMass[i] = 1.0f;
+		s->mNewMass[i] = 1.0f;
+	}
 
 	s->mCellStarts = (unsigned int*)malloc(128*128*sizeof(unsigned int));
 	s->mCellEnds = (unsigned int*)malloc(128*128*sizeof(unsigned int));
@@ -495,7 +593,8 @@ void grainDestroySystem(GrainSystem* s)
 	free(s->mPositions);
 	free(s->mVelocities);
 	free(s->mRadii);
-
+	free(s->mMass);
+	
 	free(s->mForces);
 
 	free(s->mContacts);
@@ -504,7 +603,7 @@ void grainDestroySystem(GrainSystem* s)
 	free(s->mNewPositions);
 	free(s->mCandidatePositions);
 
-	free(s->mStress);
+	free(s->mNewMass);
 
 	free(s->mCellStarts);
 	free(s->mCellEnds);
@@ -528,6 +627,17 @@ void grainSetRadii(GrainSystem* s, float* r)
 	memcpy(&s->mRadii[0], r, sizeof(float)*s->mNumGrains);
 }
 
+void grainSetSprings(GrainSystem* s, const uint32_t* springIndices, const float* springLengths, uint32_t numSprings)
+{
+	s->mSpringIndices = (uint32_t*)malloc(numSprings*2*sizeof(uint32_t));
+	s->mSpringLengths = (float*)malloc(numSprings*sizeof(float));
+
+	memcpy(s->mSpringIndices, springIndices, numSprings*2*sizeof(uint32_t));
+	memcpy(s->mSpringLengths, springLengths, numSprings*sizeof(float));
+	
+	s->mNumSprings = numSprings;
+}
+
 void grainGetPositions(GrainSystem* s, float* p)
 {
 	memcpy(p, &s->mPositions[0], sizeof(float2)*s->mNumGrains);
@@ -542,6 +652,12 @@ void grainGetRadii(GrainSystem* s, float* r)
 {
 	memcpy(r, &s->mRadii[0], sizeof(float)*s->mNumGrains);
 }
+
+void grainGetMass(GrainSystem* s, float* r)
+{
+	memcpy(r, &s->mMass[0], sizeof(float)*s->mNumGrains);
+}
+
 
 void grainSetParams(GrainSystem* s, GrainParams* params)
 {
@@ -560,3 +676,5 @@ void grainUpdateSystem(GrainSystem* s, float dt, int iterations, GrainTimers* ti
 		Update(*s, dt, invdt);
 	}	
 }
+
+#endif
