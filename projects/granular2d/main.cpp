@@ -13,7 +13,7 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*2.5f;
+const float kZoom = kWorldSize*3.5f;
 
 int kNumParticles = 0;
 const int kNumIterations = 10;
@@ -59,7 +59,7 @@ void Init()
 
 	if (true)
 	{
-		for (int x=0; x < 64; ++x)
+		for (int x=0; x < 128; ++x)
 		{
 			float s = -5.0f;
 
@@ -202,11 +202,12 @@ void GLUTUpdate()
 	double drawStart = GetSeconds();
 
 	glPointSize(kRadius*kWidth/viewWidth);
+	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_BLEND);
 
-	Colour colors[] = { Colour(0.5f, 0.5f, 0.8f),
-					Colour(0.8f, 0.5f, 0.5f),
-					Colour(0.5f, 0.8f, 0.5f) };
+	Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
+					Colour(1.0f, 0.5f, 0.5f),
+					Colour(0.5f, 1.0f, 0.5f) };
 
 	
 	glBegin(GL_POINTS);
