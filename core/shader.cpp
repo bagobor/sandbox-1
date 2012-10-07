@@ -232,9 +232,17 @@ void DrawPlane(const Vec4& p)
 
 	glBegin(GL_QUADS);
 	glColor3fv(p*0.5f + Vec4(0.5f, 0.5f, 0.5f, 0.5f));
+
+	glNormal3f(p.x, p.y, p.z);
 	glVertex3fv(c + u*kSize + v*kSize);
+
+	glNormal3f(p.x, p.y, p.z);
 	glVertex3fv(c - u*kSize + v*kSize);
+
+	glNormal3f(p.x, p.y, p.z);
 	glVertex3fv(c - u*kSize - v*kSize);
+
+	glNormal3f(p.x, p.y, p.z);
 	glVertex3fv(c + u*kSize - v*kSize);
 	glEnd();
 }
@@ -261,4 +269,48 @@ void DrawString(int x, int y, const char* s, ...)
 
 	DrawStringA(x ,y, buf);
 }
+
+void DrawFrustum(const Mat44& projToWorld)
+{
+	// transform corner points back to world space
+	Point3 corners[] = { 
+		Point3(-1.0f, 1.0f, 1.0f),
+		Point3(1.0f, 1.0f, 1.0f),
+		Point3(1.0f, -1.0f, 1.0f),
+		Point3(-1.0f, -1.0f, 1.0f),
+
+		Point3(-1.0f, 1.0f, -1.0f),
+		Point3(1.0f, 1.0f, -1.0f),
+		Point3(1.0f, -1.0f, -1.0f),
+		Point3(-1.0f, -1.0f, -1.0f) };
+
+
+	glDisable(GL_BLEND);
+	glBegin(GL_LINE_STRIP);
+	glColor3f(0.0f, 1.0f, 0.0f);
+
+	for (int i=0; i < 4; ++i)
+	{
+		Point3 p = projToWorld*corners[i];
+		glVertex3fv(p);
+	}
+
+	glVertex3fv(projToWorld*corners[0]);
+
+	glEnd();
+
+	glBegin(GL_LINE_STRIP);
+	glColor3f(0.0f, 1.0f, 0.0f);
+
+	for (int i=4; i < 8; ++i)
+	{
+		Point3 p = projToWorld*corners[i];
+		glVertex3fv(p);
+	}
+
+	glVertex3fv(projToWorld*corners[4]);
+
+	glEnd();
+}
+
 

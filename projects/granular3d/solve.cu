@@ -1,7 +1,11 @@
+#if 0
+
 #include "solve.h"
 
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+
 #include <iostream>
-#include <thrust/sort.h>
 
 #ifdef _WIN32
 typedef unsigned int uint32_t;
@@ -10,7 +14,7 @@ typedef unsigned int uint32_t;
 
 using namespace std;
 
-#define PROFILE 1
+#define PROFILE 0
 #define USE_GRID 1
 #define USE_BOX_PRUNING 0
 
@@ -28,15 +32,15 @@ struct GrainSystem
 {
 public:
 	
-	float3* mPositions;
-	float3* mVelocities;
+	Vec3* mPositions;
+	Vec3* mVelocities;
 	float* mRadii;
 	
-	float3* mSortedPositions;
-	float3* mSortedVelocities;
+	Vec3* mSortedPositions;
+	Vec3* mSortedVelocities;
 	float* mSortedRadii;
 
-	float3* mNewVelocities;
+	Vec3* mNewVelocities;
 
 	uint32_t* mCellStarts;
 	uint32_t* mCellEnds;
@@ -89,30 +93,30 @@ __device__ inline float sqr(float x) { return x*x; }
 
 
 // calculate collision impulse
-__device__ inline float3 CollisionImpulse(float3 va, float3 vb, float ma, float mb, float3 n, float d, float baumgarte, float friction, float overlap)
+__device__ inline Vec3 CollisionImpulse(Vec3 va, Vec3 vb, float ma, float mb, Vec3 n, float d, float baumgarte, float friction, float overlap)
 {
 	// calculate relative velocity
-	float3 vd = vb-va;
+	Vec3 vd = vb-va;
 	
 	// calculate relative normal velocity
-	float vn = dot(vd, n);
+	float vn = Dot(vd, n);
 	
-	float3 j = make_float3(0.0f, 0.0f, 0.0f);
+	Vec3 j = Vec3(0.0f, 0.0f, 0.0f);
 	
 	//if (vn < 0.0f)
 	vn = min(vn, 0.0f);
 
 	{
 		// calculate relative tangential velocity
-		float3 vt = vd - n*vn;	
-		float vtsq = dot(vt, vt);
+		Vec3 vt = vd - n*vn;	
+		float vtsq = Dot(vt, vt);
 		float rcpvt = rsqrtf(vtsq);// + 0.001f);
 		
 		// position bias
 		float bias = baumgarte*min(d+overlap, 0.0f);
 
-		float3 jn = -(vn + bias)*n;
-		float3 jt = max(friction*vn*rcpvt, -1.0f)*vt;
+		Vec3 jn = -(vn + bias)*n;
+		Vec3 jt = max(friction*vn*rcpvt, -1.0f)*vt;
 		
 		// crappy static friction
 		if (fabsf(vtsq*rcpvt) < fabsf(friction*vn*2.0f) && vn < 0.0f)
@@ -163,11 +167,11 @@ __device__ inline uint32_t GridHash(int x, int y, int z)
 }
 */
 
-__global__ void CreateCellIndices(const float3* positions, uint32_t* cellIds, uint32_t* particleIndices)
+__global__ void CreateCellIndices(const Vec3* positions, uint32_t* cellIds, uint32_t* particleIndices)
 {
 	uint32_t i = blockIdx.x*blockDim.x + threadIdx.x;
 
-	float3 p = positions[i];
+	Vec3 p = positions[i];
 	
 	cellIds[i] = GridHash(GridCoord(p.x, kInvCellEdge), GridCoord(p.y, kInvCellEdge), GridCoord(p.z, kInvCellEdge));
 	particleIndices[i] = i;	
@@ -201,19 +205,19 @@ __global__ void CreateGrid(const uint32_t* cellIds, uint32_t* cellStarts, uint32
 	}
 }
 
-__device__ inline float3 CollideSphere(float3 xa, float3 xb, float3 va, float3 vb, float ra, float rb, float baumgarte, float friction, float overlap)
+__device__ inline Vec3 CollideSphere(Vec3 xa, Vec3 xb, Vec3 va, Vec3 vb, float ra, float rb, float baumgarte, float friction, float overlap)
 {
 	// distance to sphere
-	float3 t = xa - xb;
-	float3 j = make_float3(0.0f, 0.0f, 0.0f);
+	Vec3 t = xa - xb;
+	Vec3 j = Vec3(0.0f, 0.0f, 0.0f);
 
-	float d = dot(t, t);
+	float d = Dot(t, t);
 	float rsum = ra + rb;
 	float mtd = d - sqr(rsum);
 			
 	if (mtd < 0.0f)
 	{
-		float3 n = make_float3(0.0f, 1.0f, 0.0f);
+		Vec3 n = Vec3(0.0f, 1.0f, 0.0f);
 				
 		if (d > 0.0f)
 		{
@@ -229,10 +233,10 @@ __device__ inline float3 CollideSphere(float3 xa, float3 xb, float3 va, float3 v
 	return j;
 }
 
-__device__ inline float3 CollideCell(int index, int cx, int cy, int cz, const uint32_t* cellStarts, const uint32_t* cellEnds, const uint32_t* indices,
-				 const float3* positions, const float3* velocities, const float* radii, float3 x, float3 v, float r, float baumgarte, float friction, float overlap)
+__device__ inline Vec3 CollideCell(int index, int cx, int cy, int cz, const uint32_t* cellStarts, const uint32_t* cellEnds, const uint32_t* indices,
+				 const Vec3* positions, const Vec3* velocities, const float* radii, Vec3 x, Vec3 v, float r, float baumgarte, float friction, float overlap)
 {
-	float3 j = make_float3(0.0f, 0.0f, 0.0f);
+	Vec3 j = Vec3(0.0f, 0.0f, 0.0f);
 	
 	uint32_t cellIndex = GridHash(cx, cy, cz);
 	uint32_t cellStart = cellStarts[cellIndex];
@@ -255,7 +259,7 @@ __device__ inline float3 CollideCell(int index, int cx, int cy, int cz, const ui
 #endif
 
 
-__global__ void ReorderParticles(const float3* positions, const float3* velocities, const float* radii, float3* sortedPositions, float3* sortedVelocities, float* sortedRadii, const uint32_t* indices)
+__global__ void ReorderParticles(const Vec3* positions, const Vec3* velocities, const float* radii, Vec3* sortedPositions, Vec3* sortedVelocities, float* sortedRadii, const uint32_t* indices)
 {
 	uint32_t i = blockIdx.x*blockDim.x + threadIdx.x;
 	
@@ -267,16 +271,16 @@ __global__ void ReorderParticles(const float3* positions, const float3* velociti
 }
 
 
-__global__ void Collide(const float3* positions, const float3* velocities, const float* radii, const uint32_t* cellStarts, const uint32_t* cellEnds, const uint32_t* indices,
-						float3* newVelocities, int numGrains, GrainParams params, float dt, float scale)
+__global__ void Collide(const Vec3* positions, const Vec3* velocities, const float* radii, const uint32_t* cellStarts, const uint32_t* cellEnds, const uint32_t* indices,
+						Vec3* newVelocities, int numGrains, GrainParams params, float dt, float scale)
 {
 	const int index = blockIdx.x*blockDim.x + threadIdx.x;
 		
-	const float3 x = positions[index];
-	const float3 v = velocities[index];
+	const Vec3 x = positions[index];
+	const Vec3 v = velocities[index];
 	const float  r = radii[index];
 
-	float3 vd = make_float3(0.0f, 0.0f, 0.0f);
+	Vec3 vd = Vec3(0.0f, 0.0f, 0.0f);
 
 #if USE_GRID
 
@@ -300,7 +304,7 @@ __global__ void Collide(const float3* positions, const float3* velocities, const
 	// collide planes
 	for (int i=0; i < params.mNumPlanes; ++i)
 	{
-		float4 p = params.mPlanes[i];
+		Vec4 p = params.mPlanes[i];
 						
 		// distance to plane
 		float d = x.x*p.x + x.y*p.y + x.z*p.z + p.w;
@@ -309,7 +313,7 @@ __global__ void Collide(const float3* positions, const float3* velocities, const
 			
 		if (mtd < 0.0f)
 		{
-			vd += CollisionImpulse(make_float3(0.0f, 0.0f, 0.0f), v, 0.0f, 1.0f, make_float3(p.x, p.y, p.z), mtd, params.mBaumgarte, 0.8f, params.mOverlap);
+			vd += CollisionImpulse(Vec3(0.0f, 0.0f, 0.0f), v, 0.0f, 1.0f, Vec3(p.x, p.y, p.z), mtd, params.mBaumgarte, 0.8f, params.mOverlap);
 		}
 	}
 	
@@ -317,7 +321,7 @@ __global__ void Collide(const float3* positions, const float3* velocities, const
 	newVelocities[index] = v + vd * scale;
 }
 
-__global__ void IntegrateForce(float3* velocities, float3 gravity, float damp, float dt)
+__global__ void IntegrateForce(Vec3* velocities, Vec3 gravity, float damp, float dt)
 {
 	int index = blockIdx.x*blockDim.x + threadIdx.x;
 
@@ -325,7 +329,7 @@ __global__ void IntegrateForce(float3* velocities, float3 gravity, float damp, f
 }
 
 
-__global__ void IntegrateVelocity(float3* positions, float3* velocities, const float3* newVelocities, float dt)
+__global__ void IntegrateVelocity(Vec3* positions, Vec3* velocities, const Vec3* newVelocities, float dt)
 {
 	int index = blockIdx.x*blockDim.x + threadIdx.x;
 
@@ -353,13 +357,13 @@ GrainSystem* grainCreateSystem(int numGrains)
 	
 	s->mNumGrains = numGrains;
 	
-	cudaMalloc(&s->mPositions, numGrains*sizeof(float3));
-	cudaMalloc(&s->mVelocities, numGrains*sizeof(float3));
-	cudaMalloc(&s->mNewVelocities, numGrains*sizeof(float3));
+	cudaMalloc(&s->mPositions, numGrains*sizeof(Vec3));
+	cudaMalloc(&s->mVelocities, numGrains*sizeof(Vec3));
+	cudaMalloc(&s->mNewVelocities, numGrains*sizeof(Vec3));
 	cudaMalloc(&s->mRadii, numGrains*sizeof(float));
 	
-	cudaMalloc(&s->mSortedPositions, numGrains*sizeof(float3));
-	cudaMalloc(&s->mSortedVelocities, numGrains*sizeof(float3));
+	cudaMalloc(&s->mSortedPositions, numGrains*sizeof(Vec3));
+	cudaMalloc(&s->mSortedVelocities, numGrains*sizeof(Vec3));
 	cudaMalloc(&s->mSortedRadii, numGrains*sizeof(float));
 
 	// grid
@@ -394,15 +398,28 @@ void grainDestroySystem(GrainSystem* s)
 
 	delete s;
 }
+void grainSetSprings(GrainSystem* s, const uint32_t* springIndices, const float* springLengths, uint32_t numSprings)
+{
+	/*
+	s->mSpringIndices = (uint32_t*)malloc(numSprings*2*sizeof(uint32_t));
+	s->mSpringLengths = (float*)malloc(numSprings*sizeof(float));
+
+	memcpy(s->mSpringIndices, springIndices, numSprings*2*sizeof(uint32_t));
+	memcpy(s->mSpringLengths, springLengths, numSprings*sizeof(float));
+	
+	s->mNumSprings = numSprings;
+	*/
+}
+
 
 void grainSetPositions(GrainSystem* s, float* p, int n)
 {
-	cudaMemcpy(&s->mPositions[0], p, sizeof(float3)*n, cudaMemcpyHostToDevice);
+	cudaMemcpy(&s->mPositions[0], p, sizeof(Vec3)*n, cudaMemcpyHostToDevice);
 }
 
 void grainSetVelocities(GrainSystem* s, float* v, int n)
 {
-	cudaMemcpy(&s->mVelocities[0], v, sizeof(float3)*n, cudaMemcpyHostToDevice);	
+	cudaMemcpy(&s->mVelocities[0], v, sizeof(Vec3)*n, cudaMemcpyHostToDevice);	
 }
 
 void grainSetRadii(GrainSystem* s, float* r)
@@ -412,12 +429,12 @@ void grainSetRadii(GrainSystem* s, float* r)
 
 void grainGetPositions(GrainSystem* s, float* p)
 {
-	cudaMemcpy(p, &s->mPositions[0], sizeof(float3)*s->mNumGrains, cudaMemcpyDeviceToHost);
+	cudaMemcpy(p, &s->mPositions[0], sizeof(Vec3)*s->mNumGrains, cudaMemcpyDeviceToHost);
 }
 
 void grainGetVelocities(GrainSystem* s, float* v)
 {
-	cudaMemcpy(v, &s->mVelocities[0], sizeof(float3)*s->mNumGrains, cudaMemcpyDeviceToHost);
+	cudaMemcpy(v, &s->mVelocities[0], sizeof(Vec3)*s->mNumGrains, cudaMemcpyDeviceToHost);
 }
 
 void grainGetRadii(GrainSystem* s, float* r)
@@ -497,7 +514,7 @@ void grainUpdateSystem(GrainSystem* s, float dt, int iterations, GrainTimers* ti
 		{
 			CudaTimer timer("Collide", start, stop, timers->mCollide);
 			
-			float scale = float(i+1)/(iterations);
+			float scale = 1;//float(i+1)/(iterations);
 
 			Collide<<<kNumBlocks, kNumThreadsPerBlock>>>(s->mSortedPositions, s->mSortedVelocities, s->mSortedRadii, s->mCellStarts, s->mCellEnds, s->mIndices, s->mNewVelocities, s->mNumGrains, params, dt, scale);
 		}
@@ -519,3 +536,4 @@ void grainUpdateSystem(GrainSystem* s, float dt, int iterations, GrainTimers* ti
 	cudaEventDestroy(stop);
 }
 
+#endif

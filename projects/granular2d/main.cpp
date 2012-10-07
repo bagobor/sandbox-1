@@ -14,7 +14,7 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*2.0;
+const float kZoom = kWorldSize*2.5;
 
 int kNumParticles = 0;
 const int kNumIterations = 5;
@@ -60,6 +60,18 @@ void Init()
 	g_radii.resize(0);
 	g_springIndices.resize(0);
 	g_springLengths.resize(0);
+		
+	g_params.mGravity = Vec2(0.0f, -9.8f);
+	g_params.mDamp = 0.0f;//powf(1.1f, float(kNumIterations));
+	g_params.mBaumgarte = 0.5f;
+	g_params.mFriction = 0.8f;
+	g_params.mRestitution = 0.1f;
+	g_params.mOverlap = kRadius*0.1f;
+	g_params.mPlanes[2] = Vec3(1.0f, 0.0f, -5.0f);
+	g_params.mPlanes[1] = Vec3(-1.0f, 0.0f, -5.0f);
+	g_params.mPlanes[0] = Normalize(Vec3(0.0f, 1.0f, 0.0f));
+	g_params.mNumPlanes = 3;
+
 
 	if (0)
 	{
@@ -82,14 +94,14 @@ void Init()
 	else if (1)
 	{
 		TgaImage img;
-		if (TgaLoad("armadillo.tga", img))
+		if (TgaLoad("bunny.tga", img))
 		{
 			float xstart = -3.0f;
 
 			float step = kRadius*1.0f;
 			float x = xstart;
-			float y = 0.0f;
-			int dim = 64;
+			float y = 1.0f;
+			int dim = 32; 
 
 			float dpx = float(img.m_width) / dim;
 			float dpy = float(img.m_height) / dim;
@@ -113,8 +125,8 @@ void Init()
 
 						float r = Randf(0.0f, 0.005f)*step;
 						g_positions.push_back(Vec2(x + r , y));
-						g_velocities.push_back(Vec2());
-						g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+						g_velocities.push_back(0.0f);//Vec2(10.0f, 0.0f));
+						g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f);
 
 						// add springs
 						for (int ny=i-1; ny <= i+1; ++ny)
@@ -145,25 +157,44 @@ void Init()
 	}
 	else if (0)
 	{
-		g_positions.push_back(Vec2(0.0f, 1.0f));
-		g_velocities.push_back(Vec2());
+		g_positions.push_back(Vec2(0.0f, kRadius));
+		g_velocities.push_back(Vec2(0.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 		
 			
-		//g_positions.push_back(Vec2(0.0f, 1.0f + 2.5f*kRadius));
-		g_velocities.push_back(Vec2());
+		g_positions.push_back(Vec2(kRadius, kRadius + 2.0f*kRadius));
+		g_velocities.push_back(Vec2(0.0f, 0.0f));
+		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+	}
+	else if (0)
+	{
+		g_positions.push_back(Vec2(-0.2f, 1.0f));
+		g_velocities.push_back(Vec2(1.0f, 0.0f));
+		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+		
+			
+		g_positions.push_back(Vec2(0.2f, 1.0f));
+		g_velocities.push_back(Vec2(-1.0f, 0.0f));
+		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+	}	
+	else if (0)
+	{
+		g_params.mPlanes[0] = Normalize(Vec3(1.1f, 1.0f, 0.0f));
+
+		g_positions.push_back(Vec2(0.0f, 1.0f));
+		g_velocities.push_back(Vec2(0.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 	}	
 	else if (1)
 	{
 		// pyramid
-		const int kLevels = 30;
+		const int kLevels = 20;
 
 		for (int y=0; y < kLevels; ++y)
 		{
 			for (int x=0; x < kLevels-y; ++x)
 			{
-				g_positions.push_back(Vec2(-1.5f + y*kRadius + x*2.0f*kRadius, kRadius + 1.6f*y*kRadius));
+				g_positions.push_back(Vec2(0.0f + y*kRadius + x*2.0f*kRadius, kRadius + 1.6f*y*kRadius));
 				g_velocities.push_back(Vec2());
 				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 			}
@@ -173,18 +204,6 @@ void Init()
 	kNumParticles = g_positions.size();
 
 	g_grains = grainCreateSystem(kNumParticles);
-		
-	g_params.mGravity = Vec2(0.0f, -9.8f);
-	g_params.mDamp = 0.0f;//powf(1.1f, float(kNumIterations));
-	g_params.mBaumgarte = 0.5f;
-	g_params.mFriction = 0.8f;
-	g_params.mRestitution = 0.1f;
-	g_params.mOverlap = kRadius*0.1f;
-	g_params.mPlanes[2] = Vec3(1.0f, 0.0f, -5.0f);
-	g_params.mPlanes[1] = Vec3(-1.0f, 0.0f, -5.0f);
-	g_params.mPlanes[0] = Normalize(Vec3(0.0f, 1.0f, 0.0f));
-	g_params.mNumPlanes = 3;
-
 	//g_radii[0] = 2.0f;
 
 	grainSetParams(g_grains, &g_params);
@@ -303,18 +322,18 @@ void GLUTUpdate()
 	std::vector<float> mass(g_positions.size());
 	grainGetMass(g_grains, &mass[0]);
 
-	glBegin(GL_POINTS);
+//	glBegin(GL_POINTS);
 
 	for (int i=0; i < kNumParticles; ++i)
 	{
 		glColor3fv(colors[i%3]);
 		//glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), (mass[i]-1.0f)*0.2f));
-		glVertex2fv(g_positions[i]);
-//		DrawCircle(g_positions[i], kRadius, colors[i%3]);
+		//glVertex2fv(g_positions[i]);
+		DrawCircle(g_positions[i], g_radii[i], colors[i%3]);
 	}
 
-	glEnd();
-	glDisable(GL_BLEND);
+	//glEnd();
+	//glDisable(GL_BLEND);
 
 	double drawEnd = GetSeconds();
 	

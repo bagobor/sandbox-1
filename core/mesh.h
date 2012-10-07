@@ -17,7 +17,7 @@ struct Mesh
     void CalculateNormals();
     void Transform(const Matrix44& m);
 
-    void GetBounds(Vector3& minExtents, Vector3& maxExtents);
+    void GetBounds(Vector3& minExtents, Vector3& maxExtents) const;
 
     std::vector<Point3> m_positions;
     std::vector<Vector3> m_normals;

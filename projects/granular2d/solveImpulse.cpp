@@ -18,6 +18,7 @@ struct GrainSystem
 public:
 	
 	float2* mPositions;
+	float2* mCandidatePositions;
 	float2* mVelocities;
 	float* mRadii;
 	float* mDensities;
@@ -202,41 +203,29 @@ inline float2 CollideCell(unsigned int index, int cx, int cy, const unsigned int
 				const float d = sqrtf(dSq);
 				const Vec2 n = xij / d;
 
-				const Vec2 vi = velocities[index];
-				const Vec2 vj = velocities[particleIndex];
-			
-				// inelastic collision impulse	
-				Vec2 c = CollisionImpulse(vj, vi, 1.0f, 1.0f, n, d-rsum, baumgarte, overlap, 0.0f);
+				const Vec2 vij = velocities[index] - velocities[particleIndex];
+				const Vec2 vn = Dot(vij, n)*n;
+				const Vec2 vt = vij - vn;	
 
-				//c += (vj-vi - 2.0f*c)*0.8f;
+				const float kSpring = 20.f;
+				const float kDamp = 0.5f;
+				const float kFriction = 0.7f*min(Length(vn), Length(vt));
+				const float kBridge = 0.0f;
 
-				//j -= 0.1f*min(0.0f, Dot(velocities[index], n))*n; 
+				if (Dot(vij, n) > 0.0f)
+					j -= kBridge*vij;
+				else
+				{
+					// inelastic collision impulse	
+					Vec2 jn = kSpring*(d-rsum)*n;
+					Vec2 jd = kDamp*vn;
+					Vec2 jt = kFriction*min(1.0f, Length(vn))*SafeNormalize(vt,Vec2());
 
-				if (!doCollide)
-					c = Vec2();	
-
-				// gradient of kernel function	
-				float w = kernel(d);
-
-				const Vec2 dw = n*w;
-
-				// update the new velocity gradient 
-				//if (c.x != 0.0f || c.y != 0.0f)
-				if (densities[particleIndex] > 0.0f)
-					velocityGradient += Outer(dw, vj-vi)*(1.0f/densities[particleIndex]);
-
-				// apply forces due to last frames stress
-				Vec2 f;	
-			//	if (densities[index] > 0.0f && densities[particleIndex] > 0.0f)
-			//		f = (stress[index]*-1.0f*sqr(1.0f/densities[index]) + stress[particleIndex]*sqr(1.0f/densities[particleIndex]))*dw;
-			
-				if (densities[particleIndex] > 0.0f)// && norm(stress[index]) > 0.2f)	
-					f = stress[particleIndex]*(1.0f/densities[particleIndex])*dw;
-
-				// apply collision and fiction impulses	
-				j += c;// + f;
-
-				newDensity += 1.0f;
+					// apply collision and fiction impulses	
+					j -= jn + jd + jt;
+				
+					newDensity += 1.0f;
+				}		
 			}
 		}		
 	}
@@ -246,7 +235,7 @@ inline float2 CollideCell(unsigned int index, int cx, int cy, const unsigned int
 
 
 
-inline void Collide(
+inline Vec2 Collide(
 		int index,
 		const float2* positions,
 		const float2* velocities,
@@ -297,23 +286,25 @@ inline void Collide(
 			
 		if (mtd < 0.0f)
 		{
-			impulse += CollisionImpulse(float2(0.0f, 0.0f), v, 0.0f, 1.0f, float2(p.x, p.y), mtd, baumgarte, overlap, 1.0f);
+			Vec2 n(p.x, p.y);
 
+			impulse -= n*mtd*10.0f; 
+			impulse -= v;// + Dot(v, n)*n*mtd*10.0f;
+	
 			density += 1.0f;
 		}
 	}
 
 	// write back velocity
-	newVelocities[index] = v + impulse/max(1.0f, density);
+	//newVelocities[index] = v + impulse/max(1.0f, density);
+
+	return impulse/max(1.0f, density);
 }
 
 void Integrate(int index, float2* positions, float2* velocities, float2 gravity, float damp, float dt)
 {
 	// v += f*dt
 	velocities[index] += (gravity - damp*velocities[index])*dt;
-
-	// x += v*dt
-	positions[index] += velocities[index]*dt;
 }
 
 void Update(GrainSystem s, float dt, float invdt)
@@ -324,18 +315,20 @@ void Update(GrainSystem s, float dt, float invdt)
 	memset(s.mCellStarts, 0, sizeof(unsigned int)*128*128);
 	memset(s.mCellEnds, 0, sizeof(unsigned int)*128*128);
 	
-	ConstructGrid(invCellEdge, s.mNumGrains, s.mPositions, s.mIndices, s.mCellStarts, s.mCellEnds); 
+	// candidate positions
+	for (int i=0; i < s.mNumGrains; ++i)
+		s.mCandidatePositions[i] = s.mPositions[i] + dt*s.mVelocities[i];
+
+	ConstructGrid(invCellEdge, s.mNumGrains, s.mCandidatePositions, s.mIndices, s.mCellStarts, s.mCellEnds); 
 
 	memcpy(s.mNewVelocities, s.mVelocities, sizeof(float)*2*s.mNumGrains);
 
-	for (int k=0; k < 1; ++k)
+	for (int k=0; k < 10; ++k)
 	{
-		doCollide = true;// k==0;
-
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
-			Collide(i,
-				   	s.mPositions,
+			Vec2 j = Collide(i,
+				   	s.mCandidatePositions,
 				   	s.mVelocities,
 				   	s.mRadii,
 					s.mDensities,
@@ -351,21 +344,26 @@ void Update(GrainSystem s, float dt, float invdt)
 					s.mNumGrains,
 				   	s.mParams.mBaumgarte*invdt, 
 					s.mParams.mOverlap);
+
+			s.mNewVelocities[i] = s.mVelocities[i] + j;
 		}
 
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
-		
-	
+			s.mCandidatePositions[i] = s.mPositions[i] + dt*s.mNewVelocities[i];
 			s.mVelocities[i] = s.mNewVelocities[i];
-			s.mStress[i] = s.mNewStress[i];
 			s.mDensities[i] = s.mNewDensities[i];
 	
-			if (s.mDensities[i] > 0.0f)	
-				s.mVelocities[i] /= max(1.0f, s.mDensities[i]*0.3f); 
+		//	if (s.mDensities[i] > 0.0f)	
+		//		s.mVelocities[i] /= max(1.0f, s.mDensities[i]*0.3f); 
 
 		}
 	}
+
+	// x += v*dt
+	for (int i=0; i < s.mNumGrains; ++i)
+		s.mPositions[i] += s.mVelocities[i]*dt;
+
 }
 
 
@@ -379,6 +377,7 @@ GrainSystem* grainCreateSystem(int numGrains)
 	s->mNumGrains = numGrains;
 	
 	s->mPositions = (float2*)malloc(numGrains*sizeof(float2));
+	s->mCandidatePositions = (float2*)malloc(numGrains*sizeof(float2));
 	s->mVelocities = (float2*)malloc(numGrains*sizeof(float2));
 	s->mRadii = (float*)malloc(numGrains*sizeof(float));
 	s->mDensities = (float*)malloc(numGrains*sizeof(float));
@@ -401,6 +400,7 @@ GrainSystem* grainCreateSystem(int numGrains)
 void grainDestroySystem(GrainSystem* s)
 {
 	free(s->mPositions);
+	free(s->mCandidatePositions);
 	free(s->mVelocities);
 	free(s->mRadii);
 	free(s->mStress);
