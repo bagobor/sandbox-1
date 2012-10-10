@@ -14,7 +14,7 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*2.5;
+const float kZoom = kWorldSize*1.0;
 
 int kNumParticles = 0;
 const int kNumIterations = 5;
@@ -33,6 +33,9 @@ vector<float> g_springLengths;
 
 bool g_pause = false;
 bool g_step = false;
+
+uint32_t g_scene = 1;
+
 
 // mouse
 static int lastx;
@@ -53,7 +56,7 @@ Vec2 ScreenToScene(int x, int y)
 	return Vec2(left + tx*(right-left), bottom + ty*(top-bottom));
 }
 
-void Init()
+void Init(int scene)
 {	
 	g_positions.resize(0);
 	g_velocities.resize(0);
@@ -63,7 +66,7 @@ void Init()
 		
 	g_params.mGravity = Vec2(0.0f, -9.8f);
 	g_params.mDamp = 0.0f;//powf(1.1f, float(kNumIterations));
-	g_params.mBaumgarte = 0.5f;
+	g_params.mBaumgarte = 0.2f;
 	g_params.mFriction = 0.8f;
 	g_params.mRestitution = 0.1f;
 	g_params.mOverlap = kRadius*0.1f;
@@ -73,7 +76,7 @@ void Init()
 	g_params.mNumPlanes = 3;
 
 
-	if (0)
+	if (scene == 1)
 	{
 		for (int x=0; x < 32; ++x)
 		{
@@ -91,7 +94,7 @@ void Init()
 			}
 		}
 	}
-	else if (1)
+	else if (scene == 2)
 	{
 		TgaImage img;
 		if (TgaLoad("bunny.tga", img))
@@ -101,7 +104,7 @@ void Init()
 			float step = kRadius*1.0f;
 			float x = xstart;
 			float y = 1.0f;
-			int dim = 32; 
+			int dim = 64; 
 
 			float dpx = float(img.m_width) / dim;
 			float dpy = float(img.m_height) / dim;
@@ -155,7 +158,7 @@ void Init()
 			}	
 		}
 	}
-	else if (0)
+	else if (scene == 3)
 	{
 		g_positions.push_back(Vec2(0.0f, kRadius));
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
@@ -166,7 +169,7 @@ void Init()
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 	}
-	else if (0)
+	else if (scene == 4)
 	{
 		g_positions.push_back(Vec2(-0.2f, 1.0f));
 		g_velocities.push_back(Vec2(1.0f, 0.0f));
@@ -177,7 +180,7 @@ void Init()
 		g_velocities.push_back(Vec2(-1.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 	}	
-	else if (0)
+	else if (scene == 5)
 	{
 		g_params.mPlanes[0] = Normalize(Vec3(1.1f, 1.0f, 0.0f));
 
@@ -185,10 +188,10 @@ void Init()
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 	}	
-	else if (1)
+	else if (scene == 6)
 	{
 		// pyramid
-		const int kLevels = 20;
+		const int kLevels = 2;
 
 		for (int y=0; y < kLevels; ++y)
 		{
@@ -211,8 +214,8 @@ void Init()
 	grainSetVelocities(g_grains, (float*)&g_velocities[0], kNumParticles);
 	grainSetRadii(g_grains, &g_radii[0]);
 
-	if (!g_springIndices.empty())
-		grainSetSprings(g_grains, &g_springIndices[0], &g_springLengths[0], g_springLengths.size());
+	//if (!g_springIndices.empty())
+	//	grainSetSprings(g_grains, &g_springIndices[0], &g_springLengths[0], g_springLengths.size());
 }
 
 void Shutdown()
@@ -223,7 +226,7 @@ void Shutdown()
 void Reset()
 {
 	Shutdown();
-	Init();
+	Init(g_scene);
 }
 
 void DrawCircle(const Vec2& p, float r, const Colour& c )
@@ -376,6 +379,13 @@ void GLUTArrowKeysUp(int key, int x, int y)
 
 void GLUTKeyboardDown(unsigned char key, int x, int y)
 {
+	if (key > '0' && key <= '6')
+	{
+		g_scene = key-'0';
+		Init(g_scene);
+		return;
+	}
+	
  	switch (key)
 	{
 		case 'e':
@@ -392,7 +402,7 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			g_params.mNumPlanes--;
 			break;
 		}
-		case 's':
+		case 'o':
 		{
 			g_step = true;
 			break;
@@ -407,7 +417,7 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			g_params.mNumPlanes--;
 			break;
 		}
-		case ' ':
+		case 'p':
 		{
 			g_pause = !g_pause;
 			break;
@@ -480,7 +490,7 @@ int main(int argc, char* argv[])
 //		cout << c[i] << endl;
 	
 	RandInit();
-	Init();
+	Init(g_scene);
 	
     // init gl
     glutInit(&argc, argv);
