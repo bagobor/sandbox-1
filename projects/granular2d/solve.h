@@ -50,6 +50,8 @@ struct GrainTimers
 GrainSystem* grainCreateSystem(int numGrains);
 void grainDestroySystem(GrainSystem* s);
 
+void grainSetSprings(GrainSystem* s, const uint32_t* indices, const float* restLengths, uint32_t numSprings);
+
 void grainSetPositions(GrainSystem* s, float* p, int n);
 void grainSetVelocities(GrainSystem* s, float* v, int n);
 
@@ -58,6 +60,8 @@ void grainGetVelocities(GrainSystem* s, float* v);
 
 void grainSetRadii(GrainSystem* s, float* r);
 void grainGetRadii(GrainSystem* s, float r);
+
+void grainGetMass(GrainSystem* s, float* r);
 
 void grainSetParams(GrainSystem* s, GrainParams* params);
 

@@ -38,7 +38,7 @@ namespace
     template <typename T>
     T PlyRead(ifstream& s, PlyFormat format)
     {
-        T data;
+        T data = eAscii;
 
         switch (format)
         {
@@ -55,6 +55,8 @@ namespace
                 data = *(T*)c;
                 break;
             }      
+			default:
+				assert(0);
         }
 
         return data;
@@ -104,6 +106,7 @@ Mesh* ImportMeshFromPly(const char* path)
                 vertexElement = false;
                 file >> numFaces;
             }
+
             else if (strcmp(buffer, "vertex") == 0)
             {
                 vertexElement = true;
@@ -121,6 +124,11 @@ Mesh* ImportMeshFromPly(const char* path)
             {
                 format = eBinaryBigEndian;
             }
+			else
+			{
+				printf("Ply: unknown format\n");
+				return false;
+			}
         }
         else if (strcmp(buffer, "property") == 0)
         {
@@ -136,6 +144,9 @@ Mesh* ImportMeshFromPly(const char* path)
     // eat newline
     char nl;
     file.read(&nl, 1);
+	
+	// debug
+	printf ("numFaces: %d numVertices: %d format: %d numProperties: %d\n", numFaces, numVertices, format, numProperties);
 
     Mesh* mesh = new Mesh;
 
@@ -183,7 +194,6 @@ Mesh* ImportMeshFromPly(const char* path)
 			mesh->m_indices.push_back(indices[2]);
 			mesh->m_indices.push_back(indices[3]);
 			mesh->m_indices.push_back(indices[0]);
-
 			break;
 
 		default:
@@ -511,7 +521,7 @@ void Mesh::Transform(const Matrix44& m)
     }
 }
 
-void Mesh::GetBounds(Vector3& outMinExtents, Vector3& outMaxExtents)
+void Mesh::GetBounds(Vector3& outMinExtents, Vector3& outMaxExtents) const
 {
     Point3 minExtents(FLT_MAX);
     Point3 maxExtents(-FLT_MAX);

@@ -175,7 +175,11 @@ CUDA_CALLABLE typename T::value_type LengthSq(const T v)
 template <typename T>
 CUDA_CALLABLE typename T::value_type Length(const T& v)
 {
-	return Sqrt(LengthSq(v));
+	typename T::value_type lSq = LengthSq(v);
+	if (lSq)
+		return Sqrt(LengthSq(v));
+	else
+		return 0.0f;
 }
 
 // this is mainly a helper function used by script
@@ -444,14 +448,13 @@ inline Mat44 LookAtMatrix(const Point3& viewer, const Point3& target)
 {
 	// create a basis from viewer to target (OpenGL convention looking down -z)
 	Vec3 forward = -Normalize(target-viewer);
-	Vec3 left, up;
+	Vec3 up(0.0f, 1.0f, 0.0f);
+	Vec3 left = Cross(up, forward);
+	up = Cross(forward, left);
 
-	// create a basis with z along target-viewer dir
-	BasisFromVector(forward, &left, &up);
-	
 	float xform[4][4] = {  { left.x, left.y, left.z, 0.0f },
-	  						     { up.x, up.y, up.z, 0.0f},
-							     { forward.x, forward.y, forward.z, 0.0f},
+	  					     { up.x, up.y, up.z, 0.0f},
+						     { forward.x, forward.y, forward.z, 0.0f},
 							     { viewer.x, viewer.y, viewer.z, 1.0f} };
 
 	return AffineInverse(Mat44(&xform[0][0]));		

@@ -12,7 +12,7 @@ using namespace std;
 _declspec (thread) uint32_t AABBTree::s_traceDepth;
 #endif
 
-AABBTree::AABBTree(Point3* vertices, uint32_t numVerts, uint32_t* indices, uint32_t numFaces) 
+AABBTree::AABBTree(const Point3* vertices, uint32_t numVerts, const uint32_t* indices, uint32_t numFaces) 
     : m_vertices(vertices)
     , m_numVerts(numVerts)
     , m_indices(indices)
@@ -180,6 +180,7 @@ void AABBTree::Build()
 
     const double buildTime = (GetSeconds()-startTime);
 
+	/*
     cout << "AAABTree Build Stats:" << endl;
     cout << "Node size: " << sizeof(Node) << endl;
     cout << "Build time: " << buildTime << "s" << endl;
@@ -188,7 +189,7 @@ void AABBTree::Build()
     cout << "Alloc nodes: " << m_nodes.size() << endl;
     cout << "Avg. tris/leaf: " << m_faces.size() / float(m_leafNodes) << endl;
     cout << "Max depth: " << m_treeDepth << endl;
-
+	*/
     // free some memory
     FaceBoundsArray f;
     m_faceBounds.swap(f);
@@ -290,7 +291,7 @@ void AABBTree::BuildRecursive(uint32_t nodeIndex, uint32_t* faces, uint32_t numF
     {
 		uint32_t s = std::max(uint32_t(1.5f*m_nodes.size()), 512U);
 
-		cout << "Resizing tree, current size: " << m_nodes.size()*sizeof(Node) << " new size: " << s*sizeof(Node) << endl;
+		//cout << "Resizing tree, current size: " << m_nodes.size()*sizeof(Node) << " new size: " << s*sizeof(Node) << endl;
 
         m_nodes.resize(s);
     }
@@ -358,9 +359,10 @@ bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, fl
 	Vector3 normal;
     float t, u, v, w, s;
 
-    float minT = FLT_MAX;
-    float minU, minV, minW, minSign;
-    uint32_t minIndex;
+    float minT, minU, minV, minW, minSign;
+	minU = minV = minW = minSign = minT = FLT_MAX;
+    
+	uint32_t minIndex = 0;
     Vector3 minNormal;
 
     const uint32_t kStackDepth = 50;

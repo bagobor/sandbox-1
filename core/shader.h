@@ -23,7 +23,7 @@
 
 #endif
 
-#include "core/vec4.h"
+#include "core/maths.h"
 
 #define glVerify(x) {x; glAssert(#x, __LINE__, __FILE__);}
 void glAssert(const char* msg, long line, const char* file);
@@ -34,4 +34,4 @@ GLuint CompileProgram(const char *vsource, const char* csource, const char* esou
 
 void DrawPlane(const Vec4& p);
 void DrawString(int x, int y, const char* s, ...);
-
+void DrawFrustum(const Matrix44& projToWorld);

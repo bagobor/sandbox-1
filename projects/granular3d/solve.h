@@ -1,15 +1,12 @@
 #pragma once
 
-#ifdef CUDA
-#include <cutil_math.h>
-#include <cutil_inline.h>    // includes cuda.h and cuda_runtime_api.h
-#endif
+#include "core/maths.h"
 
 struct GrainSystem;
 
 struct GrainParams
 {
-	float3 mGravity;
+	Vec3 mGravity;
 	float mDamp;
 	
 	float mBaumgarte;
@@ -17,7 +14,7 @@ struct GrainParams
 	float mRestitution;
 	float mOverlap;
 
-	float4 mPlanes[8];
+	Vec4 mPlanes[8];
 	int mNumPlanes;
 };
 
@@ -43,6 +40,8 @@ struct GrainTimers
 
 GrainSystem* grainCreateSystem(int numGrains);
 void grainDestroySystem(GrainSystem* s);
+
+void grainSetSprings(GrainSystem* s, const uint32_t* springIndices, const float* springLengths, uint32_t numSprings);
 
 void grainSetPositions(GrainSystem* s, float* p, int n);
 void grainSetVelocities(GrainSystem* s, float* v, int n);
