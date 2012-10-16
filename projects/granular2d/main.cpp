@@ -14,7 +14,7 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*1.0;
+const float kZoom = kWorldSize*2.5;
 
 int kNumParticles = 0;
 const int kNumIterations = 5;
@@ -34,7 +34,10 @@ vector<float> g_springLengths;
 bool g_pause = false;
 bool g_step = false;
 
-uint32_t g_scene = 1;
+vector<float> g_energy(200);
+uint32_t g_frame;
+
+uint32_t g_scene = 6;
 
 
 // mouse
@@ -82,7 +85,7 @@ void Init(int scene)
 		{
 			float s = -3.0f;
 
-			const float sep = 1.f*kRadius;
+			const float sep = 0.96f*kRadius;
 
 			for (int i=0; i < 16; ++i)
 			{
@@ -103,7 +106,7 @@ void Init(int scene)
 
 			float step = kRadius*1.0f;
 			float x = xstart;
-			float y = 1.0f;
+			float y = .0f;
 			int dim = 64; 
 
 			float dpx = float(img.m_width) / dim;
@@ -126,7 +129,7 @@ void Init(int scene)
 						uint32_t newIndex = g_positions.size(); 
 						lookup[i*dim + j] = newIndex;
 
-						float r = Randf(0.0f, 0.005f)*step;
+						float r = Randf(0.0f, 0.009f)*step;
 						g_positions.push_back(Vec2(x + r , y));
 						g_velocities.push_back(0.0f);//Vec2(10.0f, 0.0f));
 						g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f);
@@ -182,7 +185,7 @@ void Init(int scene)
 	}	
 	else if (scene == 5)
 	{
-		g_params.mPlanes[0] = Normalize(Vec3(1.1f, 1.0f, 0.0f));
+		g_params.mPlanes[0] = Normalize(Vec3(1.0f, 1.0f, 0.0f));
 
 		g_positions.push_back(Vec2(0.0f, 1.0f));
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
@@ -191,7 +194,7 @@ void Init(int scene)
 	else if (scene == 6)
 	{
 		// pyramid
-		const int kLevels = 2;
+		const int kLevels = 10;
 
 		for (int y=0; y < kLevels; ++y)
 		{
@@ -270,8 +273,8 @@ void GLUTUpdate()
 {
 	//---------------------------
 
+	glViewport(0, 0, kWidth, kHeight);
 	glDisable(GL_CULL_FACE);
-	glClear(GL_COLOR_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 	
 	glPointSize(5.0f);
@@ -288,10 +291,20 @@ void GLUTUpdate()
 
 	if (!g_pause || g_step)
 	{
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		grainSetParams(g_grains, &g_params);
 		grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
 
 		g_step = false;
+
+		float e = 0.0f;
+		for(int i=0; i < kNumParticles; i++)
+			e += g_positions[i].y*fabsf(g_params.mGravity.y) + 0.5f*Dot(g_velocities[i], g_velocities[i]);
+
+		g_energy[g_frame%g_energy.size()] = e;
+
+		g_frame++;
 	}
 
 
@@ -309,6 +322,7 @@ void GLUTUpdate()
 		
 	// read-back data	
 	grainGetPositions(g_grains, (float*)&g_positions[0]);
+	grainGetVelocities(g_grains, (float*)&g_velocities[0]);
 	
 	glColor3f(0.7f, 0.7f, 0.8f);
 
@@ -360,6 +374,23 @@ void GLUTUpdate()
 	DrawString(x, y, "Collide: %.2fms", timers.mCollide); y += 13;
 	DrawString(x, y, "Integrate: %.2fms", timers.mIntegrate); y += 13;
 	DrawString(x, y, "Reorder: %.2fms", timers.mReorder); y += 13;
+
+	float m = *std::max_element(g_energy.begin(), g_energy.end());
+
+	glViewport(20, 20, 200, 200);
+	glLoadIdentity();
+	gluOrtho2D(0, g_energy.size(), 0.0f, m);
+   	glBegin(GL_LINE_STRIP);
+
+	for (uint32_t i=0; i < g_energy.size(); i++)
+	{
+		glVertex2f(i, g_energy[i]);
+
+	}
+
+	glEnd();
+
+	
 
 	glutSwapBuffers();
 	
