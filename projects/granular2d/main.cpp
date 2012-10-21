@@ -14,7 +14,7 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*2.5;
+const float kZoom = kWorldSize*0.5;
 
 int kNumParticles = 0;
 const int kNumIterations = 5;
@@ -31,7 +31,7 @@ vector<float> g_radii;
 vector<uint32_t> g_springIndices;
 vector<float> g_springLengths;
 
-bool g_pause = false;
+bool g_pause = true;
 bool g_step = false;
 
 vector<float> g_energy(200);
@@ -68,7 +68,7 @@ void Init(int scene)
 	g_springLengths.resize(0);
 		
 	g_params.mGravity = Vec2(0.0f, -9.8f);
-	g_params.mDamp = 0.0f;//powf(1.1f, float(kNumIterations));
+	g_params.mDamp = 0.0f;//powf(0.5f, float(kNumIterations));
 	g_params.mBaumgarte = 0.2f;
 	g_params.mFriction = 0.8f;
 	g_params.mRestitution = 0.1f;
@@ -85,7 +85,7 @@ void Init(int scene)
 		{
 			float s = -3.0f;
 
-			const float sep = 0.96f*kRadius;
+			const float sep = kRadius;
 
 			for (int i=0; i < 16; ++i)
 			{
@@ -132,7 +132,7 @@ void Init(int scene)
 						float r = Randf(0.0f, 0.009f)*step;
 						g_positions.push_back(Vec2(x + r , y));
 						g_velocities.push_back(0.0f);//Vec2(10.0f, 0.0f));
-						g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f);
+						g_radii.push_back(kRadius);// + kRadius*Randf(-0.2f, 0.0f));
 
 						// add springs
 						for (int ny=i-1; ny <= i+1; ++ny)
@@ -171,6 +171,10 @@ void Init(int scene)
 		g_positions.push_back(Vec2(kRadius, kRadius + 2.0f*kRadius));
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+
+		g_positions.push_back(Vec2(0.0f, 0.5f));
+		g_velocities.push_back(Vec2(2.0f, -1.0f));
+		g_radii.push_back(kRadius);
 	}
 	else if (scene == 4)
 	{
@@ -194,13 +198,13 @@ void Init(int scene)
 	else if (scene == 6)
 	{
 		// pyramid
-		const int kLevels = 10;
+		const int kLevels = 3;
 
 		for (int y=0; y < kLevels; ++y)
 		{
 			for (int x=0; x < kLevels-y; ++x)
 			{
-				g_positions.push_back(Vec2(0.0f + y*kRadius + x*2.0f*kRadius, kRadius + 1.6f*y*kRadius));
+				g_positions.push_back(Vec2(0.0f + 0.0f*y*kRadius + x*2.0f*kRadius, 0.0f + kRadius + 1.6f*y*kRadius));
 				g_velocities.push_back(Vec2());
 				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 			}
@@ -285,13 +289,13 @@ void GLUTUpdate()
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(OrthographicMatrix(-viewWidth, viewWidth, -0.5, 2*kZoom-0.5f, 0.0f, 1.0f));
 
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Step
 	GrainTimers timers;
 
 	if (!g_pause || g_step)
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
 
 		grainSetParams(g_grains, &g_params);
 		grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
