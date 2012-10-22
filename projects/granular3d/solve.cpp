@@ -510,8 +510,8 @@ void Update(GrainSystem s, float dt, float invdt)
 		}
 
 		// solve springs 		
-		SolveSprings(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings, s.mForces, s.mNewMass, k==kNumPosIters-1); 
-		//SolveSpringsGauss(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings, k==kNumPosIters-1);
+		//SolveSprings(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings, s.mForces, s.mNewMass, k==kNumPosIters-1); 
+		SolveSpringsGauss(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings, k==kNumPosIters-1);
 	
 		// solve position constraints
 		for (int i=0; i < s.mNumGrains; ++i)
@@ -544,7 +544,7 @@ void Update(GrainSystem s, float dt, float invdt)
 	for (int i=0; i < s.mNumGrains; ++i)
 		s.mVelocities[i] = (s.mCandidatePositions[i]-s.mPositions[i])*invdt; 
 	
-	for (int k=0; k < 3; ++k)
+	for (int k=0; k < 1; ++k)
 	{	
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
@@ -584,7 +584,7 @@ void Update(GrainSystem s, float dt, float invdt)
 
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
-		s.mVelocities[i] /= max(1.0f, s.mMass[i]*0.2f); 
+		s.mVelocities[i] /= max(1.0f, s.mMass[i]*s.mParams.mDissipation); 
 		//s.mVelocities[i] /= max(1.0f, s.mContactCounts[i]*0.3f); 
 
 		s.mMass[i] = 1.0f;//

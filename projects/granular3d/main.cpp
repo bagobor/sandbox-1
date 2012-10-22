@@ -29,8 +29,8 @@ vector<float> g_radii;
 vector<uint32_t> g_springIndices;
 vector<float> g_springLengths;
 
-Vec3 g_camPos(1.0f, 2.0f, 5.0f);
-Vec3 g_camAngle(0.0f, -kPi/8.0f, 0.0f);
+Vec3 g_camPos(1.0f, 2.0f, 7.0f);
+Vec3 g_camAngle(0.0f, 0.0f, 0.0f);
 
 bool g_pause = false;
 bool g_step = false;
@@ -50,13 +50,18 @@ const int kParticleLength = 16;
 
 void Voxelize(const Mesh& mesh, uint32_t width, uint32_t height, uint32_t depth, uint32_t* volume);
 
-void Init()
+int g_scene = 1;
+
+void Init(int scene)
 {	
 	g_positions.resize(0);
 	g_velocities.resize(0);
 	g_radii.resize(0);
 	g_springIndices.resize(0);
 	g_springLengths.resize(0);
+
+	if (g_grains)
+		grainDestroySystem(g_grains);
 
 	// sim params	
 	g_params.mGravity = Vec3(0.0f, -9.8f, 0.0f);
@@ -68,12 +73,17 @@ void Init()
 	g_params.mPlanes[0] = Vec4(0.0f, 1.0f, 0.0f, 0.0f);
 	g_params.mPlanes[1] = Vec4(1.0f, 0.0f, 0.0f, 2.0f);
 	g_params.mNumPlanes = 2;
+	g_params.mDissipation = 0.2f;
 	
 	float r = kRadius*0.95f;
 	
-	if (0)
+	switch (scene)
+	{
+	case 1:
 	{	
-		float y = 1.0f + kRadius;
+		g_params.mDissipation = 0.5f;
+
+		float y = 0.0f + kRadius;
 
 		for (int i=0; i < kParticleHeight; ++i)
 		{	
@@ -89,11 +99,21 @@ void Init()
 
 			y += 2.f*r;
 		}
+		break;
 	}
-	else if (1)
+	case 2:
+	case 3:
+	case 4:
+	case 5:
 	{
+		const char* file;
+
+		if (scene == 2 || scene == 3)
+			file = "armadillo.ply";
+		else if (scene == 4 || scene == 5)
+			file = "bunny.ply";
+
 		// voxelize mesh
-		const char file[] = "armadillo.ply";
 		Mesh* m = ImportMeshFromPly(file);
 	
 		if (m)
@@ -106,9 +126,11 @@ void Init()
 
 			// normalize scale
 			float longestAxis = max(max(extents.x, extents.y), extents.z);
-			float scale = 2.5f;
+			float scale = 1.5f;			
 			
-			m->Transform(RotationMatrix(kPi, Vec3(0.0f, 1.0f, 0.0f)));
+			if (scene == 2 || scene == 3)
+				m->Transform(RotationMatrix(kPi, Vec3(0.0f, 1.0f, 0.0f)));
+
 			m->Transform(ScaleMatrix(scale/longestAxis));
 			extents *= scale/longestAxis;
 
@@ -126,7 +148,10 @@ void Init()
 
 			printf("end voxelize\n");
 
-			float yoff = 3.0f + r;
+			float yoff = 0.0f + r;
+
+			if (scene & 1)
+				yoff += 1.0f;
 
 			// create a particle at each non-empty cell
 			for (uint32_t x=0; x < dx; ++x)
@@ -145,26 +170,35 @@ void Init()
 
 							volume[index] = g_positions.size();
 
-							// add springs
-							const int stride = 1;
-
-							for (uint32_t i=max(0, int(x)-stride); i <= x; i+=stride)
+							if (scene & 1)
 							{
-								for (uint32_t j=max(0, int(y)-stride); j <= y; j+=stride)
+								g_velocities.back() = Vec3(-10.0f, 0.0f, 0.0f);
+								// add springs
+								const int stride = 1;
+
+								for (uint32_t i=max(0, int(x)-stride); i <= x; i+=stride)
 								{
-									for (uint32_t k=max(0, int(z)-stride); k <= z; k+=stride)
+									for (uint32_t j=max(0, int(y)-stride); j <= y; j+=stride)
 									{
-										uint32_t r = volume[k*dx*dy + j*dx + i];
+										for (uint32_t k=max(0, int(z)-stride); k <= z; k+=stride)
+										{
+											uint32_t r = volume[k*dx*dy + j*dx + i];
 
-										if (r && r != uint32_t(-1) && r != volume[index])
-										{	
-											g_springIndices.push_back(volume[index]-1);
-											g_springIndices.push_back(r-1);
+											if (r && r != uint32_t(-1) && r != volume[index])
+											{	
+												g_springIndices.push_back(volume[index]-1);
+												g_springIndices.push_back(r-1);
 
-											g_springLengths.push_back(Distance(g_positions.back(), g_positions[r-1]));
+												g_springLengths.push_back(Distance(g_positions.back(), g_positions[r-1]));
+											}
 										}
 									}
 								}
+							}
+							else
+							{
+								g_params.mDissipation = 0.4f;
+								g_positions.back() += Vec3(Randf(-0.001f, 0.001f), Randf(-0.001f, 0.001f), Randf(-0.001f, 0.001f));
 							}
 						}
 					}
@@ -176,6 +210,11 @@ void Init()
 		}
 		else
 			printf("Couldn't open %s for read\n", file); 
+
+		break;
+	}
+	default:
+		break;
 	}
 
 	kNumParticles = g_positions.size();
@@ -200,7 +239,7 @@ void Shutdown()
 void Reset()
 {
 	Shutdown();
-	Init();
+	Init(g_scene);
 }
 
 
@@ -300,6 +339,8 @@ void GLUTUpdate()
 	
 	double drawEnd = GetSeconds();
 
+	glUseProgram(0);
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glMatrixMode(GL_PROJECTION);
@@ -311,18 +352,8 @@ void GLUTUpdate()
 	
 	glColor3f(1.0f, 1.0f, 1.0f);
 	DrawString(x, y, "Draw time: %.2fms", (drawEnd-drawStart)*1000.0f); y += 13;
-	DrawString(x, y, "Create Cell Indices: %.2fms", timers.mCreateCellIndices); y += 13;
-	DrawString(x, y, "Sort Cell Indices: %.2fms", timers.mSortCellIndices); y += 13;
-	DrawString(x, y, "Create Grid: %.2fms", timers.mCreateGrid); y += 13;
-	DrawString(x, y, "Collide: %.2fms", timers.mCollide); y += 13;
-	DrawString(x, y, "Integrate: %.2fms", timers.mIntegrate); y += 13;
-	DrawString(x, y, "Reorder: %.2fms", timers.mReorder); y += 13;
-	DrawString(x, y, "Particles: %d", kParticleHeight*kParticleWidth*kParticleLength, kNumIterations); y += 13;
-	DrawString(x, y, "Iterations: %d", kNumIterations); y += 26;
-
-	DrawString(x, y, "t - Remove plane"); y += 13;
-	DrawString(x, y, "u - Move plane"); y += 13;
-	DrawString(x, y, "r - Reset"); y += 13;
+	DrawString(x, y, "1-5: Scene Select"); y += 13;
+	DrawString(x, y, "r: Reset"); y += 13;
 		
 	glutSwapBuffers();
 	
@@ -342,6 +373,13 @@ void GLUTArrowKeysUp(int key, int x, int y)
 
 void GLUTKeyboardDown(unsigned char key, int x, int y)
 {
+	if (key > '0' && key <= '5')
+	{
+		g_scene = key-'0';
+		Init(g_scene);
+		return;
+	}
+
 	const float kSpeed = 0.5f;
 
 	// update camera
@@ -456,7 +494,7 @@ int solveCuda(float* a, float* b, float* c, int n);
 int main(int argc, char* argv[])
 {	
 	RandInit();
-	Init();
+	Init(g_scene);
 	
     // init gl
     glutInit(&argc, argv);

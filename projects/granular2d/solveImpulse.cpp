@@ -207,17 +207,20 @@ inline float2 CollideCell(unsigned int index, int cx, int cy, const unsigned int
 				const Vec2 vn = Dot(vij, n)*n;
 				const Vec2 vt = vij - vn;	
 
-				const float kSpring = 20.f;
+				const float kSpring = baumgarte;
 				const float kDamp = 0.5f;
-				const float kFriction = 0.7f*min(Length(vn), Length(vt));
+				const float kFriction = 0.5f*min(Length(vn), Length(vt));
 				const float kBridge = 0.0f;
 
 				if (Dot(vij, n) > 0.0f)
+				{
 					j -= kBridge*vij;
+					newDensity += 0.0f;
+				}
 				else
 				{
 					// inelastic collision impulse	
-					Vec2 jn = kSpring*(d-rsum)*n;
+					Vec2 jn = kSpring*max(rsum-d-0.005f, 0.0f)*n*-0.5f;
 					Vec2 jd = kDamp*vn;
 					Vec2 jt = kFriction*min(1.0f, Length(vn))*SafeNormalize(vt,Vec2());
 
@@ -288,8 +291,8 @@ inline Vec2 Collide(
 		{
 			Vec2 n(p.x, p.y);
 
-			impulse -= n*mtd*10.0f; 
-			impulse -= v;// + Dot(v, n)*n*mtd*10.0f;
+			impulse -= n*mtd*baumgarte; 
+			impulse -= v*1.0f;// + Dot(v, n)*n*mtd*10.0f;
 	
 			density += 1.0f;
 		}
@@ -354,8 +357,8 @@ void Update(GrainSystem s, float dt, float invdt)
 			s.mVelocities[i] = s.mNewVelocities[i];
 			s.mDensities[i] = s.mNewDensities[i];
 	
-		//	if (s.mDensities[i] > 0.0f)	
-		//		s.mVelocities[i] /= max(1.0f, s.mDensities[i]*0.3f); 
+			//if (s.mDensities[i] > 0.0f)	
+			//	s.mVelocities[i] /= max(1.0f, s.mDensities[i]*0.3f); 
 
 		}
 	}
@@ -425,6 +428,11 @@ void grainSetPositions(GrainSystem* s, float* p, int n)
 void grainSetVelocities(GrainSystem* s, float* v, int n)
 {
 	memcpy(&s->mVelocities[0], v, sizeof(float2)*n);	
+}
+
+void grainSetSprings(GrainSystem* s, const uint32_t* springIndices, const float* springLengths, uint32_t numSprings)
+{
+
 }
 
 void grainSetRadii(GrainSystem* s, float* r)
