@@ -38,7 +38,7 @@ namespace
     template <typename T>
     T PlyRead(ifstream& s, PlyFormat format)
     {
-        T data;
+        T data = eAscii;
 
         switch (format)
         {
@@ -55,6 +55,8 @@ namespace
                 data = *(T*)c;
                 break;
             }      
+			default:
+				assert(0);
         }
 
         return data;

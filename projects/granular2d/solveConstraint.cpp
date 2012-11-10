@@ -1,4 +1,4 @@
-#if 0
+#if 1
 
 #include <core/maths.h>
 #include <core/shader.h>
@@ -14,17 +14,16 @@ typedef Vec3 float3;
 
 using namespace std;
 
-const int kMaxContactsPerSphere = 16; 
+const int kMaxContactsPerSphere = 9; 
 
 struct Contact
 {
-	Vec2 n;
-	int j;
+	Vec2 point;
+	Vec2 normal;
+	int j;	
 	float e;
-	float m;
 	float lambda;
-	float jn;
-	float jt; 
+	float total;
 };
 
 struct GrainSystem
@@ -151,7 +150,7 @@ inline float sqr(float x) { return x*x; }
 inline float kernel(float x) { return x; } //return x*sqr(max(1.0f-x*20.0f, 0.0f)); } 
 
 inline int Collide(
-		unsigned int index,	
+		float2 xi, float ri,
 		const unsigned int* cellStarts, 
 		const unsigned int* cellEnds, 
 		const unsigned int* indices,
@@ -160,12 +159,8 @@ inline int Collide(
 		const float3* planes,
 		const int numPlanes,
 		Contact* contacts,
-		int maxContacts,
-		float invdt) 
+		int maxContacts) 
 {
-	const Vec2 xi = positions[index];
-	const float ri = radii[index];
-
 	// collide particles
 	int cx = GridCoord(xi.x, invCellEdge);
 	int cy = GridCoord(xi.y, invCellEdge);
@@ -184,9 +179,6 @@ inline int Collide(
 			for (unsigned int i=cellStart; i < cellEnd; ++i)
 			{
 				const unsigned int particleIndex = indices[i];
-
-				if (index == particleIndex)
-					continue;
 				
 				const float2 xj = positions[particleIndex];
 				const float rj = radii[particleIndex];
@@ -197,34 +189,31 @@ inline int Collide(
 				const float dSq = LengthSq(xij);
 				const float rsum = ri + rj;
 			
-				if (dSq < sqr(rsum) && dSq != 0.0f)
+				if (dSq < sqr(rsum) && dSq > 0.001f)
 				{	
-					Vec2 n = xij / sqrtf(dSq);
+					/*
+					contacts[numContacts++] = particleIndex;	
 
-					// reset warm start
-					if (contacts[numContacts].j == int(particleIndex))
+					if (numContacts == maxContacts)
+						return numContacts;
+					*/
+
+					if (numContacts == maxContacts)
 					{
-						contacts[numContacts].jn = contacts[numContacts].lambda;
-						contacts[numContacts].jt = 0.0f;
-					}
-					else
-					{
-						contacts[numContacts].jn = 0.0f;
+						//printf("Dropping contacts!\n");
+						return numContacts;
 					}
 
-					contacts[numContacts].n = n; 
-					contacts[numContacts].e = rsum*0.95f;
-					contacts[numContacts].m = 0.5f;
-					contacts[numContacts].lambda = 0.0f;
+					contacts[numContacts].point = 0.5f*(xi+xj); 
+					contacts[numContacts].normal = Normalize(xij);
+					contacts[numContacts].e = 0.05f;
+
+					if (contacts[numContacts].j != particleIndex)
+						contacts[numContacts].lambda = 0.0f;
+
 					contacts[numContacts].j = particleIndex; 
 
 					++numContacts;
-	
-					if (numContacts == maxContacts)
-					{
-						printf("dropping contacts\n");
-						return numContacts;
-					}
 				}	
 			}
 		}
@@ -240,37 +229,32 @@ inline int Collide(
 			
 		if (d <= ri)
 		{
-			float2 n(p.x, p.y);
-
-			// reset warm start
-			if (contacts[numContacts].j == -1)
-			{
-				contacts[numContacts].jn = contacts[numContacts].lambda;
-				contacts[numContacts].jt = 0.0f;
-			}
-			else
-			{
-				contacts[numContacts].jn = 0.0f;
-			}
-
-			contacts[numContacts].n = n; 
-			contacts[numContacts].e = p.z + ri*0.95f;//(ri-d)*invdt;
-			contacts[numContacts].m = 1.0f;
-			contacts[numContacts].lambda = 0.0f;
-			contacts[numContacts].j = -1;
-			
-			++numContacts;
 			if (numContacts == maxContacts)
 			{
-				printf("dropping contacts\n");
+				//printf("Dropping contacts!\n");
 				return numContacts;
 			}
+
+			float2 n(p.x, p.y);
+
+			contacts[numContacts].point = xi - n*d; 
+			contacts[numContacts].normal = n; 
+			contacts[numContacts].e = 1.0f;
+				
+			if (contacts[numContacts].j != -1)
+				contacts[numContacts].lambda = 0.0f;
+
+			contacts[numContacts].j = -1;
+			contacts[numContacts].lambda = 0.0f;
+			
+			//printf("adding contact %f %f at %f %f \n", xi.x, xi.y, contacts[numContacts].point.x, contacts[numContacts].point.y);
+
+			++numContacts;
 		}
 	}
 
 	return numContacts;
 }
-
 
 inline float2 SolvePositions(
 		int index,
@@ -285,51 +269,43 @@ inline float2 SolvePositions(
 {
 	float2 xi = positions[index];
 	float2 vi = velocities[index];
+	float ri = radii[index];
 
 	// collide particles
 	float2 impulse;
 
+	float scale = 0.95f;
+
+	ri *= scale;
+
 	for (int i=0; i < numContacts; ++i)
 	{
 		Contact& c = contacts[i];
+			
+		Vec2 vj = (c.j != -1)?velocities[c.j]:0.0f;
 
-		float2 xj = (c.j != -1)?positions[c.j]:0.0f;
-		float2 vj = (c.j != -1)?velocities[c.j]:0.0f;
-		float2 xij = xi-xj;
+		Vec2 delta = xi-c.point;
 
-		float l = (Dot(xij, c.n)-c.e)*c.m;
-
-		float t = c.lambda;
-		c.lambda = c.lambda - l;
-		c.lambda = max(0.0f, c.lambda);
-
-		float dl = (c.lambda-t);
-		impulse += c.n*dl;
+		float dn = Dot(delta, c.normal);
 		
-		Vec2 vij = vi-vj;
-		Vec2 vn = Dot(vij, c.n)*c.n;
-		Vec2 vt = vij - vn;
-
-		//c.jt += lambda; 
-		impulse -= SafeNormalize(vt,Vec2(0.0f))*min(c.m*c.m*c.m*dl, Length(vt)*dt);
-
-		pressure += 1.0f;
-
-
-		/*
-		if (l < 0.0f)
+		if (dn < ri)
 		{
-			impulse -= c.n*l*c.m;
+			Vec2 vij = vj-vi;
+			float vn = Dot(vij, c.normal);
+		
+			//Vec2 vt = vij - vn;
+			//impulse -= c.e*SafeNormalize(vt, Vec2(0.0f))*min(Length(vn), Length(vt));
 
-			c.lambda = -l*c.m;
-			c.jn += c.lambda;
+			// calculate velocity correction
+			float l = max((ri-dn)/dt, vn*0.5f);
+			Vec2 dv = l*c.normal;
+			impulse += dv;
+
+			c.lambda = l;
+
 
 			pressure += 1.0f;
 		}
-		else
-			c.lambda = 0.0f;
-		*/
-
 	}
 
 	return impulse/max(1.0f, pressure);
@@ -340,37 +316,43 @@ inline float2 SolveVelocities(
 		const float2* positions,
 		const float2* velocities,
 		const float* radii,
-		Contact* contacts, 
+		const Contact* contacts, 
 		int numContacts,
 		float& pressure,
-		float invdt)
+		float dt)
+
 {
 	float2 xi = positions[index];
 	float2 vi = velocities[index];
+	float ri = radii[index];
 
 	// collide particles
 	float2 impulse;
 
+	float scale = 0.95f;
+
+	ri *= scale;
+
 	for (int i=0; i < numContacts; ++i)
 	{
-		Contact& c = contacts[i];
+		const Contact& c = contacts[i];
+			
+		Vec2 vj = (c.j != -1)?velocities[c.j]:0.0f;
+
+		Vec2 delta = xi-c.point;
+
+		float dn = Dot(delta, c.normal);
 		
-		assert(c.lambda >= 0.0f);
-
+		if (dn < ri)
 		{
-			Vec2 vj = (c.j != -1)?velocities[c.j]:0.0f;
-
 			Vec2 vij = vi-vj;
-			Vec2 vn = Dot(vij, c.n)*c.n;
+			Vec2 vn = Dot(vij, c.normal)*c.normal;
 			Vec2 vt = vij - vn;
+			impulse -= c.e*SafeNormalize(vt, Vec2(0.0f))*min(c.lambda, Length(vt));
 
-			//c.jt += lambda; 
+			//impulse -= vn*c.e;
 
-			//float l = min(c.m*c.m*c.m*c.m*c.lambda*invdt, Length(vt));
-			//impulse -= SafeNormalize(vt, Vec2(0.0f))*l;
-
-
-			pressure += 1.0f;
+			pressure += c.e;
 		}
 	}
 
@@ -390,32 +372,35 @@ void Update(GrainSystem s, float dt, float invdt)
 	for (int i=0; i < s.mNumGrains; ++i)
 		Integrate(i, s.mPositions, s.mCandidatePositions, s.mVelocities, s.mMass, s.mParams.mGravity, s.mParams.mDamp, dt);
 	
+
 	const int kNumIterations = 5;
 
 	memset(s.mCellStarts, 0, sizeof(unsigned int)*128*128);
 	memset(s.mCellEnds, 0, sizeof(unsigned int)*128*128);
 
 	ConstructGrid(invCellEdge, s.mNumGrains, s.mCandidatePositions, s.mIndices, s.mCellStarts, s.mCellEnds); 
-
-	// find neighbours
-	for (int i=0; i < s.mNumGrains; ++i)
-	{
-		s.mContactCounts[i] = Collide(i,
-									  s.mCellStarts,
-									  s.mCellEnds,
-									  s.mIndices,
-									  s.mCandidatePositions,
-									  s.mRadii,
-									  s.mParams.mPlanes,
-									  s.mParams.mNumPlanes,
-									  &s.mContacts[i*kMaxContactsPerSphere],
-									  kMaxContactsPerSphere,
-									  invdt);
-
-	}
-
+		
 	for (int k=0; k < kNumIterations; ++k)
 	{
+		// find neighbours
+		for (int i=0; i < s.mNumGrains; ++i)
+		{
+			float2 xi = s.mCandidatePositions[i];
+
+			s.mContactCounts[i] = Collide(s.mCandidatePositions[i],
+										  s.mRadii[i],
+										  s.mCellStarts,
+										  s.mCellEnds,
+										  s.mIndices,
+										  s.mCandidatePositions,
+										  s.mRadii,
+										  s.mParams.mPlanes,
+										  s.mParams.mNumPlanes,
+										  &s.mContacts[i*kMaxContactsPerSphere],
+										  kMaxContactsPerSphere);
+
+		}
+
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
 			s.mForces[i] = 0.0f;
@@ -433,15 +418,14 @@ void Update(GrainSystem s, float dt, float invdt)
 					dt);
 			
 				s.mMass[i] = pressure;
-				s.mForces[i] += j;
+				s.mForces[i] += j;//*float(k+1)/kNumIterations;
 		}
 
-		if (0)
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
 			float pressure = 0.0f;
 
-			s.mVelocities[i] += s.mForces[i]*invdt;
+			s.mVelocities[i] += s.mForces[i];
 			s.mForces[i] = 0.0f;
 
 			float2 j = SolveVelocities(
@@ -452,16 +436,16 @@ void Update(GrainSystem s, float dt, float invdt)
 					&s.mContacts[i*kMaxContactsPerSphere],
 					s.mContactCounts[i],
 					pressure,
-					invdt);
+					dt);
 			
 				s.mMass[i] = pressure;
-				s.mForces[i] += j;
+				s.mForces[i] += j;//*float(k+1)/kNumIterations;
 		}
 
 		// apply impulses	
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
-			s.mVelocities[i] += s.mForces[i]*invdt;
+			s.mVelocities[i] += s.mForces[i];
 			s.mCandidatePositions[i] = s.mPositions[i] + dt*s.mVelocities[i];	
 		}
 	}
@@ -470,7 +454,7 @@ void Update(GrainSystem s, float dt, float invdt)
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
 		//s.mVelocities[i] /= max(1.0f, s.mContactCounts[i]*0.3f); 
-		s.mPositions[i] = s.mCandidatePositions[i];//s.mPositions[i] + s.mVelocities[i]*dt; 
+		s.mPositions[i] = s.mPositions[i] + s.mVelocities[i]*dt; 
 	}
 }
 
@@ -493,9 +477,6 @@ GrainSystem* grainCreateSystem(int numGrains)
 	s->mContacts = (Contact*)malloc(numGrains*kMaxContactsPerSphere*sizeof(Contact));
 	s->mContactCounts = (int*)malloc(numGrains*sizeof(int));
 
-	memset(s->mContacts, 0, sizeof(Contact)*numGrains*kMaxContactsPerSphere);
-	memset(s->mContactCounts, 0, sizeof(int)*numGrains);
-	
 	s->mCandidatePositions = (float2*)malloc(numGrains*sizeof(float2));
 	s->mNewPositions = (float2*)malloc(numGrains*sizeof(float2));
 

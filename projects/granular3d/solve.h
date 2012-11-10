@@ -13,6 +13,7 @@ struct GrainParams
 	float mFriction;
 	float mRestitution;
 	float mOverlap;
+	float mDissipation;
 
 	Vec4 mPlanes[8];
 	int mNumPlanes;

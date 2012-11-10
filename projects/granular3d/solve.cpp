@@ -472,6 +472,7 @@ void Integrate(int index, const Vec3* positions, Vec3* candidatePositions, Vec3*
 
 void Update(GrainSystem s, float dt, float invdt)
 {		
+	#pragma omp parallel for
 	for (int i=0; i < s.mNumGrains; ++i)
 		Integrate(i, s.mPositions, s.mCandidatePositions, s.mVelocities, s.mMass, s.mParams.mGravity, s.mParams.mDamp, dt);
 	
@@ -508,12 +509,11 @@ void Update(GrainSystem s, float dt, float invdt)
 			s.mNewMass[i] = 0.0f;
 		}
 
-		// solve springs 
+		// solve springs 		
 		//SolveSprings(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings, s.mForces, s.mNewMass, k==kNumPosIters-1); 
 		SolveSpringsGauss(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings, k==kNumPosIters-1);
 	
 		// solve position constraints
-		//
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
 			float p = 0.0f;
@@ -544,14 +544,14 @@ void Update(GrainSystem s, float dt, float invdt)
 	for (int i=0; i < s.mNumGrains; ++i)
 		s.mVelocities[i] = (s.mCandidatePositions[i]-s.mPositions[i])*invdt; 
 	
-	for (int k=0; k < 3; ++k)
+	for (int k=0; k < 1; ++k)
 	{	
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
 			s.mForces[i] = 0.0f;
 			s.mNewMass[i] = 0.0f;
 		}
-
+		
 		SolveSpringDamping(s.mVelocities, s.mSpringIndices, s.mSpringLengths, s.mNumSprings, s.mForces, s.mNewMass);
 
 		// solve velocity constraints
@@ -584,7 +584,7 @@ void Update(GrainSystem s, float dt, float invdt)
 
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
-		s.mVelocities[i] /= max(1.0f, s.mMass[i]*0.2f); 
+		s.mVelocities[i] /= max(1.0f, s.mMass[i]*s.mParams.mDissipation); 
 		//s.mVelocities[i] /= max(1.0f, s.mContactCounts[i]*0.3f); 
 
 		s.mMass[i] = 1.0f;//

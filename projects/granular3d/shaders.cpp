@@ -1,5 +1,7 @@
 #include "shaders.h"
 
+#include "core/shader.h"
+
 // vertex shader
 const char *vertexPointShader = STRINGIFY(
 

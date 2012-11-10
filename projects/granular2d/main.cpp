@@ -14,7 +14,7 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*1.5;
+const float kZoom = kWorldSize*2.5f;
 
 int kNumParticles = 0;
 const int kNumIterations = 5;
@@ -78,14 +78,15 @@ void Init(int scene)
 	g_params.mPlanes[0] = Normalize(Vec3(0.0f, 1.0f, 0.0f));
 	g_params.mNumPlanes = 3;
 
-
-	if (scene == 1)
+	switch (scene)
+	{
+	case 1:
 	{
 		for (int x=0; x < 32; ++x)
 		{
 			float s = -3.0f;
 
-			const float sep = kRadius;
+			const float sep = 0.96f*kRadius;
 
 			for (int i=0; i < 16; ++i)
 			{
@@ -96,17 +97,28 @@ void Init(int scene)
 				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 			}
 		}
-	}
-	else if (scene == 2)
+		break;
+	}	
+	case 2:		
+	case 3:
+	case 4:
+	case 5:
 	{
+		const char* file;
+		if (scene == 2 || scene == 3)
+			file = "bunny.tga";
+		else if (scene == 4 || scene == 5)
+			file = "armadillo.tga";
+
 		TgaImage img;
-		if (TgaLoad("bunny.tga", img))
+		if (TgaLoad(file, img))
 		{
 			float xstart = -3.0f;
 
 			float step = kRadius*1.0f;
 			float x = xstart;
-			float y = .0f;
+			float y = 1.5f;
+
 			int dim = 64; 
 
 			float dpx = float(img.m_width) / dim;
@@ -135,18 +147,21 @@ void Init(int scene)
 						g_radii.push_back(kRadius);// + kRadius*Randf(-0.2f, 0.0f));
 
 						// add springs
-						for (int ny=i-1; ny <= i+1; ++ny)
-						{
-							for (int nx=j-1; nx <= j+1; ++nx)
+						if (scene & 1)
 							{
-								uint32_t r = lookup[ny*dim + nx];
+							for (int ny=i-1; ny <= i+1; ++ny)
+							{
+								for (int nx=j-1; nx <= j+1; ++nx)
+								{
+									uint32_t r = lookup[ny*dim + nx];
 
-								if (r != uint32_t(-1) && r != newIndex)
-								{	
-									g_springIndices.push_back(newIndex);
-									g_springIndices.push_back(r);
+									if (r != uint32_t(-1) && r != newIndex)
+									{	
+										g_springIndices.push_back(newIndex);
+										g_springIndices.push_back(r);
 
-									g_springLengths.push_back(Distance(g_positions[newIndex], g_positions[r]));
+										g_springLengths.push_back(Distance(g_positions[newIndex], g_positions[r]));
+									}
 								}
 							}
 						}
@@ -160,8 +175,9 @@ void Init(int scene)
 				y += 2.0f*step; 
 			}	
 		}
+		break;
 	}
-	else if (scene == 3)
+	case 6:
 	{
 		g_positions.push_back(Vec2(0.0f, kRadius));
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
@@ -172,11 +188,9 @@ void Init(int scene)
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 
-		g_positions.push_back(Vec2(0.0f, 0.5f));
-		g_velocities.push_back(Vec2(2.0f, -1.0f));
-		g_radii.push_back(kRadius);
+		break;
 	}
-	else if (scene == 4)
+	case 7:
 	{
 		g_positions.push_back(Vec2(-0.2f, 1.0f));
 		g_velocities.push_back(Vec2(1.0f, 0.0f));
@@ -186,16 +200,20 @@ void Init(int scene)
 		g_positions.push_back(Vec2(0.2f, 1.0f));
 		g_velocities.push_back(Vec2(-1.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+
+		break;
 	}	
-	else if (scene == 5)
+	case 8:
 	{
-		g_params.mPlanes[0] = Normalize(Vec3(1.1f, 1.0f, 0.0f));
+		g_params.mPlanes[0] = Normalize(Vec3(1.0f, 1.0f, 0.0f));
 
 		g_positions.push_back(Vec2(0.0f, 1.0f));
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
 		g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
+
+		break;
 	}	
-	else if (scene == 6)
+	case 9:
 	{
 		// pyramid
 		const int kLevels = 10;
@@ -209,7 +227,12 @@ void Init(int scene)
 				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 			}
 		}
+
+		break;
 	}
+	default: 
+		break;
+	};
 
 	kNumParticles = g_positions.size();
 
@@ -221,8 +244,8 @@ void Init(int scene)
 	grainSetVelocities(g_grains, (float*)&g_velocities[0], kNumParticles);
 	grainSetRadii(g_grains, &g_radii[0]);
 
-	//if (!g_springIndices.empty())
-	//	grainSetSprings(g_grains, &g_springIndices[0], &g_springLengths[0], g_springLengths.size());
+	if (!g_springIndices.empty())
+		grainSetSprings(g_grains, &g_springIndices[0], &g_springLengths[0], g_springLengths.size());
 }
 
 void Shutdown()
@@ -296,6 +319,7 @@ void GLUTUpdate()
 
 	if (!g_pause || g_step)
 	{
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		grainSetParams(g_grains, &g_params);
 		grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
@@ -333,11 +357,12 @@ void GLUTUpdate()
 	double drawStart = GetSeconds();
 
 	glPointSize(kRadius*kWidth/viewWidth);
+	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_BLEND);
 
-	Colour colors[] = { Colour(0.5f, 0.5f, 0.8f),
-					Colour(0.8f, 0.5f, 0.5f),
-					Colour(0.5f, 0.8f, 0.5f) };
+	Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
+					Colour(1.0f, 0.5f, 0.5f),
+					Colour(0.5f, 1.0f, 0.5f) };
 
 
 	std::vector<float> mass(g_positions.size());
@@ -372,12 +397,26 @@ void GLUTUpdate()
 	
 	glColor3f(1.0f, 1.0f, 1.0f);
 	DrawString(x, y, "Draw time: %.2fms", (drawEnd-drawStart)*1000.0f); y += 13;
-	DrawString(x, y, "Create Cell Indices: %.2fms", timers.mCreateCellIndices); y += 13;
-	DrawString(x, y, "Sort Cell Indices: %.2fms", timers.mSortCellIndices); y += 13;
-	DrawString(x, y, "Create Grid: %.2fms", timers.mCreateGrid); y += 13;
-	DrawString(x, y, "Collide: %.2fms", timers.mCollide); y += 13;
-	DrawString(x, y, "Integrate: %.2fms", timers.mIntegrate); y += 13;
-	DrawString(x, y, "Reorder: %.2fms", timers.mReorder); y += 13;
+	DrawString(x, y, "1-9: Select scene", "");
+	DrawString(x, y, "r: Reset", "");
+	
+
+	float m = *std::max_element(g_energy.begin(), g_energy.end());
+
+	glViewport(20, 20, 200, 200);
+	glLoadIdentity();
+	gluOrtho2D(0, g_energy.size(), 0.0f, m);
+   	glBegin(GL_LINE_STRIP);
+
+	for (uint32_t i=0; i < g_energy.size(); i++)
+	{
+		glVertex2f(i, g_energy[i]);
+
+	}
+
+	glEnd();
+
+	
 
 	float m = *std::max_element(g_energy.begin(), g_energy.end());
 
@@ -414,7 +453,7 @@ void GLUTArrowKeysUp(int key, int x, int y)
 
 void GLUTKeyboardDown(unsigned char key, int x, int y)
 {
-	if (key > '0' && key <= '6')
+	if (key > '0' && key <= '9')
 	{
 		g_scene = key-'0';
 		Init(g_scene);

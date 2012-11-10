@@ -240,14 +240,7 @@ inline float2 SolvePositions(
 			float l = 0.5f*(rsum-d)*invdt;	
 
 			// project out of sphere
-			impulse += l*n;
-
-			// apply friction
-			const float kFriction = 0.4f;
-
-			float2 vij = velocities[particleIndex] - velocities[index];
-			float2 vt = vij - Dot(vij, n)*n;
-			impulse += kFriction*0.5f*min(l, Length(vt))*SafeNormalize(vt, Vec2(0.0f)); 
+			impulse += 0.5f*kernel(rsum-d)*n;
 		
 			weight += 1.0f;
 		}
@@ -329,6 +322,7 @@ Vec2 SolveVelocities(
 			const float kFriction = 0.05f;
 			const float kViscosity = 0.0f;
 
+			float fn = Max(Dot(fi, n), 0.0f);
 			float2 vn = Dot(vij, n)*n; 
 			float2 vt = vij - vn;
 
@@ -360,6 +354,7 @@ Vec2 SolveVelocities(
 			float2 n(p.x, p.y);
 
 			// friction
+			float fn = Max(Dot(fi, n), 0.0f);
 			float2 vn = Dot(velocities[index], n)*n;
 			float2 vt = velocities[index] - vn;
 
@@ -374,6 +369,115 @@ Vec2 SolveVelocities(
 
 	return impulse/max(1.0f, weight);
 }
+
+void SolveSprings(float2* positions, const uint32_t* indices, float* lengths, int numSprings)
+{
+	const uint32_t* sIt = indices;
+	const uint32_t* sEnd = indices+numSprings*2;
+	float* lIt = lengths; 
+
+	for (; sIt < sEnd; sIt+=2, ++lIt )
+	{
+		float2 xi = positions[sIt[0]];
+		float2 xj = positions[sIt[1]];
+		float2 xij = xi-xj;
+
+		float rij = Dot(xij, xij);
+		float l = *lIt;
+		
+		if (l < 0.0f)
+			continue;
+
+		//if (rij > sqr(l))
+		{
+			float k = 1.0f;	
+			float d = sqrtf(rij);
+		
+			// handle breaking spring	
+			if (d > l*1.04f)
+				*lIt = -1.0f;
+
+			float e = d-l;	
+			xij /= d;
+
+			xi -= 0.5f*k*e*xij;
+			xj += 0.5f*k*e*xij;
+			
+			positions[sIt[0]] = xi;
+			positions[sIt[1]] = xj;
+		}
+	}	
+}
+
+void SolveSpringsJacobi(const Vec2* positions, const uint32_t* indices, float* lengths, int numSprings, Vec2* deltas, float* weights, bool doBreak)
+{
+	const uint32_t* sIt = indices;
+	const uint32_t* sEnd = indices+numSprings*2;
+	float* lIt = lengths; 
+
+	for (; sIt < sEnd; sIt+=2, ++lIt )
+	{
+		Vec2 xi = positions[sIt[0]];
+		Vec2 xj = positions[sIt[1]];
+		Vec2 xij = xi-xj;
+
+		float rij = Dot(xij, xij);
+		float l = *lIt;
+		
+		if (l < 0.0f)
+			continue;
+
+		//if (rij > sqr(l))
+		{
+			float k = 1.0f;	
+			float d = sqrtf(rij);
+		
+			// handle breaking spring	
+			if (doBreak && d > l*1.05f)
+				*lIt = -1.0f;
+
+			float e = d-l;	
+			xij / d;
+
+			Vec2 j = 0.5f*k*e*xij;
+			
+			deltas[sIt[0]] -= j;
+			deltas[sIt[1]] += j;
+
+			//weights[sIt[0]] += 1.0f;
+			//weights[sIt[1]] += 1.0f;
+		}
+	}	
+}
+
+
+void SolveSpringDamping(float2* velocities, const uint32_t* indices, float* lengths, int numSprings)
+{
+	const uint32_t* sIt = indices;
+	const uint32_t* sEnd = indices+numSprings*2;
+	float* lIt = lengths; 
+
+	for (; sIt < sEnd; sIt+=2, ++lIt )
+	{
+		float l = *lIt;
+		
+		if (l < 0.0f)
+			continue;
+
+		float2 vi = velocities[sIt[0]];
+		float2 vj = velocities[sIt[1]];
+		float2 vij = vi-vj;
+
+		float k = 0.0f;	
+
+		vi -= 0.5f*k*vij;
+		vj += 0.5f*k*vij;
+		
+		velocities[sIt[0]] = vi;
+		velocities[sIt[1]] = vj;
+	}	
+}
+
 
 void Integrate(int index, const float2* positions, float2* candidatePositions, float2* velocities, const float* mass, float2 gravity, float damp, float dt)
 {
@@ -419,6 +523,13 @@ void Update(GrainSystem s, float dt, float invdt)
 
 	for (int k=0; k < kNumPositionIterations; ++k)
 	{
+		for (int i=0; i < s.mNumGrains; ++i)
+			s.mForces[i] = 0.0f;
+
+		// solve springs (Gauss-Seidel style is cheating)
+		SolveSprings(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings); 
+		//SolveSpringsJacobi(s.mCandidatePositions, s.mSpringIndices, s.mSpringLengths, s.mNumSprings, s.mForces, s.mNewMass, k+1 == kNumPositionIterations);
+
 		// solve position constraints
 		//
 		for (int i=0; i < s.mNumGrains; ++i)
@@ -441,9 +552,9 @@ void Update(GrainSystem s, float dt, float invdt)
 				s.mMass[i] = pressure;
 			
 				s.mForces[i] = j;
+				s.mVelocities[i] = (s.mCandidatePositions[i]+s.mForces[i]-s.mPositions[i])*invdt; 
 		}
-		
-		/*	
+	
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
 			float2 j = SolveVelocities(i,
@@ -460,7 +571,6 @@ void Update(GrainSystem s, float dt, float invdt)
 
 			s.mForces[i] = j;
 		}
-		*/
 
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
@@ -472,8 +582,8 @@ void Update(GrainSystem s, float dt, float invdt)
 
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
-		//s.mVelocities[i] /= max(1.0f, s.mMass[i]*0.3f); 
-		//s.mVelocities[i] /= max(1.0f, s.mContactCounts[i]*0.3f); 
+		
+		s.mVelocities[i] /= max(1.0f, s.mMass[i]*0.3f); 
 		
 
 		s.mMass[i] = 1.0f;//
