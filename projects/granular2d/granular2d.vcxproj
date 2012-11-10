@@ -86,6 +86,7 @@
     <ClCompile Include="main.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_ITERATOR_DEBUG_LEVEL=0;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="solveConstraint.cpp" />
     <ClCompile Include="solveImpulse.cpp" />
     <ClCompile Include="solvePBD.cpp" />
   </ItemGroup>

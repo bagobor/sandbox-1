@@ -34,7 +34,10 @@ vector<float> g_springLengths;
 bool g_pause = false;
 bool g_step = false;
 
-uint32_t g_scene = 1;
+vector<float> g_energy(200);
+uint32_t g_frame;
+
+uint32_t g_scene = 6;
 
 
 // mouse
@@ -83,7 +86,7 @@ void Init(int scene)
 		{
 			float s = -3.0f;
 
-			const float sep = 1.f*kRadius;
+			const float sep = 0.96f*kRadius;
 
 			for (int i=0; i < 16; ++i)
 			{
@@ -138,7 +141,7 @@ void Init(int scene)
 						uint32_t newIndex = g_positions.size(); 
 						lookup[i*dim + j] = newIndex;
 
-						float r = Randf(0.0f, 0.005f)*step;
+						float r = Randf(0.0f, 0.009f)*step;
 						g_positions.push_back(Vec2(x + r , y));
 						g_velocities.push_back(0.0f);//Vec2(10.0f, 0.0f));
 						g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f);
@@ -202,7 +205,7 @@ void Init(int scene)
 	}	
 	case 8:
 	{
-		g_params.mPlanes[0] = Normalize(Vec3(1.1f, 1.0f, 0.0f));
+		g_params.mPlanes[0] = Normalize(Vec3(1.0f, 1.0f, 0.0f));
 
 		g_positions.push_back(Vec2(0.0f, 1.0f));
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
@@ -213,7 +216,7 @@ void Init(int scene)
 	case 9:
 	{
 		// pyramid
-		const int kLevels = 2;
+		const int kLevels = 10;
 
 		for (int y=0; y < kLevels; ++y)
 		{
@@ -297,8 +300,8 @@ void GLUTUpdate()
 {
 	//---------------------------
 
+	glViewport(0, 0, kWidth, kHeight);
 	glDisable(GL_CULL_FACE);
-	glClear(GL_COLOR_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 	
 	glPointSize(5.0f);
@@ -315,10 +318,20 @@ void GLUTUpdate()
 
 	if (!g_pause || g_step)
 	{
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		grainSetParams(g_grains, &g_params);
 		grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
 
 		g_step = false;
+
+		float e = 0.0f;
+		for(int i=0; i < kNumParticles; i++)
+			e += g_positions[i].y*fabsf(g_params.mGravity.y) + 0.5f*Dot(g_velocities[i], g_velocities[i]);
+
+		g_energy[g_frame%g_energy.size()] = e;
+
+		g_frame++;
 	}
 
 
@@ -336,6 +349,7 @@ void GLUTUpdate()
 		
 	// read-back data	
 	grainGetPositions(g_grains, (float*)&g_positions[0]);
+	grainGetVelocities(g_grains, (float*)&g_velocities[0]);
 	
 	glColor3f(0.7f, 0.7f, 0.8f);
 
@@ -384,6 +398,23 @@ void GLUTUpdate()
 	DrawString(x, y, "Draw time: %.2fms", (drawEnd-drawStart)*1000.0f); y += 13;
 	DrawString(x, y, "1-9: Select scene", "");
 	DrawString(x, y, "r: Reset", "");
+	
+
+	float m = *std::max_element(g_energy.begin(), g_energy.end());
+
+	glViewport(20, 20, 200, 200);
+	glLoadIdentity();
+	gluOrtho2D(0, g_energy.size(), 0.0f, m);
+   	glBegin(GL_LINE_STRIP);
+
+	for (uint32_t i=0; i < g_energy.size(); i++)
+	{
+		glVertex2f(i, g_energy[i]);
+
+	}
+
+	glEnd();
+
 	
 
 	glutSwapBuffers();
