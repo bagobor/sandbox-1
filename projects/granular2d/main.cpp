@@ -14,7 +14,7 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*0.5;
+const float kZoom = kWorldSize*1.5;
 
 int kNumParticles = 0;
 const int kNumIterations = 5;
@@ -189,7 +189,7 @@ void Init(int scene)
 	}	
 	else if (scene == 5)
 	{
-		g_params.mPlanes[0] = Normalize(Vec3(1.0f, 1.0f, 0.0f));
+		g_params.mPlanes[0] = Normalize(Vec3(1.1f, 1.0f, 0.0f));
 
 		g_positions.push_back(Vec2(0.0f, 1.0f));
 		g_velocities.push_back(Vec2(0.0f, 0.0f));
@@ -198,13 +198,13 @@ void Init(int scene)
 	else if (scene == 6)
 	{
 		// pyramid
-		const int kLevels = 3;
+		const int kLevels = 10;
 
 		for (int y=0; y < kLevels; ++y)
 		{
 			for (int x=0; x < kLevels-y; ++x)
 			{
-				g_positions.push_back(Vec2(0.0f + 0.0f*y*kRadius + x*2.0f*kRadius, 0.0f + kRadius + 1.6f*y*kRadius));
+				g_positions.push_back(Vec2(0.0f + 1.0f*y*kRadius + x*2.0f*kRadius, 0.f + kRadius + 1.6f*y*kRadius));
 				g_velocities.push_back(Vec2());
 				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 			}
