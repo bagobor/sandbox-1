@@ -14,11 +14,11 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*2.5f;
+const float kZoom = kWorldSize*1.5f;
 
 int kNumParticles = 0;
-const int kNumIterations = 5;
-const float kDt = 1.0f/60.0f;
+const int kNumIterations = 1;
+const float kDt = 1.0f/600.0f;
 const float kRadius = 0.05f;
 
 GrainSystem* g_grains;
@@ -37,7 +37,7 @@ bool g_step = false;
 vector<float> g_energy(200);
 uint32_t g_frame;
 
-uint32_t g_scene = 6;
+uint32_t g_scene = 1;
 
 
 // mouse
@@ -86,7 +86,7 @@ void Init(int scene)
 		{
 			float s = -3.0f;
 
-			const float sep = 0.96f*kRadius;
+			const float sep = 0.4f*kRadius;
 
 			for (int i=0; i < 16; ++i)
 			{
@@ -236,6 +236,16 @@ void Init(int scene)
 
 	kNumParticles = g_positions.size();
 
+	// calculate fluid parameters
+	float restDensity = 100.0f;
+	float volume = kNumParticles*kRadius*kRadius*kPi*0.4f;
+	float mass = (volume*restDensity)/kNumParticles;
+
+	g_params.mGravity = 0.0f;
+	g_params.mMass = mass;
+	g_params.mRestDensity = restDensity;
+	g_params.mNumPlanes = 0;
+
 	g_grains = grainCreateSystem(kNumParticles);
 	//g_radii[0] = 2.0f;
 
@@ -246,6 +256,7 @@ void Init(int scene)
 
 	if (!g_springIndices.empty())
 		grainSetSprings(g_grains, &g_springIndices[0], &g_springLengths[0], g_springLengths.size());
+
 }
 
 void Shutdown()
@@ -366,14 +377,17 @@ void GLUTUpdate()
 
 
 	std::vector<float> mass(g_positions.size());
+	std::vector<float> density(g_positions.size());
+
 	grainGetMass(g_grains, &mass[0]);
+	grainGetDensities(g_grains, &density[0]);
 
 //	glBegin(GL_POINTS);
 
 	for (int i=0; i < kNumParticles; ++i)
 	{
-		glColor3fv(colors[i%3]);
-		//glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), (mass[i]-1.0f)*0.2f));
+		//glColor3fv(colors[i%3]);
+		glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), Clamp(density[i]/100.0f - 1.0f, 0.0f, 1.0f)));
 		//glVertex2fv(g_positions[i]);
 		DrawCircle(g_positions[i], g_radii[i], colors[i%3]);
 	}
@@ -416,24 +430,6 @@ void GLUTUpdate()
 
 	glEnd();
 
-	
-
-	float m = *std::max_element(g_energy.begin(), g_energy.end());
-
-	glViewport(20, 20, 200, 200);
-	glLoadIdentity();
-	gluOrtho2D(0, g_energy.size(), 0.0f, m);
-   	glBegin(GL_LINE_STRIP);
-
-	for (uint32_t i=0; i < g_energy.size(); i++)
-	{
-		glVertex2f(i, g_energy[i]);
-
-	}
-
-	glEnd();
-
-	
 
 	glutSwapBuffers();
 	

@@ -27,7 +27,7 @@ public:
 	float* mMass;
 
 	float2* mCandidatePositions;
-	float2* mNewPositions;
+	float2* mCandidateVelocities;
 	float*  mNewMass;
 
 	float2* mForces;
@@ -611,7 +611,7 @@ GrainSystem* grainCreateSystem(int numGrains)
 	s->mContactCounts = (int*)malloc(numGrains*sizeof(int));
 
 	s->mCandidatePositions = (float2*)malloc(numGrains*sizeof(float2));
-	s->mNewPositions = (float2*)malloc(numGrains*sizeof(float2));
+	s->mCandidateVelocities = (float2*)malloc(numGrains*sizeof(float2));
 
 	s->mNewMass = (float*)malloc(numGrains*sizeof(float));
 
@@ -644,7 +644,7 @@ void grainDestroySystem(GrainSystem* s)
 	free(s->mContacts);
 	free(s->mContactCounts);
 	
-	free(s->mNewPositions);
+	free(s->mCandidateVelocities);
 	free(s->mCandidatePositions);
 
 	free(s->mNewMass);

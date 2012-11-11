@@ -50,7 +50,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_ITERATOR_DEBUG_LEVEL=0;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../..;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.0\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -89,6 +89,7 @@
     <ClCompile Include="solveConstraint.cpp" />
     <ClCompile Include="solveImpulse.cpp" />
     <ClCompile Include="solvePBD.cpp" />
+    <ClCompile Include="solveSPH.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="solve.h" />
@@ -101,6 +102,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.0\bin\nvcc.exe" -I"C:\ProgramData\NVIDIA Corporation\NVIDIA GPU Computing SDK 4.0\C\common\inc" -DCUDA -m32 -arch=sm_20 -c solve.cu -o solve.obj</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">solve.obj</Outputs>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +112,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">sort.obj</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.0\bin\nvcc.exe" -I"C:\ProgramData\NVIDIA Corporation\NVIDIA GPU Computing SDK 4.0\C\common\inc" -I"." -DCUDA -m32 -gencode=arch=compute_10,code=\"sm_10,compute_10\" -gencode=arch=compute_20,code=\"sm_20,compute_20\" -c sort.cu -o sort.obj</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">sort.obj</Outputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

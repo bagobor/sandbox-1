@@ -23,6 +23,10 @@ struct GrainParams
 	float mRestitution;
 	float mOverlap;
 
+	// fluid params
+	float mMass;
+	float mRestDensity;
+
 	float3 mPlanes[8];
 	int mNumPlanes;
 };
@@ -60,6 +64,8 @@ void grainGetVelocities(GrainSystem* s, float* v);
 
 void grainSetRadii(GrainSystem* s, float* r);
 void grainGetRadii(GrainSystem* s, float r);
+
+void grainGetDensities(GrainSystem* s, float* r);
 
 void grainGetMass(GrainSystem* s, float* r);
 
