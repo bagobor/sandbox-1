@@ -18,6 +18,7 @@ const float kZoom = kWorldSize*1.5f;
 
 int kNumParticles = 0;
 const int kNumIterations = 1;
+
 const float kDt = 1.0f/600.0f;
 const float kRadius = 0.05f;
 
@@ -82,13 +83,13 @@ void Init(int scene)
 	{
 	case 1:
 	{
-		for (int x=0; x < 32; ++x)
+		for (int x=0; x < 2; ++x)
 		{
 			float s = -3.0f;
 
-			const float sep = 0.4f*kRadius;
+			const float sep = 0.5f*kRadius;
 
-			for (int i=0; i < 16; ++i)
+			for (int i=0; i < 1; ++i)
 			{
 				s += 2.0f*sep;// + Randf(0.0f, 0.05f)*kRadius;
 
@@ -142,7 +143,7 @@ void Init(int scene)
 						lookup[i*dim + j] = newIndex;
 
 						float r = Randf(0.0f, 0.009f)*step;
-						g_positions.push_back(Vec2(x + r , y));
+						g_positions.push_back(Vec2(x + r , y)*0.8f);
 						g_velocities.push_back(0.0f);//Vec2(10.0f, 0.0f));
 						g_radii.push_back(kRadius);// + kRadius*Randf(-0.2f, 0.0f));
 
@@ -222,7 +223,7 @@ void Init(int scene)
 		{
 			for (int x=0; x < kLevels-y; ++x)
 			{
-				g_positions.push_back(Vec2(0.0f + 1.0f*y*kRadius + x*2.0f*kRadius, 0.f + kRadius + 1.6f*y*kRadius));
+				g_positions.push_back(0.5f*Vec2(0.0f + 1.0f*y*kRadius + x*2.0f*kRadius, 0.5f + kRadius + 1.6f*y*kRadius));
 				g_velocities.push_back(Vec2());
 				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 			}
@@ -237,9 +238,8 @@ void Init(int scene)
 	kNumParticles = g_positions.size();
 
 	// calculate fluid parameters
-	float restDensity = 100.0f;
-	float volume = kNumParticles*kRadius*kRadius*kPi*0.4f;
-	float mass = (volume*restDensity)/kNumParticles;
+	float restDensity = 160.f;
+	float mass = 1.0f;//(volume*restDensity)/kNumParticles;
 
 	g_params.mGravity = 0.0f;
 	g_params.mMass = mass;
@@ -382,18 +382,18 @@ void GLUTUpdate()
 	grainGetMass(g_grains, &mass[0]);
 	grainGetDensities(g_grains, &density[0]);
 
-//	glBegin(GL_POINTS);
+	//glBegin(GL_POINTS);
 
 	for (int i=0; i < kNumParticles; ++i)
 	{
 		//glColor3fv(colors[i%3]);
-		glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), Clamp(density[i]/100.0f - 1.0f, 0.0f, 1.0f)));
+		//glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), Clamp(density[i]/g_params.mRestDensity - 1.0f, 0.0f, 1.0f)));
 		//glVertex2fv(g_positions[i]);
 		DrawCircle(g_positions[i], g_radii[i], colors[i%3]);
 	}
 
 	//glEnd();
-	//glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 
 	double drawEnd = GetSeconds();
 	

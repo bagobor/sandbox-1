@@ -14,7 +14,7 @@ typedef Vec3 float3;
 
 using namespace std;
 
-const int kMaxContactsPerSphere = 26; 
+const int kMaxContactsPerSphere = 100; 
 
 
 struct GrainSystem
@@ -161,6 +161,7 @@ inline float dWdx(float r, float h)
 
 	return m/sqr(h);
 }
+
 */
 
 inline float W(float r, float h)
@@ -184,6 +185,28 @@ inline float dWdx(float r, float h)
 		return 0.0f;
 }
 
+
+/*
+inline float W(float r, float h)
+{
+	float k = 6.0f/(kPi*h*h);
+
+	if (r < h)
+		return k*sqr(1.0f-r/h);
+	else
+		return 0.0f;
+}
+
+inline float dWdx(float r, float h)
+{
+	float k = -12.0f/(kPi*h*h*h);
+
+	if (r < h)
+		return k*(1.0f-r/h);
+	else
+		return 0.0f;
+}	
+*/
 
 inline int Collide(
 		int index, 
@@ -216,7 +239,7 @@ inline int Collide(
 			{
 				const unsigned int particleIndex = indices[i];
 
-				if (particleIndex == index)
+				if (int(particleIndex) == index)
 					continue;
 				
 				const float2 xj = positions[particleIndex];
@@ -249,16 +272,12 @@ inline float CalculateDensity(
 		const float3* planes,
 		int numPlanes,
 		float h,
-		float mass,
-		float& beta)
+		float mass)
 {
 	float2 xi = positions[index];
 	
 	float rho = 0.0f;
 	h *= 2.0f;
-
-	float2 sumWij;
-	float sumWijSq = 0.0f;
 
 	for (int i=0; i < numContacts; ++i)
 	{
@@ -269,7 +288,7 @@ inline float CalculateDensity(
 		
 		const float dSq = LengthSq(xij);
 	
-		if (dSq < sqr(h)*0.99f && dSq > 0.001f)
+		if (dSq < sqr(h) && dSq > 0.001f)
 		{
 			const float d = sqrtf(dSq);
 			const float w = W(d, h);
@@ -278,24 +297,20 @@ inline float CalculateDensity(
 
 			rho += mass*w;
 
-			const float2 dw = dWdx(d, h);
-			sumWij += dw;
-			sumWijSq += Dot(dw, dw);
-
 		}
 	}
 
-	if (sumWijSq > 0.0f)
-		beta = sumWijSq + Dot(sumWij, sumWij);
+	printf("%f\n", rho);
 
 	return rho;
 }
 
-inline float2 SolvePositions(
+inline void SolvePositions(
 		int index,
 		const float2* positions,
 		const float2* velocities,		
 		const float* densities,
+		float2* forces,
 		const float* pressures,
 		const int* contacts, 
 		int numContacts,
@@ -303,7 +318,8 @@ inline float2 SolvePositions(
 		int numPlanes,
 		float h,
 		float mass,
-		float dt)
+		float dt,
+		float restDensity)
 {
 	const float2 xi = positions[index];
 	
@@ -313,38 +329,56 @@ inline float2 SolvePositions(
 
 	h *= 2.0f;
 
+	float c = pressures[index];
+	float2 cw = 0.0f;
+
+	float sumConstraintGradSq = 0.0f;
+
+	// calculate scaling factor
 	if (densities[index] > 0.0f)
 	{
 
-		const float pi = pressures[index]/sqr(densities[index]);
+	for (int i=0; i < numContacts; ++i)
+	{
+		const int particleIndex = contacts[i];
 
-		for (int i=0; i < numContacts; ++i)
-		{
-			const int particleIndex = contacts[i];
-
-			const float2 xj = positions[particleIndex];
-			const float2 xij = xi-xj;
-		
-			const float dSq = LengthSq(xij);
+		const float2 xj = positions[particleIndex];
+		const float2 xij = xi-xj;
 	
-			if (dSq < sqr(h) && dSq > 0.001f)
-			{
-				const float d = sqrtf(dSq);
-				const float2 dw = dWdx(d, h)*xij;
+		const float dSq = LengthSq(xij);
 
-				//assert(densities[particleIndex] > 0.0f);
-				if (densities[particleIndex] > 0.0f)
-				{
-					const float pj = pressures[particleIndex]/sqr(densities[particleIndex]);
-					pressureForce += (pi + pj)*dw;
-				}
-			}
+		if (dSq < sqr(h) && dSq > 0.001f)
+		{
+			float d = sqrtf(dSq);
+			float2 dw = dWdx(d, h)*xij;
+
+			sumConstraintGradSq += Dot(dw, dw)/restDensity;
 		}
 	}
 
-	pressureForce *= -sqr(mass);
+	float s = c / sumConstraintGradSq;  
+
+	for (int i=0; i < numContacts; ++i)
+	{
+		const int particleIndex = contacts[i];
+
+		const float2 xj = positions[particleIndex];
+		const float2 xij = xi-xj;
 	
-	delta = pressureForce;//*dt*dt;
+		const float dSq = LengthSq(xij);
+
+		if (dSq < sqr(h) && dSq > 0.001f)
+		{
+			float d = sqrtf(dSq);
+			float2 dw = dWdx(d, h)*xij;
+
+			float2 j = s*dWdx(d, h)*xij/restDensity;
+			
+			forces[index] -= j;
+			forces[particleIndex] += j; 
+		}
+	}
+	}
 
 	// collide planes
 	for (int i=0; i < numPlanes; ++i)
@@ -353,16 +387,16 @@ inline float2 SolvePositions(
 
 		// distance to plane
 		float d = xi.x*p.x + xi.y*p.y - p.z;
-		float mtd = d-h;
+		float mtd = d-h*0.5f;
 			
 		if (mtd <= 0.0f)
 		{
 			const float2 n = float2(p.x, p.y);
 			delta -= mtd*n;
+
+			forces[index] -= mtd*n;
 		}
 	}
-
-	return delta;
 }
 
 void Integrate(int index, const float2* positions, float2* candidatePositions, float2* velocities, float2 gravity, float damp, float dt)
@@ -376,8 +410,8 @@ void Integrate(int index, const float2* positions, float2* candidatePositions, f
 
 void Update(GrainSystem s, float dt, float invdt)
 {		
-	//for (int i=0; i < s.mNumGrains; ++i)
-//		Integrate(i, s.mPositions, s.mCandidatePositions, s.mVelocities, s.mParams.mGravity, s.mParams.mDamp, dt);
+	for (int i=0; i < s.mNumGrains; ++i)
+		Integrate(i, s.mPositions, s.mCandidatePositions, s.mVelocities, s.mParams.mGravity, s.mParams.mDamp, dt);
 	
 	float kRadius = s.mRadii[0];
 	float kMass = s.mParams.mMass;
@@ -386,8 +420,7 @@ void Update(GrainSystem s, float dt, float invdt)
 	memset(s.mCellStarts, 0, sizeof(unsigned int)*128*128);
 	memset(s.mCellEnds, 0, sizeof(unsigned int)*128*128);
 
-	ConstructGrid(invCellEdge, s.mNumGrains, s.mPositions, s.mIndices, s.mCellStarts, s.mCellEnds); 
-
+	ConstructGrid(invCellEdge, s.mNumGrains, s.mCandidatePositions, s.mIndices, s.mCellStarts, s.mCellEnds); 
 
 	// find neighbours
 	for (int i=0; i < s.mNumGrains; ++i)
@@ -396,7 +429,7 @@ void Update(GrainSystem s, float dt, float invdt)
 									  s.mCellStarts,
 									  s.mCellEnds,
 									  s.mIndices,
-									  s.mPositions,
+									  s.mCandidatePositions,
 									  kRadius,
 									  &s.mContacts[i*kMaxContactsPerSphere],
 									  kMaxContactsPerSphere);
@@ -421,57 +454,43 @@ void Update(GrainSystem s, float dt, float invdt)
 		maxDensity = 0.0f;
 		avgDensity = 0.0f;
 
-
-		// predict new velocity / position
-		for (int i=0; i < s.mNumGrains; ++i)
-		{
-			s.mCandidateVelocities[i] = s.mVelocities[i] + (s.mParams.mGravity)*dt + s.mForces[i]/kMass*dt;
-			s.mCandidatePositions[i] = s.mPositions[i] + s.mCandidateVelocities[i]*dt;
-		}
-
 		// calculate predicted density
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
 			float rho = 0.0f;
-			float pressure = 0.0f;
-			float beta = 1.0f;
 
 			rho = CalculateDensity(
 					i,
 				   	s.mCandidatePositions,
-					s.mCandidateVelocities,				   	
+					s.mVelocities,				   	
 					&s.mContacts[i*kMaxContactsPerSphere],
 					s.mContactCounts[i],
 				   	s.mParams.mPlanes,
 				   	s.mParams.mNumPlanes,					
 					kRadius,
-					kMass,
-					beta);
+					kMass);
 
-
+			s.mForces[i] = 0.0f;
 			s.mDensity[i] = rho;
+			s.mPressure[i] = rho/kRestDensity - 1.0f;
 		
-			//beta *= sqr(dt)*sqr(kMass)*2.0f/sqr(kRestDensity);
-			beta = 2.75f;
-			
-			s.mPressure[i] += (rho-kRestDensity)/beta;
-
 			maxDensity = max(maxDensity, rho);
 			avgDensity += rho;
 		}
 
 		avgDensity /= s.mNumGrains;
 
+		//printf("%f %f\n", maxDensity, avgDensity);
+
 		// calculate pressure forces
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
-			float2 delta = 0.0f;
-
-			delta = SolvePositions(
+			SolvePositions(
 					i,
 				   	s.mCandidatePositions,
 					s.mVelocities,				   	
 					s.mDensity,
+					s.mForces,
 					s.mPressure,
 					&s.mContacts[i*kMaxContactsPerSphere],
 					s.mContactCounts[i],
@@ -479,12 +498,14 @@ void Update(GrainSystem s, float dt, float invdt)
 				   	s.mParams.mNumPlanes,					
 					kRadius,
 					kMass,
-					dt);
-
-			s.mForces[i] = delta;
+					dt,
+					kRestDensity);
 		}
 
-		printf("%f %f %f\n", maxDensity, avgDensity, kRestDensity);
+		for (int i=0; i < s.mNumGrains; ++i)
+		{
+			s.mCandidatePositions[i] = s.mCandidatePositions[i]+s.mForces[i];
+		}
 	}
 
 	for (int i=0; i < s.mNumGrains; ++i)
@@ -492,7 +513,7 @@ void Update(GrainSystem s, float dt, float invdt)
 		//s.mVelocities[i] /= max(1.0f, s.mMass[i]*0.3f); 
 		//s.mVelocities[i] /= max(1.0f, s.mContactCounts[i]*0.3f); 
 
-		s.mVelocities[i] = s.mCandidateVelocities[i];
+		s.mVelocities[i] = (s.mCandidatePositions[i]-s.mPositions[i])*invdt;
 		s.mPositions[i] = s.mCandidatePositions[i];
 	}
 }
