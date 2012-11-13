@@ -163,7 +163,7 @@ inline float dWdx(float r, float h)
 }
 
 */
-
+/*
 inline float W(float r, float h)
 {
 	float k = 4.0f/(kPi*h*h*h*h*h*h*h*h);
@@ -184,9 +184,9 @@ inline float dWdx(float r, float h)
 	else
 		return 0.0f;
 }
+*/
 
 
-/*
 inline float W(float r, float h)
 {
 	float k = 6.0f/(kPi*h*h);
@@ -206,7 +206,7 @@ inline float dWdx(float r, float h)
 	else
 		return 0.0f;
 }	
-*/
+
 
 inline int Collide(
 		int index, 
@@ -249,7 +249,7 @@ inline int Collide(
 				
 				const float dSq = LengthSq(xij);
 			
-				if (dSq < sqr(2.f*h) && dSq > 0.001f)
+				if (dSq < sqr(2.f*h))
 				{	
 					contacts[numContacts++] = particleIndex;	
 
@@ -288,7 +288,7 @@ inline float CalculateDensity(
 		
 		const float dSq = LengthSq(xij);
 	
-		if (dSq < sqr(h) && dSq > 0.001f)
+		if (dSq < sqr(h))
 		{
 			const float d = sqrtf(dSq);
 			const float w = W(d, h);
@@ -347,7 +347,7 @@ inline void SolvePositions(
 	
 		const float dSq = LengthSq(xij);
 
-		if (dSq < sqr(h) && dSq > 0.001f)
+		if (dSq < sqr(h))
 		{
 			float d = sqrtf(dSq);
 			float2 dw = dWdx(d, h)*xij;
@@ -367,7 +367,7 @@ inline void SolvePositions(
 	
 		const float dSq = LengthSq(xij);
 
-		if (dSq < sqr(h) && dSq > 0.001f)
+		if (dSq < sqr(h))
 		{
 			float d = sqrtf(dSq);
 			float2 dw = dWdx(d, h)*xij;
@@ -472,7 +472,7 @@ void Update(GrainSystem s, float dt, float invdt)
 
 			s.mForces[i] = 0.0f;
 			s.mDensity[i] = rho;
-			s.mPressure[i] = rho/kRestDensity - 1.0f;
+			s.mPressure[i] = rho/(kRestDensity/max(1.0f, float(s.mContactCounts[i]))) - 1.0f;
 		
 			maxDensity = max(maxDensity, rho);
 			avgDensity += rho;
