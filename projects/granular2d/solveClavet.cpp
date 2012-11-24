@@ -1,4 +1,4 @@
-#if 1
+#if 0
 
 #include <core/maths.h>
 #include <core/shader.h>
@@ -14,7 +14,7 @@ typedef Vec3 float3;
 
 using namespace std;
 
-const int kMaxContactsPerSphere = 9; 
+const int kMaxContactsPerSphere = 40; 
 
 struct GrainSystem
 {
@@ -206,9 +206,6 @@ inline float W(float r, float h)
 
 inline float Wnear(float r, float h)
 {
-//	h*=0.8f;
-//return W(r, h);
-
 	float k = 6.0f/(kPi*h*h);
 
 	if (r < h)
@@ -230,8 +227,6 @@ inline float dWdx(float r, float h)
 
 inline float dWNeardx(float r, float h)
 {
-//	h*=0.8f;
-//return dWdx(r, h);//
 	float k = -18.0f/(kPi*h*h*h);
 
 	if (r < h)
@@ -381,36 +376,25 @@ inline void SolvePositions(
 	float2 cw = 0.0f;
 
 	float rho = densities[index];
-   	float rhoNear = nearDensities[index];
+    float rhoNear = nearDensities[index];
 
-	// scaling factor based on a filled neighbourhood
-	float s = 3000.f;
-
-	if (s > 0.0f)
+	// calculate scaling factor
+	for (int i=0; i < numContacts; ++i)
 	{
-		s = 1.0f/s;
+		const int particleIndex = contacts[i];
 
-		// apply position updates
-		for (int i=0; i < numContacts; ++i)
+		const float2 xj = positions[particleIndex];
+		const float2 xij = xi-xj;
+	
+		const float dSq = LengthSq(xij);
+
+		if (dSq < sqr(h))
 		{
-			const int particleIndex = contacts[i];
+			float d = sqrtf(dSq);
+			float2 j = dt*dt*(rho*dWdx(d, h) + rhoNear*dWNeardx(d, h))*xij/d;
 
-			const float2 xj = positions[particleIndex];
-			const float2 xij = xi-xj;
-		
-			const float dSq = LengthSq(xij);
-
-			if (dSq < sqr(h))
-			{
-				float d = sqrtf(dSq);
-				float2 dw = 1.0f/restDensity*dWdx(d,h)*xij/d; 
-				float2 j = s*rho*dw;
-
-				j += dt*dt*0.01f*cube(W(d,h)/W(h*0.5f, h))*dWdx(d,h)*xij/d;
-
-				positions[index] -= j;
-				positions[particleIndex] += j; 
-			}
+			positions[index] -= j;
+			positions[particleIndex] += j; 
 		}
 	}
 
@@ -451,12 +435,13 @@ inline float2 SolveVelocities(
 		float dt,
 		float restDensity)
 {
-	return 0.0f;//
+	return 0.0f;
+
 	float2 xi = positions[index];
 	float2 delta;
 
 	//float kSurfaceTension = 0.05f;
-	float kViscosity = 0.5f*dt;
+	float kViscosity = 1.0f*dt;
 
 	for (int i=0; i < numContacts; ++i)
 	{
@@ -518,12 +503,11 @@ void Update(GrainSystem s, float dt, float invdt)
 
 	}
 
-	const int kNumPositionIterations = 3;
+	const int kNumPositionIterations = 1;
 
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
 		s.mDensity[i] = 0.0f;
-		s.mNearDensity[i] = 0.0f;
 		s.mPressure[i] = 0.0f;
 		s.mForces[i] = 0.0f;
 	}
@@ -557,12 +541,16 @@ void Update(GrainSystem s, float dt, float invdt)
 
 			s.mForces[i] = 0.0f;
 
-			s.mDensity[i] = rho/kRestDensity-1.0f;// + 0.2f*sqr(rho/W(kRadius*0.3f, kRadius));
-			s.mNearDensity[i] = rho;//kNearStiffness*nearRho/kRestDensity;
+			const float kStiffness = 0.08f;
+			const float kNearStiffness = 0.125f;
+
+			s.mDensity[i] = kStiffness*(rho/kRestDensity - 1.0f);
+			s.mNearDensity[i] = kNearStiffness*(nearRho/kRestDensity);
 
 			maxDensity = max(maxDensity, rho);
 			avgDensity += rho;
 		}
+
 
 		avgDensity /= s.mNumGrains;
 
@@ -594,11 +582,11 @@ void Update(GrainSystem s, float dt, float invdt)
 			s.mCandidatePositions[i] = s.mCandidatePositions[i]+s.mForces[i];///max(float(s.mContactCounts[i]), 1.0f);
 		}
 		*/
-	
-		for (int i=0; i < s.mNumGrains; ++i)
-		{
-			s.mVelocities[i] = (s.mCandidatePositions[i]-s.mPositions[i])*invdt;
-		}
+	}
+
+	for (int i=0; i < s.mNumGrains; ++i)
+	{
+		s.mVelocities[i] = (s.mCandidatePositions[i]-s.mPositions[i])*invdt;
 	}
 
 	

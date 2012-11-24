@@ -14,12 +14,12 @@ using namespace std;
 const uint32_t kWidth = 800;
 const uint32_t kHeight = 600;
 const float kWorldSize = 2.0f;
-const float kZoom = kWorldSize*1.5f;
+const float kZoom = kWorldSize*2.5f;
 
 int kNumParticles = 0;
-const int kNumIterations = 1;
+const int kNumIterations = 5;
 
-const float kDt = 1.0f/600.0f;
+const float kDt = 1.0f/60.0f;
 const float kRadius = 0.05f;
 
 GrainSystem* g_grains;
@@ -83,13 +83,13 @@ void Init(int scene)
 	{
 	case 1:
 	{
-		for (int x=0; x < 2; ++x)
+		for (int x=0; x < 64; ++x)
 		{
-			float s = -3.0f;
+			float s = -4.5f;
 
-			const float sep = 0.5f*kRadius;
+			const float sep = 0.8f*kRadius;
 
-			for (int i=0; i < 1; ++i)
+			for (int i=0; i < 32; ++i)
 			{
 				s += 2.0f*sep;// + Randf(0.0f, 0.05f)*kRadius;
 
@@ -238,13 +238,13 @@ void Init(int scene)
 	kNumParticles = g_positions.size();
 
 	// calculate fluid parameters
-	float restDensity = 160.f;
+	float restDensity = 80.f;
 	float mass = 1.0f;//(volume*restDensity)/kNumParticles;
 
-	g_params.mGravity = 0.0f;
+	//g_params.mGravity = 0.0f;
 	g_params.mMass = mass;
 	g_params.mRestDensity = restDensity;
-	g_params.mNumPlanes = 0;
+	//g_params.mNumPlanes = 0;
 
 	g_grains = grainCreateSystem(kNumParticles);
 	//g_radii[0] = 2.0f;
@@ -389,7 +389,10 @@ void GLUTUpdate()
 		//glColor3fv(colors[i%3]);
 		//glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), Clamp(density[i]/g_params.mRestDensity - 1.0f, 0.0f, 1.0f)));
 		//glVertex2fv(g_positions[i]);
-		DrawCircle(g_positions[i], g_radii[i], colors[i%3]);
+		//DrawCircle(g_positions[i], g_radii[i], colors[i%3]);
+		//
+		float p = max(density[i], 0.0f);
+		DrawCircle(g_positions[i], g_radii[i], Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
 	}
 
 	//glEnd();
@@ -547,9 +550,12 @@ void GLUTMotionFunc(int x, int y)
 }
 
 int solveCuda(float* a, float* b, float* c, int n);
+#include <xmmintrin.h>
 
 int main(int argc, char* argv[])
-{	
+{
+
+	//_MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);	
 //	float a[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 //	float b[8] = {1, 1, 1, 1, 1, 1, 1, 1};
 //	float c[8] = {0};
