@@ -120,7 +120,7 @@ void Init(int scene)
 			float x = xstart;
 			float y = 1.5f;
 
-			int dim = 64; 
+			int dim = 80; 
 
 			float dpx = float(img.m_width) / dim;
 			float dpy = float(img.m_height) / dim;
@@ -238,7 +238,7 @@ void Init(int scene)
 	kNumParticles = g_positions.size();
 
 	// calculate fluid parameters
-	float restDensity = 80.f;
+	float restDensity = 60.f;
 	float mass = 1.0f;//(volume*restDensity)/kNumParticles;
 
 	//g_params.mGravity = 0.0f;
@@ -323,6 +323,7 @@ void GLUTUpdate()
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(OrthographicMatrix(-viewWidth, viewWidth, -0.5, 2*kZoom-0.5f, 0.0f, 1.0f));
 
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Step
@@ -367,11 +368,7 @@ void GLUTUpdate()
 
 	double drawStart = GetSeconds();
 
-	glPointSize(kRadius*kWidth/viewWidth);
-	glEnable(GL_POINT_SMOOTH);
-	glEnable(GL_BLEND);
-
-	Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
+		Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
 					Colour(1.0f, 0.5f, 0.5f),
 					Colour(0.5f, 1.0f, 0.5f) };
 
@@ -382,20 +379,30 @@ void GLUTUpdate()
 	grainGetMass(g_grains, &mass[0]);
 	grainGetDensities(g_grains, &density[0]);
 
-	//glBegin(GL_POINTS);
+	glEnable(GL_POINT_SMOOTH);
+	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+	glEnable(GL_BLEND);
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	glPointSize(0.5f*kRadius*kWidth/viewWidth + 1.0f);
+
+	glBegin(GL_POINTS);
 
 	for (int i=0; i < kNumParticles; ++i)
 	{
-		//glColor3fv(colors[i%3]);
 		//glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), Clamp(density[i]/g_params.mRestDensity - 1.0f, 0.0f, 1.0f)));
 		//glVertex2fv(g_positions[i]);
 		//DrawCircle(g_positions[i], g_radii[i], colors[i%3]);
 		//
 		float p = max(density[i], 0.0f);
-		DrawCircle(g_positions[i], g_radii[i], Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
+		//DrawCircle(g_positions[i], g_radii[i], Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
+		glColor3fv(Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
+		//glColor3fv(colors[i%3]);
+		glVertex2fv(g_positions[i]);
 	}
 
-	//glEnd();
+	glEnd();
+	
 	glDisable(GL_BLEND);
 
 	double drawEnd = GetSeconds();

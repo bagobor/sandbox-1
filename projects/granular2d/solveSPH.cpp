@@ -167,6 +167,8 @@ inline float dWdx(float r, float h)
 /*
  * Poly6
  *
+ */
+/*
 inline float W(float r, float h)
 {
 	float k = 4.0f/(kPi*h*h*h*h*h*h*h*h);
@@ -177,7 +179,6 @@ inline float W(float r, float h)
 		return 0.0f;
 }
 
-
 inline float dWdx(float r, float h)
 {
 	float k = 4.0f/(kPi*h*h*h*h*h*h*h*h);
@@ -187,13 +188,12 @@ inline float dWdx(float r, float h)
 	else
 		return 0.0f;
 }
-
 */
-
 /*
  * Spiky kernel
  *
  */
+
 inline float W(float r, float h)
 {
 	float k = 6.0f/(kPi*h*h);
@@ -203,20 +203,6 @@ inline float W(float r, float h)
 	else
 		return 0.0f;
 }
-
-inline float Wnear(float r, float h)
-{
-//	h*=0.8f;
-//return W(r, h);
-
-	float k = 6.0f/(kPi*h*h);
-
-	if (r < h)
-		return k*cube(1.0f-r/h);
-	else
-		return 0.0f;
-}
-
 
 inline float dWdx(float r, float h)
 {
@@ -228,10 +214,19 @@ inline float dWdx(float r, float h)
 		return 0.0f;
 }	
 
+inline float Wnear(float r, float h)
+{
+	float k = 6.0f/(kPi*h*h);
+
+	if (r < h)
+		return k*cube(1.0f-r/h);
+	else
+		return 0.0f;
+}
+
+
 inline float dWNeardx(float r, float h)
 {
-//	h*=0.8f;
-//return dWdx(r, h);//
 	float k = -18.0f/(kPi*h*h*h);
 
 	if (r < h)
@@ -239,7 +234,6 @@ inline float dWNeardx(float r, float h)
 	else
 		return 0.0f;
 }
-
 inline int Collide(
 		int index, 
 		const unsigned int* cellStarts, 
@@ -384,7 +378,7 @@ inline void SolvePositions(
    	float rhoNear = nearDensities[index];
 
 	// scaling factor based on a filled neighbourhood
-	float s = 3000.f;
+	float s = 4000.f;
 
 	if (s > 0.0f)
 	{
@@ -404,9 +398,9 @@ inline void SolvePositions(
 			{
 				float d = sqrtf(dSq);
 				float2 dw = 1.0f/restDensity*dWdx(d,h)*xij/d; 
-				float2 j = s*rho*dw;
+				float2 j = s*(rho + 0.1f*sqr(W(d,h)/W(h*0.3f, h)))*dw;
 
-				j += dt*dt*0.01f*cube(W(d,h)/W(h*0.5f, h))*dWdx(d,h)*xij/d;
+				//j += dt*dt*0.01f*(W(d,h)/W(h*0.5f, h))*dWdx(d,h)*xij/d;
 
 				positions[index] -= j;
 				positions[particleIndex] += j; 
@@ -456,7 +450,7 @@ inline float2 SolveVelocities(
 	float2 delta;
 
 	//float kSurfaceTension = 0.05f;
-	float kViscosity = 0.5f*dt;
+	float kViscosity = 0.01f*dt;
 
 	for (int i=0; i < numContacts; ++i)
 	{
@@ -595,12 +589,12 @@ void Update(GrainSystem s, float dt, float invdt)
 		}
 		*/
 	
+	}
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
 			s.mVelocities[i] = (s.mCandidatePositions[i]-s.mPositions[i])*invdt;
 		}
-	}
-
+	
 	
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
