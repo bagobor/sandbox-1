@@ -168,7 +168,7 @@ inline float dWdx(float r, float h)
  * Poly6
  *
  */
-/*
+
 inline float W(float r, float h)
 {
 	float k = 4.0f/(kPi*h*h*h*h*h*h*h*h);
@@ -178,7 +178,7 @@ inline float W(float r, float h)
 	else
 		return 0.0f;
 }
-
+/*
 inline float dWdx(float r, float h)
 {
 	float k = 4.0f/(kPi*h*h*h*h*h*h*h*h);
@@ -193,7 +193,7 @@ inline float dWdx(float r, float h)
  * Spiky kernel
  *
  */
-
+/*
 inline float W(float r, float h)
 {
 	float k = 6.0f/(kPi*h*h);
@@ -203,7 +203,7 @@ inline float W(float r, float h)
 	else
 		return 0.0f;
 }
-
+*/
 inline float dWdx(float r, float h)
 {
 	float k = -12.0f/(kPi*h*h*h);
@@ -318,17 +318,17 @@ inline float CalculateDensity(
 		{
 			const float d = sqrtf(dSq);
 			const float w = W(d, h);
-			const float wn = Wnear(d, h);
+		//	const float wn = Wnear(d, h);
 
 			//assert(w > 0.0f);
 			//assert(isfinite(dSq));
 			
 			rho += mass*max(w, 0.0f);
 
-			nearRho += mass*max(wn, 0.0f);
+			//nearRho += mass*max(wn, 0.0f);
 		}
 	}
-
+	/*
 	// collide planes
 	for (int i=0; i < numPlanes; ++i)
 	{
@@ -344,7 +344,7 @@ inline float CalculateDensity(
 			//rho += mass*max(w, 0.0f);
 		}
 	}
-
+	*/
 	//printf("%f\n", rho);
 
 	return rho;
@@ -378,33 +378,28 @@ inline void SolvePositions(
    	float rhoNear = nearDensities[index];
 
 	// scaling factor based on a filled neighbourhood
-	float s = 4000.f;
+	const float s = 1.0f/4000.f;
 
-	if (s > 0.0f)
+	// apply position updates
+	for (int i=0; i < numContacts; ++i)
 	{
-		s = 1.0f/s;
+		const int particleIndex = contacts[i];
 
-		// apply position updates
-		for (int i=0; i < numContacts; ++i)
-		{
-			const int particleIndex = contacts[i];
-
-			const float2 xj = positions[particleIndex];
-			const float2 xij = xi-xj;
+		const float2 xj = positions[particleIndex];
+		const float2 xij = xi-xj;
 		
-			const float dSq = LengthSq(xij);
+		const float dSq = LengthSq(xij);
 
-			if (dSq < sqr(h))
-			{
-				float d = sqrtf(dSq);
-				float2 dw = 1.0f/restDensity*dWdx(d,h)*xij/d; 
-				float2 j = s*(rho + 0.1f*sqr(W(d,h)/W(h*0.3f, h)))*dw;
+		if (dSq < sqr(h))
+		{
+			float d = sqrtf(dSq);
+			float2 dw = 1.0f/restDensity*dWdx(d,h)*xij/d; 
+			float2 j = s*(rho + 0.05f*sqr(W(d,h)/W(h*0.3f, h)))*dw;
 
-				//j += dt*dt*0.01f*(W(d,h)/W(h*0.5f, h))*dWdx(d,h)*xij/d;
+			//j += dt*dt*0.01f*(W(d,h)/W(h*0.5f, h))*dWdx(d,h)*xij/d;
 
-				positions[index] -= j;
-				positions[particleIndex] += j; 
-			}
+			positions[index] -= j;
+			positions[particleIndex] += j; 
 		}
 	}
 
@@ -445,12 +440,13 @@ inline float2 SolveVelocities(
 		float dt,
 		float restDensity)
 {
-	return 0.0f;//
+	//return 0.0f;
+
 	float2 xi = positions[index];
 	float2 delta;
 
 	//float kSurfaceTension = 0.05f;
-	float kViscosity = 0.01f*dt;
+	float kViscosity = 0.1f*dt;
 
 	for (int i=0; i < numContacts; ++i)
 	{
@@ -590,15 +586,12 @@ void Update(GrainSystem s, float dt, float invdt)
 		*/
 	
 	}
-		for (int i=0; i < s.mNumGrains; ++i)
-		{
-			s.mVelocities[i] = (s.mCandidatePositions[i]-s.mPositions[i])*invdt;
-		}
-	
 	
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
-		
+		s.mVelocities[i] = (s.mCandidatePositions[i]-s.mPositions[i])*invdt;
+
+
 		s.mForces[i] = SolveVelocities(
 					i,
 				   	s.mCandidatePositions,
