@@ -17,7 +17,7 @@ const float kWorldSize = 2.0f;
 const float kZoom = kWorldSize*2.5f;
 
 int kNumParticles = 0;
-const int kNumIterations = 5;
+const int kNumIterations = 1;
 
 const float kDt = 1.0f/60.0f;
 const float kRadius = 0.05f;
@@ -93,7 +93,7 @@ void Init(int scene)
 			{
 				s += 2.0f*sep;// + Randf(0.0f, 0.05f)*kRadius;
 
-				g_positions.push_back(Vec2(s, sep + 2.0f*x*sep));
+				g_positions.push_back(Vec2(s, 1.0f + sep + 2.0f*x*sep));
 				g_velocities.push_back(Vec2());
 				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
 			}
@@ -106,9 +106,9 @@ void Init(int scene)
 	case 5:
 	{
 		const char* file;
-		if (scene == 2 || scene == 3)
+		if (scene == 2)
 			file = "bunny.tga";
-		else if (scene == 4 || scene == 5)
+		else if (scene == 3)
 			file = "armadillo.tga";
 
 		TgaImage img;
@@ -238,7 +238,7 @@ void Init(int scene)
 	kNumParticles = g_positions.size();
 
 	// calculate fluid parameters
-	float restDensity = 60.f;
+	float restDensity = 100.f;
 	float mass = 1.0f;//(volume*restDensity)/kNumParticles;
 
 	//g_params.mGravity = 0.0f;
@@ -326,6 +326,8 @@ void GLUTUpdate()
 	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	double drawStart = GetSeconds();
+
 	// Step
 	GrainTimers timers;
 
@@ -338,15 +340,18 @@ void GLUTUpdate()
 
 		g_step = false;
 
+		/*
 		float e = 0.0f;
 		for(int i=0; i < kNumParticles; i++)
 			e += g_positions[i].y*fabsf(g_params.mGravity.y) + 0.5f*Dot(g_velocities[i], g_velocities[i]);
 
 		g_energy[g_frame%g_energy.size()] = e;
+		*/
 
 		g_frame++;
 	}
 
+	double drawEnd = GetSeconds();
 
 	for (int i=0; i < g_params.mNumPlanes; ++i)
 	{	
@@ -366,7 +371,6 @@ void GLUTUpdate()
 	
 	glColor3f(0.7f, 0.7f, 0.8f);
 
-	double drawStart = GetSeconds();
 
 		Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
 					Colour(1.0f, 0.5f, 0.5f),
@@ -396,7 +400,7 @@ void GLUTUpdate()
 		//
 		float p = max(density[i], 0.0f);
 		//DrawCircle(g_positions[i], g_radii[i], Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
-		glColor3fv(Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
+		glColor3fv(Lerp(Colour(0.3f, 0.5f, 0.9f),Colour(1.0f, 1.0f, 0.0f), p));
 		//glColor3fv(colors[i%3]);
 		glVertex2fv(g_positions[i]);
 	}
@@ -405,10 +409,9 @@ void GLUTUpdate()
 	
 	glDisable(GL_BLEND);
 
-	double drawEnd = GetSeconds();
-	
-	Vec2 mouse = ScreenToScene(lastx, lasty);
-	DrawCircle(mouse, 0.2f, Colour(1.0f, 0.0f, 0.0f));
+
+	//Vec2 mouse = ScreenToScene(lastx, lasty);
+	//DrawCircle(mouse, 0.2f, Colour(1.0f, 0.0f, 0.0f));
 		
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -420,13 +423,14 @@ void GLUTUpdate()
 	int y = 15;
 	
 	glColor3f(1.0f, 1.0f, 1.0f);
-	DrawString(x, y, "Draw time: %.2fms", (drawEnd-drawStart)*1000.0f); y += 13;
-	DrawString(x, y, "1-9: Select scene", "");
-	DrawString(x, y, "r: Reset", "");
+	DrawString(x, y, "1-3: Select scene", ""); y += 13;
+	DrawString(x, y, "r: Reset", ""); y += 13;
+	DrawString(x, y, "p: Pause", ""); y += 13;
+	DrawString(x, y, "o: Step", ""); y += 13;
 	
+	/*
 
 	float m = *std::max_element(g_energy.begin(), g_energy.end());
-
 	glViewport(20, 20, 200, 200);
 	glLoadIdentity();
 	gluOrtho2D(0, g_energy.size(), 0.0f, m);
@@ -439,7 +443,7 @@ void GLUTUpdate()
 	}
 
 	glEnd();
-
+	*/
 
 	glutSwapBuffers();
 	
@@ -459,7 +463,7 @@ void GLUTArrowKeysUp(int key, int x, int y)
 
 void GLUTKeyboardDown(unsigned char key, int x, int y)
 {
-	if (key > '0' && key <= '9')
+	if (key > '0' && key <= '3')
 	{
 		g_scene = key-'0';
 		Init(g_scene);
