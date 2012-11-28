@@ -17,7 +17,7 @@ const float kWorldSize = 2.0f;
 const float kZoom = kWorldSize*2.5f;
 
 int kNumParticles = 0;
-const int kNumIterations = 5;
+const int kNumIterations = 1;
 
 const float kDt = 1.0f/60.0f;
 const float kRadius = 0.05f;
@@ -238,7 +238,7 @@ void Init(int scene)
 	kNumParticles = g_positions.size();
 
 	// calculate fluid parameters
-	float restDensity = 60.f;
+	float restDensity = 100.f;
 	float mass = 1.0f;//(volume*restDensity)/kNumParticles;
 
 	//g_params.mGravity = 0.0f;
@@ -400,7 +400,7 @@ void GLUTUpdate()
 		//
 		float p = max(density[i], 0.0f);
 		//DrawCircle(g_positions[i], g_radii[i], Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
-		glColor3fv(Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
+		glColor3fv(Lerp(Colour(0.3f, 0.5f, 0.9f),Colour(1.0f, 1.0f, 0.0f), p));
 		//glColor3fv(colors[i%3]);
 		glVertex2fv(g_positions[i]);
 	}
