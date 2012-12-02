@@ -14,6 +14,22 @@ typedef Vec3 float3;
 
 using namespace std;
 
+// Todo List 
+// -------------------
+//
+// * Unify artificial pressure and constraint function 
+// * Density analysis
+// 		- look at using a higher order solver for the density constraint 
+// 		- and get rid of the precomputed scaling factor (done, use regularization)
+// * CPU Jacobi solver (done)
+// * GPU Jacobi solver 
+// * Port to 3d 
+// * No-slip boundary (done)
+// * Signed distance field collision
+// * Vorticity confinement (done)
+// * Stable viscosity
+// * Improved boundary density estimate
+
 const int kMaxContactsPerSphere = 40; 
 
 struct GrainSystem
@@ -25,7 +41,7 @@ public:
 	float* mRadii;
 	float* mDensity;
 	float* mNearDensity;
-	float* mPressure;
+	float* mVorticity;
 
 	float2* mCandidatePositions;
 	float2* mCandidateVelocities;
@@ -168,6 +184,7 @@ inline float dWdx(float r, float h)
  * Poly6
  *
  */
+
 /*
 inline float W(float r, float h)
 {
@@ -193,7 +210,6 @@ inline float dWdx(float r, float h)
  * Spiky kernel
  *
  */
-
 inline float W(float r, float h)
 {
 	float k = 6.0f/(kPi*h*h);
@@ -203,7 +219,6 @@ inline float W(float r, float h)
 	else
 		return 0.0f;
 }
-
 inline float dWdx(float r, float h)
 {
 	float k = -12.0f/(kPi*h*h*h);
@@ -234,6 +249,7 @@ inline float dWNeardx(float r, float h)
 	else
 		return 0.0f;
 }
+
 inline int Collide(
 		int index, 
 		const unsigned int* cellStarts, 
@@ -299,11 +315,15 @@ inline float CalculateDensity(
 		int numPlanes,
 		float h,
 		float mass,
+		float restDensity,
 		float& nearRho)
 {
 	float2 xi = positions[index];
 	
 	float rho = 0.0f;
+
+	float s = 0.0f; 
+	float2 sv;
 
 	for (int i=0; i < numContacts; ++i)
 	{
@@ -318,17 +338,19 @@ inline float CalculateDensity(
 		{
 			const float d = sqrtf(dSq);
 			const float w = W(d, h);
-		//	const float wn = Wnear(d, h);
 
-			//assert(w > 0.0f);
-			//assert(isfinite(dSq));
-			
-			rho += mass*max(w, 0.0f);
+			const float2 dw = 1.0f/restDensity*dWdx(d,h)*xij/d; 
+			s += Dot(dw, dw);
+			sv += dw;
 
-			//nearRho += mass*max(wn, 0.0f);
+			rho += max(w, 0.0f);
 		}
 	}
-	/*
+
+	// constraint regularization
+	nearRho = s + Dot(sv, sv) + 300.0f; 
+
+/*	
 	// collide planes
 	for (int i=0; i < numPlanes; ++i)
 	{
@@ -340,11 +362,11 @@ inline float CalculateDensity(
 			
 		if (mtd <= 0.0f)
 		{
-			//const float w = W(max(d, 0.0f), h);
-			//rho += mass*max(w, 0.0f);
+			const float w = W(max(d, 0.0f), h);
+			rho += mass*max(w, 0.0f);
 		}
 	}
-	*/
+*/	
 	//printf("%f\n", rho);
 
 	return rho;
@@ -378,7 +400,12 @@ inline void SolvePositions(
    	float rhoNear = nearDensities[index];
 
 	// scaling factor based on a filled neighbourhood
-	const float s = 1.0f/250.f;
+	const float s = 1.0f/rhoNear;//1.0f/600.f;
+
+	//printf("%f\n", rhoNear);
+
+	float m = 0.0f;
+	float2 mv;
 
 	// apply position updates
 	for (int i=0; i < numContacts; ++i)
@@ -395,13 +422,25 @@ inline void SolvePositions(
 			float d = sqrtf(dSq);
 
 			float2 dw = 1.0f/restDensity*dWdx(d,h)*xij/d; 
-			float2 j = s*(rho + 0.02f*sqr(W(d,h)/W(h*0.3f, h)))*dw;
+			float j = s*(rho + densities[particleIndex] + 0.04f*(sqr(W(d,h)/W(h*0.3f, h))));
 
-			//j += dt*dt*0.01f*(W(d,h)/W(h*0.5f, h))*dWdx(d,h)*xij/d;
+			// don't allow position to move more than the smoothing kernel length
+			//if (fabsf(j) > h*0.005f)
+			//	j = h*Sign(j)*0.005f;
 
-			positions[index] -= j;
-			positions[particleIndex] += j; 
+			m += Dot(dw, dw);
+			mv += dw;
+
+			forces[index] -= j*dw;
 		}
+	}
+	
+	static float mmax = 0.0f;
+	float mc = m + Dot(mv, mv);
+	if (mc > mmax)
+	{
+		mmax = mc;
+		//printf("%f\n", mc);
 	}
 
 	// collide planes
@@ -420,7 +459,8 @@ inline void SolvePositions(
 			const float2 n = float2(p.x, p.y);
 			delta -= mtd*n;
 
-			positions[index] -= mtd*n;
+			//positions[index] -= mtd*n;
+			forces[index] -= mtd*n;
 		}
 	}
 }
@@ -430,8 +470,8 @@ inline float2 SolveVelocities(
 		float2* positions,
 		const float2* velocities,		
 		const float* densities,
+		float* vorticities,
 		float2* forces,
-		const float* pressures,
 		const int* contacts, 
 		int numContacts,
 		const float3* planes,
@@ -443,9 +483,11 @@ inline float2 SolveVelocities(
 {
 	float2 xi = positions[index];
 	float2 delta;
+	float vorticity = 0.0f;
+	float2 vorticityGrad;
 
 	//float kSurfaceTension = 0.05f;
-	float kViscosity = 0.05f*dt;
+	float kViscosity = 0.02f*dt;
 
 	for (int i=0; i < numContacts; ++i)
 	{
@@ -456,17 +498,53 @@ inline float2 SolveVelocities(
 	
 		const float dSq = LengthSq(xij);
 
-		if (dSq < sqr(h))
+		if (dSq < sqr(h) && dSq > 0.0f)
 		{
 			float d = sqrtf(dSq);
 			float w = W(d, h);
+			float2 dw = dWdx(d, h)*xij/d;
+			
+			assert(isfinite(d));
+			assert(isfinite(dw.x));
+			assert(isfinite(dw.y));
 
-			const float2 vij = (velocities[particleIndex]-velocities[index])*w;
+			const float2 vij = (velocities[particleIndex]-velocities[index]);
+
+			vorticity += Cross(dw, vij); 
+			vorticityGrad += fabsf(vorticities[particleIndex])*dw;
 
 			//delta -= kSurfaceTension*xij*w;
-			delta += kViscosity*vij; 
+			delta += kViscosity*vij*w; 
 		}
 	}
+
+	// vorticity confinement - see Bubbles Alive for prior art :(
+//	delta -= dt*100.5f*PerpCCW(SafeNormalize(vorticityGrad))*Sign(vorticity)/restDensity;	
+
+	vorticities[index] = vorticity;
+
+	/*
+	// collide planes
+	for (int i=0; i < numPlanes; ++i)
+	{
+		float3 p = planes[i];
+
+		xi = positions[index];
+
+		// distance to plane
+		float d = xi.x*p.x + xi.y*p.y - p.z;
+		float mtd = d-h;
+			
+		if (mtd <= 0.0f)
+		{
+			const float2 n = float2(p.x, p.y);
+			float j = Dot(velocities[index], n);
+
+			if (j > 0.0f)
+				delta -= velocities[index]*0.2f;
+		}
+	}
+	*/
 
 	return delta;
 }
@@ -513,7 +591,6 @@ void Update(GrainSystem s, float dt, float invdt)
 	{
 		s.mDensity[i] = 0.0f;
 		s.mNearDensity[i] = 0.0f;
-		s.mPressure[i] = 0.0f;
 		s.mForces[i] = 0.0f;
 	}
 
@@ -542,12 +619,13 @@ void Update(GrainSystem s, float dt, float invdt)
 				   	s.mParams.mNumPlanes,					
 					kRadius,
 					kMass,
+					kRestDensity,
 					nearRho);
 
 			s.mForces[i] = 0.0f;
 
 			s.mDensity[i] = rho/kRestDensity-1.0f;// + 0.2f*sqr(rho/W(kRadius*0.3f, kRadius));
-			s.mNearDensity[i] = rho;//kNearStiffness*nearRho/kRestDensity;
+			s.mNearDensity[i] = nearRho;//kNearStiffness*nearRho/kRestDensity;
 
 			maxDensity = max(maxDensity, rho);
 			avgDensity += rho;
@@ -577,6 +655,10 @@ void Update(GrainSystem s, float dt, float invdt)
 					kRestDensity);
 		}
 
+		for (int i=0; i < s.mNumGrains; ++i)
+		{
+			s.mCandidatePositions[i] += s.mForces[i];///s.mContactCounts[i];	
+		}
 		/*
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
@@ -596,8 +678,8 @@ void Update(GrainSystem s, float dt, float invdt)
 				   	s.mCandidatePositions,
 					s.mVelocities,				   	
 					s.mDensity,
+					s.mVorticity,
 					s.mForces,
-					s.mPressure,
 					&s.mContacts[i*kMaxContactsPerSphere],
 					s.mContactCounts[i],
 				   	s.mParams.mPlanes,
@@ -609,16 +691,11 @@ void Update(GrainSystem s, float dt, float invdt)
 					
 					
 	}	
-	
 
 	for (int i=0; i < s.mNumGrains; ++i)
 	{
-		//s.mVelocities[i] /= max(1.0f, s.mMass[i]*0.3f); 
-		//s.mVelocities[i] /= max(1.0f, s.mContactCounts[i]*0.3f); 
-
-		//s.mPositions[i] = s.mCandidatePositions[i];
 		s.mVelocities[i] += s.mForces[i];
-		s.mPositions[i] += s.mVelocities[i]*dt;
+		s.mPositions[i] = s.mCandidatePositions[i];//s.mVelocities[i]*dt;
 	}
 }
 
@@ -636,7 +713,7 @@ GrainSystem* grainCreateSystem(int numGrains)
 	s->mRadii = (float*)malloc(numGrains*sizeof(float));
 	s->mDensity = (float*)malloc(numGrains*sizeof(float));
 	s->mNearDensity = (float*)malloc(numGrains*sizeof(float));
-	s->mPressure = (float*)malloc(numGrains*sizeof(float));
+	s->mVorticity = (float*)malloc(numGrains*sizeof(float));
 
 	s->mForces = (float2*)malloc(numGrains*sizeof(float2));
 
@@ -653,7 +730,7 @@ GrainSystem* grainCreateSystem(int numGrains)
 
 		s->mDensity[i] = 0.0f;
 		s->mNearDensity[i] = 0.0f;
-		s->mPressure[i] = 0.0f;
+		s->mVorticity[i] = 0.0f;
 	}
 
 	s->mCellStarts = (unsigned int*)malloc(128*128*sizeof(unsigned int));
@@ -674,7 +751,7 @@ void grainDestroySystem(GrainSystem* s)
 	free(s->mRadii);
 	free(s->mDensity);
 	free(s->mNearDensity);
-	free(s->mPressure);
+	free(s->mVorticity);
 	
 	free(s->mForces);
 
@@ -735,6 +812,11 @@ void grainGetRadii(GrainSystem* s, float* r)
 void grainGetDensities(GrainSystem* s, float* r)
 {
 	memcpy(r, &s->mDensity[0], sizeof(float)*s->mNumGrains);
+}
+
+void grainGetVorticities(GrainSystem* s, float* r)
+{
+	memcpy(r, &s->mVorticity[0], sizeof(float)*s->mNumGrains);
 }
 
 void grainGetMass(GrainSystem* s, float* r)

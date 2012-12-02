@@ -702,7 +702,6 @@ void grainGetMass(GrainSystem* s, float* r)
 	memcpy(r, &s->mMass[0], sizeof(float)*s->mNumGrains);
 }
 
-
 void grainSetParams(GrainSystem* s, GrainParams* params)
 {
 	//cudaMemcpy(s->mParams, params, sizeof(GrainParams), cudaMemcpyHostToDevice);

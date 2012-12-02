@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 CC = g++
 
-CFLAGS = -g -m32 -Wall -I"../.." -O3 -ffast-math 
+CFLAGS = -g -m32 -Wall -I"../.." -O3 -ffast-math -msse -msse2 -msse3 -mfpmath=sse 
 LDFLAGS = -g -m32 -framework GLUT -framework OpenGL -framework Cocoa 
 
 TARGET  = granular2d

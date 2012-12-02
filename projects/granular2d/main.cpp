@@ -87,7 +87,7 @@ void Init(int scene)
 		{
 			float s = -4.5f;
 
-			const float sep = 0.8f*kRadius;
+			const float sep = 0.9f*kRadius;
 
 			for (int i=0; i < 32; ++i)
 			{
@@ -238,7 +238,7 @@ void Init(int scene)
 	kNumParticles = g_positions.size();
 
 	// calculate fluid parameters
-	float restDensity = 100.f;
+	float restDensity = 90.f;
 	float mass = 1.0f;//(volume*restDensity)/kNumParticles;
 
 	//g_params.mGravity = 0.0f;
@@ -323,7 +323,7 @@ void GLUTUpdate()
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(OrthographicMatrix(-viewWidth, viewWidth, -0.5, 2*kZoom-0.5f, 0.0f, 1.0f));
 
-	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	double drawStart = GetSeconds();
@@ -371,16 +371,16 @@ void GLUTUpdate()
 	
 	glColor3f(0.7f, 0.7f, 0.8f);
 
-
+/*
 		Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
 					Colour(1.0f, 0.5f, 0.5f),
 					Colour(0.5f, 1.0f, 0.5f) };
+*/
 
-
-	std::vector<float> mass(g_positions.size());
+	std::vector<float> vorticity(g_positions.size());
 	std::vector<float> density(g_positions.size());
 
-	grainGetMass(g_grains, &mass[0]);
+	grainGetVorticities(g_grains, &vorticity[0]);
 	grainGetDensities(g_grains, &density[0]);
 
 	glEnable(GL_POINT_SMOOTH);
@@ -399,6 +399,8 @@ void GLUTUpdate()
 		//DrawCircle(g_positions[i], g_radii[i], colors[i%3]);
 		//
 		float p = max(density[i], 0.0f);
+		//float p = (i/512)&1?1.0f:0.0f;
+		//float p = fabsf(vorticity[i])*0.001f;
 		//DrawCircle(g_positions[i], g_radii[i], Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
 		glColor3fv(Lerp(Colour(0.3f, 0.5f, 0.9f),Colour(1.0f, 1.0f, 0.0f), p));
 		//glColor3fv(colors[i%3]);
@@ -409,6 +411,13 @@ void GLUTUpdate()
 	
 	glDisable(GL_BLEND);
 
+	// metre scale
+	/*
+	glBegin(GL_LINES);
+	glVertex2f(-0.1f, 0.0f);
+	glVertex2f(-0.1f, 1.0f);
+	glEnd();
+	*/
 
 	//Vec2 mouse = ScreenToScene(lastx, lasty);
 	//DrawCircle(mouse, 0.2f, Colour(1.0f, 0.0f, 0.0f));
@@ -423,6 +432,7 @@ void GLUTUpdate()
 	int y = 15;
 	
 	glColor3f(1.0f, 1.0f, 1.0f);
+	DrawString(x, y, "Sim: %.2f", (drawEnd-drawStart)*1000.0f); y += 13;
 	DrawString(x, y, "1-3: Select scene", ""); y += 13;
 	DrawString(x, y, "r: Reset", ""); y += 13;
 	DrawString(x, y, "p: Pause", ""); y += 13;

@@ -66,6 +66,7 @@ void grainSetRadii(GrainSystem* s, float* r);
 void grainGetRadii(GrainSystem* s, float r);
 
 void grainGetDensities(GrainSystem* s, float* r);
+void grainGetVorticities(GrainSystem* s, float* r);
 
 void grainGetMass(GrainSystem* s, float* r);
 
