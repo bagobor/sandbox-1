@@ -17,7 +17,7 @@ const float kWorldSize = 2.0f;
 const float kZoom = kWorldSize*2.5f;
 
 int kNumParticles = 0;
-const int kNumIterations = 1;
+const int kNumIterations = 5;
 
 const float kDt = 1.0f/60.0f;
 const float kRadius = 0.05f;
@@ -35,11 +35,7 @@ vector<float> g_springLengths;
 bool g_pause = true;
 bool g_step = false;
 
-vector<float> g_energy(200);
-uint32_t g_frame;
-
 uint32_t g_scene = 1;
-
 
 // mouse
 static int lastx;
@@ -87,7 +83,7 @@ void Init(int scene)
 		{
 			float s = -4.5f;
 
-			const float sep = 0.9f*kRadius;
+			const float sep = 1.0f*kRadius;
 
 			for (int i=0; i < 32; ++i)
 			{
@@ -106,9 +102,9 @@ void Init(int scene)
 	case 5:
 	{
 		const char* file;
-		if (scene == 2)
+		if (scene == 2 || scene == 3)
 			file = "bunny.tga";
-		else if (scene == 3)
+		else if (scene == 4 || scene == 5)
 			file = "armadillo.tga";
 
 		TgaImage img;
@@ -143,7 +139,7 @@ void Init(int scene)
 						lookup[i*dim + j] = newIndex;
 
 						float r = Randf(0.0f, 0.009f)*step;
-						g_positions.push_back(Vec2(x + r , y)*0.8f);
+						g_positions.push_back(Vec2(x + r , y));
 						g_velocities.push_back(0.0f);//Vec2(10.0f, 0.0f));
 						g_radii.push_back(kRadius);// + kRadius*Randf(-0.2f, 0.0f));
 
@@ -237,17 +233,7 @@ void Init(int scene)
 
 	kNumParticles = g_positions.size();
 
-	// calculate fluid parameters
-	float restDensity = 90.f;
-	float mass = 1.0f;//(volume*restDensity)/kNumParticles;
-
-	//g_params.mGravity = 0.0f;
-	g_params.mMass = mass;
-	g_params.mRestDensity = restDensity;
-	//g_params.mNumPlanes = 0;
-
 	g_grains = grainCreateSystem(kNumParticles);
-	//g_radii[0] = 2.0f;
 
 	grainSetParams(g_grains, &g_params);
 	grainSetPositions(g_grains, (float*)&g_positions[0], kNumParticles);
@@ -339,16 +325,6 @@ void GLUTUpdate()
 		grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
 
 		g_step = false;
-
-		/*
-		float e = 0.0f;
-		for(int i=0; i < kNumParticles; i++)
-			e += g_positions[i].y*fabsf(g_params.mGravity.y) + 0.5f*Dot(g_velocities[i], g_velocities[i]);
-
-		g_energy[g_frame%g_energy.size()] = e;
-		*/
-
-		g_frame++;
 	}
 
 	double drawEnd = GetSeconds();
@@ -371,17 +347,9 @@ void GLUTUpdate()
 	
 	glColor3f(0.7f, 0.7f, 0.8f);
 
-/*
-		Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
-					Colour(1.0f, 0.5f, 0.5f),
-					Colour(0.5f, 1.0f, 0.5f) };
-*/
-
-	std::vector<float> vorticity(g_positions.size());
-	std::vector<float> density(g_positions.size());
-
-	grainGetVorticities(g_grains, &vorticity[0]);
-	grainGetDensities(g_grains, &density[0]);
+	Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
+						Colour(1.0f, 0.5f, 0.5f),
+						Colour(0.5f, 1.0f, 0.5f) };
 
 	glEnable(GL_POINT_SMOOTH);
 	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
@@ -394,34 +362,15 @@ void GLUTUpdate()
 
 	for (int i=0; i < kNumParticles; ++i)
 	{
-		//glColor3fv(Lerp(Vec3(1.0f, 0.0f, 0.0f), Vec3(1.0f, 1.0f, 0.0f), Clamp(density[i]/g_params.mRestDensity - 1.0f, 0.0f, 1.0f)));
-		//glVertex2fv(g_positions[i]);
-		//DrawCircle(g_positions[i], g_radii[i], colors[i%3]);
-		//
-		float p = max(density[i], 0.0f);
-		//float p = (i/512)&1?1.0f:0.0f;
-		//float p = fabsf(vorticity[i])*0.001f;
-		//DrawCircle(g_positions[i], g_radii[i], Lerp(Colour(0.2f, 0.4f, 0.7f),Colour(1.0f, 1.0f, 0.0f), p));
-		glColor3fv(Lerp(Colour(0.3f, 0.5f, 0.9f),Colour(1.0f, 1.0f, 0.0f), p));
-		//glColor3fv(colors[i%3]);
+		glColor3fv(colors[i%3]);
 		glVertex2fv(g_positions[i]);
 	}
 
 	glEnd();
-	
+
+
 	glDisable(GL_BLEND);
 
-	// metre scale
-	/*
-	glBegin(GL_LINES);
-	glVertex2f(-0.1f, 0.0f);
-	glVertex2f(-0.1f, 1.0f);
-	glEnd();
-	*/
-
-	//Vec2 mouse = ScreenToScene(lastx, lasty);
-	//DrawCircle(mouse, 0.2f, Colour(1.0f, 0.0f, 0.0f));
-		
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glMatrixMode(GL_PROJECTION);
@@ -437,23 +386,6 @@ void GLUTUpdate()
 	DrawString(x, y, "r: Reset", ""); y += 13;
 	DrawString(x, y, "p: Pause", ""); y += 13;
 	DrawString(x, y, "o: Step", ""); y += 13;
-	
-	/*
-
-	float m = *std::max_element(g_energy.begin(), g_energy.end());
-	glViewport(20, 20, 200, 200);
-	glLoadIdentity();
-	gluOrtho2D(0, g_energy.size(), 0.0f, m);
-   	glBegin(GL_LINE_STRIP);
-
-	for (uint32_t i=0; i < g_energy.size(); i++)
-	{
-		glVertex2f(i, g_energy[i]);
-
-	}
-
-	glEnd();
-	*/
 
 	glutSwapBuffers();
 	
@@ -473,7 +405,7 @@ void GLUTArrowKeysUp(int key, int x, int y)
 
 void GLUTKeyboardDown(unsigned char key, int x, int y)
 {
-	if (key > '0' && key <= '3')
+	if (key > '0' && key <= '9')
 	{
 		g_scene = key-'0';
 		Init(g_scene);
@@ -575,31 +507,15 @@ int solveCuda(float* a, float* b, float* c, int n);
 
 int main(int argc, char* argv[])
 {
-
-	//_MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);	
-//	float a[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-//	float b[8] = {1, 1, 1, 1, 1, 1, 1, 1};
-//	float c[8] = {0};
-//	
-//	cout << solveCuda(a, b, c, 8);
-//	
-//	for (int i=0; i < 8; ++i)
-//		cout << c[i] << endl;
-	
 	RandInit();
 	Init(g_scene);
 	
     // init gl
     glutInit(&argc, argv);
-
-#ifdef WIN32
-    glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
-#else
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
-#endif
 	
     glutInitWindowSize(kWidth, kHeight);
-    glutCreateWindow("Granular");
+    glutCreateWindow("Granular2d");
     glutPositionWindow(200, 100);
 		
     glutMouseFunc(GLUTMouseFunc);
