@@ -11,6 +11,7 @@
 #include <vector>
 #include <stdint.h>
 
+#include <xmmintrin.h>
 
 using namespace std;
 
@@ -23,8 +24,8 @@ float gViewWidth = 5.0f;
 float gViewAspect = kHeight/float(kWidth);
 
 Vec2 gGravity(0.0f, -9.8f);
-float gStiffness = 100000.0f; 
-float gDamping = 1.0f;
+float gStiffness = 10000.0f; 
+float gDamping = 0.0f;
 const int gSubsteps = 1;
 
 Vec2 gMousePos;
@@ -165,6 +166,7 @@ void SolveImplicit(float dt)
 
 	// construct n by n block matrix of force Jacobians
 	std::vector<NodeRow> A(n, NodeRow(n));
+	std::vector<NodeRow> dJdx(n, NodeRow(n));
 
 	for (size_t i=0; i < gSprings.size(); ++i)
 	{
@@ -191,6 +193,20 @@ void SolveImplicit(float dt)
 
 		// force on j due to i is same as force on i due to j 
 		A[s.j][s.i] += Jqdp-Jv;
+
+	//	-----------------------------------
+	//
+		// force derivative wrt first particle
+		dJdx[s.i][s.i] += Jpdp;
+
+		// force on i due to other particle is in the opposite direction
+		dJdx[s.i][s.j] += Jpdq;
+
+		// force on j due to j is the same as i
+		dJdx[s.j][s.j] += Jqdq;
+
+		// force on j due to i is same as force on i due to j 
+		dJdx[s.j][s.i] += Jqdp;
 	}	
 
 	std::vector<Vec2> v(n);
@@ -198,18 +214,19 @@ void SolveImplicit(float dt)
 
 	for (size_t i=0; i < n; ++i)
 	{
-		f[i] = dt*gParticles[i].f;//dt*gGravity;//*gParticles[i].invMass;
+		f[i] = dt*gParticles[i].f;
 		v[i] = gParticles[i].v;
 	}
 
 	// calculate b
-	std::vector<Vec2> b = CgSub(f, CgMul(A, v));
+	std::vector<Vec2> b = CgSub(f, CgMul(dJdx, v));
 
+	// multiply through by mass, 
 	for (size_t i=0; i < n; ++i)
-		A[i][i] = kIdentity + A[i][i];
-	
+		A[i][i] = 1.0f/max(gParticles[i].invMass, 0.01f)*kIdentity + A[i][i];
+
 	// solve for dv
-	std::vector<Vec2> dv = CgSolve(A, b, 20, 0.00001f);
+	std::vector<Vec2> dv = CgSolve(A, b, 20, 0.001f);
 
 	// update v
 	for (size_t i=0; i < n; ++i)
@@ -228,10 +245,8 @@ void Advance(float dt)
 	{
 		Particle& p = gParticles[i];
 
-		if (p.invMass > 0.0f)
+		//if (p.invMass > 0.0f)
 			p.f = gGravity;//*(1.0f/p.invMass);
-		else
-			p.f = 0.0f;
 	}
 
 	for (size_t i=0; i < gSprings.size(); ++i)
@@ -239,6 +254,11 @@ void Advance(float dt)
 		Spring& s = gSprings[i];
 
 		Vec2 f = SpringF(s.i, s.j, s.r, s.ks, s.kd, Vec2(), Vec2());
+
+		
+		float msum = gParticles[s.i].invMass + gParticles[s.j].invMass;
+		float ma = gParticles[s.i].invMass / msum;
+	    float mb = gParticles[s.j].invMass / msum;
 
 		gParticles[s.i].f += f;
 		gParticles[s.j].f -= f;
@@ -254,7 +274,7 @@ void Advance(float dt)
 
 void Update()
 {
-	const float dt = 1.0f/60.0f;
+	const float dt = 10.0f/60.0f;
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -440,6 +460,8 @@ void GLUTMotionFunc(int x, int y)
 
 int main(int argc, char* argv[])
 {
+	_MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);		
+		
 	// init gl
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);

@@ -348,7 +348,7 @@ inline float CalculateDensity(
 	}
 
 	// constraint regularization
-	nearRho = s + Dot(sv, sv) + 300.0f; 
+	nearRho = s + Dot(sv, sv) + 200.0f; 
 
 /*	
 	// collide planes

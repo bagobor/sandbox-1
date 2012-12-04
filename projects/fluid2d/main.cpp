@@ -35,9 +35,6 @@ vector<float> g_springLengths;
 bool g_pause = true;
 bool g_step = false;
 
-vector<float> g_energy(200);
-uint32_t g_frame;
-
 uint32_t g_scene = 1;
 
 // mouse
@@ -101,8 +98,6 @@ void Init(int scene)
 	}	
 	case 2:		
 	case 3:
-	case 4:
-	case 5:
 	{
 		const char* file;
 		if (scene == 2)
@@ -213,23 +208,6 @@ void Init(int scene)
 
 		break;
 	}	
-	case 9:
-	{
-		// pyramid
-		const int kLevels = 10;
-
-		for (int y=0; y < kLevels; ++y)
-		{
-			for (int x=0; x < kLevels-y; ++x)
-			{
-				g_positions.push_back(0.5f*Vec2(0.0f + 1.0f*y*kRadius + x*2.0f*kRadius, 0.5f + kRadius + 1.6f*y*kRadius));
-				g_velocities.push_back(Vec2());
-				g_radii.push_back(kRadius);// + kRadius*Randf(-0.1f, 0.0f));
-			}
-		}
-
-		break;
-	}
 	default: 
 		break;
 	};
@@ -243,10 +221,8 @@ void Init(int scene)
 	//g_params.mGravity = 0.0f;
 	g_params.mMass = mass;
 	g_params.mRestDensity = restDensity;
-	//g_params.mNumPlanes = 0;
 
 	g_grains = grainCreateSystem(kNumParticles);
-	//g_radii[0] = 2.0f;
 
 	grainSetParams(g_grains, &g_params);
 	grainSetPositions(g_grains, (float*)&g_positions[0], kNumParticles);
@@ -269,27 +245,6 @@ void Reset()
 	Init(g_scene);
 }
 
-void DrawCircle(const Vec2& p, float r, const Colour& c )
-{
-	glBegin(GL_TRIANGLE_FAN);
-	glColor3f(c.r, c.g, c.b);
-	glVertex2fv(p);
-	
-	const int kSegments = 40;
-	for (int i=0; i < kSegments+1; ++i)
-	{
-		float theta = k2Pi*float(i)/kSegments;
-		
-		float y = p.y + r*Cos(theta);
-		float x = p.x + r*Sin(theta);
-		
-		glVertex2f(x, y);		
-	}
-	
-	glEnd();
-	
-}
-
 void DrawString(int x, int y, const char* s)
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -308,8 +263,6 @@ void DrawString(int x, int y, const char* s)
 
 void GLUTUpdate()
 {
-	//---------------------------
-
 	glViewport(0, 0, kWidth, kHeight);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
@@ -327,7 +280,7 @@ void GLUTUpdate()
 
 	double drawStart = GetSeconds();
 
-	// Step
+	// step
 	GrainTimers timers;
 
 	if (!g_pause || g_step)
@@ -338,20 +291,11 @@ void GLUTUpdate()
 		grainUpdateSystem(g_grains, kDt, kNumIterations, &timers);
 
 		g_step = false;
-
-		/*
-		float e = 0.0f;
-		for(int i=0; i < kNumParticles; i++)
-			e += g_positions[i].y*fabsf(g_params.mGravity.y) + 0.5f*Dot(g_velocities[i], g_velocities[i]);
-
-		g_energy[g_frame%g_energy.size()] = e;
-		*/
-
-		g_frame++;
 	}
 
 	double drawEnd = GetSeconds();
 
+	// draw planes
 	for (int i=0; i < g_params.mNumPlanes; ++i)
 	{	
 		Vec2 p = g_params.mPlanes[i].z * Vec2(g_params.mPlanes[i].x, g_params.mPlanes[i].y);
@@ -372,8 +316,8 @@ void GLUTUpdate()
 
 /*
 		Colour colors[] = { Colour(0.5f, 0.5f, 1.0f),
-					Colour(1.0f, 0.5f, 0.5f),
-					Colour(0.5f, 1.0f, 0.5f) };
+			Colour(1.0f, 0.5f, 0.5f),
+			Colour(0.5f, 1.0f, 0.5f) };
 */
 
 	std::vector<float> vorticity(g_positions.size());
@@ -410,17 +354,8 @@ void GLUTUpdate()
 	
 	glDisable(GL_BLEND);
 
-	// metre scale
-	/*
-	glBegin(GL_LINES);
-	glVertex2f(-0.1f, 0.0f);
-	glVertex2f(-0.1f, 1.0f);
-	glEnd();
-	*/
-
-	//Vec2 mouse = ScreenToScene(lastx, lasty);
-	//DrawCircle(mouse, 0.2f, Colour(1.0f, 0.0f, 0.0f));
-		
+	// debug text
+	//
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glMatrixMode(GL_PROJECTION);
@@ -436,23 +371,6 @@ void GLUTUpdate()
 	DrawString(x, y, "r: Reset", ""); y += 13;
 	DrawString(x, y, "p: Pause", ""); y += 13;
 	DrawString(x, y, "o: Step", ""); y += 13;
-	
-	/*
-
-	float m = *std::max_element(g_energy.begin(), g_energy.end());
-	glViewport(20, 20, 200, 200);
-	glLoadIdentity();
-	gluOrtho2D(0, g_energy.size(), 0.0f, m);
-   	glBegin(GL_LINE_STRIP);
-
-	for (uint32_t i=0; i < g_energy.size(); i++)
-	{
-		glVertex2f(i, g_energy[i]);
-
-	}
-
-	glEnd();
-	*/
 
 	glutSwapBuffers();
 	
@@ -574,28 +492,13 @@ int solveCuda(float* a, float* b, float* c, int n);
 
 int main(int argc, char* argv[])
 {
-
-	//_MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);	
-//	float a[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-//	float b[8] = {1, 1, 1, 1, 1, 1, 1, 1};
-//	float c[8] = {0};
-//	
-//	cout << solveCuda(a, b, c, 8);
-//	
-//	for (int i=0; i < 8; ++i)
-//		cout << c[i] << endl;
-	
 	RandInit();
 	Init(g_scene);
 	
     // init gl
     glutInit(&argc, argv);
 
-#ifdef WIN32
-    glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
-#else
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
-#endif
 	
     glutInitWindowSize(kWidth, kHeight);
     glutCreateWindow("Fluid2d");
