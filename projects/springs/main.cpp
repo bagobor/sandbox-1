@@ -221,7 +221,7 @@ void SolveImplicit(float dt)
 	// calculate b
 	std::vector<Vec2> b = CgSub(f, CgMul(dJdx, v));
 
-	// multiply through by mass, 
+	// multiply through by mass
 	for (size_t i=0; i < n; ++i)
 		A[i][i] = 1.0f/max(gParticles[i].invMass, 0.01f)*kIdentity + A[i][i];
 
@@ -274,7 +274,7 @@ void Advance(float dt)
 
 void Update()
 {
-	const float dt = 10.0f/60.0f;
+	const float dt = 1.0f/60.0f;
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
