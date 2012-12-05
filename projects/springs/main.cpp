@@ -24,7 +24,7 @@ float gViewAspect = kHeight/float(kWidth);
 
 Vec2 gGravity(0.0f, -9.8f);
 float gStiffness = 100000.0f; 
-float gDamping = 1.0f;
+float gDamping = 0.0f;
 const int gSubsteps = 1;
 
 Vec2 gMousePos;
@@ -209,7 +209,7 @@ void SolveImplicit(float dt)
 		A[i][i] = kIdentity + A[i][i];
 	
 	// solve for dv
-	std::vector<Vec2> dv = CgSolve(A, b, 20, 0.00001f);
+	std::vector<Vec2> dv = CgSolve(A, b, 50, 0.00001f);
 
 	// update v
 	for (size_t i=0; i < n; ++i)
