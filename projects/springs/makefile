@@ -1,8 +1,8 @@
 SHELL = /bin/sh
 CC = g++
 
-CFLAGS = -g -Wall -I"../.." -D_DEBUG
-LDFLAGS = -g -framework GLUT -framework OpenGL -framework Cocoa
+CFLAGS = -g -m32 -Wall -I"../.." -D_DEBUG
+LDFLAGS = -g -m32 -framework GLUT -framework OpenGL -framework Cocoa
 
 TARGET  = Springs
 SOURCES = $(wildcard *.cpp) ../../core/platform.cpp ../../core/shader.cpp

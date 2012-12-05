@@ -108,7 +108,7 @@ void AABBTree::Build()
 {
     assert(m_numFaces*3);
 
-    const double startTime = GetSeconds();
+    //const double startTime = GetSeconds();
 
     const uint32_t numFaces = m_numFaces;
 
@@ -178,9 +178,9 @@ void AABBTree::Build()
 
     assert(s_depth == 0);
 
-    const double buildTime = (GetSeconds()-startTime);
 
 	/*
+    const double buildTime = (GetSeconds()-startTime);
     cout << "AAABTree Build Stats:" << endl;
     cout << "Node size: " << sizeof(Node) << endl;
     cout << "Build time: " << buildTime << "s" << endl;

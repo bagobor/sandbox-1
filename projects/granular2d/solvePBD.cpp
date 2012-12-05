@@ -1,4 +1,4 @@
-#if 0
+#if 1
 
 #include <core/maths.h>
 #include <core/shader.h>
@@ -214,7 +214,6 @@ inline float2 SolvePositions(
 	// collide particles
 	float2 impulse;
 	float weight = 0.0f;
-
 	float scale = 0.95f;
 
 	ri *= scale;
@@ -237,8 +236,6 @@ inline float2 SolvePositions(
 			const float d = sqrtf(dSq);
 			const Vec2 n = xij / d;
 
-			float l = 0.5f*(rsum-d)*invdt;	
-
 			// project out of sphere
 			impulse += 0.5f*kernel(rsum-d)*n;
 		
@@ -258,8 +255,7 @@ inline float2 SolvePositions(
 		if (mtd <= 0.0f)
 		{
 			float2 n = float2(p.x, p.y);
-
-			float l = -mtd*invdt;
+			float l = -mtd;
 
 			impulse += l*n;
 
@@ -513,13 +509,9 @@ void Update(GrainSystem s, float dt, float invdt)
 									  s.mRadii,
 									  &s.mContacts[i*kMaxContactsPerSphere],
 									  kMaxContactsPerSphere);
-
-		//printf("%d: count: %d\n", i, s.mContactCounts[i]);
-
 	}
 
-	const int kNumPositionIterations = 10;
-
+	const int kNumPositionIterations = 4; 
 
 	for (int k=0; k < kNumPositionIterations; ++k)
 	{
@@ -575,7 +567,6 @@ void Update(GrainSystem s, float dt, float invdt)
 		for (int i=0; i < s.mNumGrains; ++i)
 		{
 			s.mVelocities[i] += s.mForces[i];
-
 			s.mCandidatePositions[i] = s.mPositions[i] + s.mVelocities[i]*dt;
 		}
 	}
@@ -585,7 +576,6 @@ void Update(GrainSystem s, float dt, float invdt)
 		
 		s.mVelocities[i] /= max(1.0f, s.mMass[i]*0.3f); 
 		
-
 		s.mMass[i] = 1.0f;//
 		s.mPositions[i] = s.mCandidatePositions[i];
 	}
@@ -701,7 +691,6 @@ void grainGetMass(GrainSystem* s, float* r)
 {
 	memcpy(r, &s->mMass[0], sizeof(float)*s->mNumGrains);
 }
-
 
 void grainSetParams(GrainSystem* s, GrainParams* params)
 {

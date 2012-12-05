@@ -4,7 +4,7 @@ CC = g++
 CFLAGS = -g -m32 -Wall -I"../.." -O3 -ffast-math -msse -msse2 -msse3 -mfpmath=sse 
 LDFLAGS = -g -m32 -framework GLUT -framework OpenGL -framework Cocoa 
 
-TARGET  = granular2d
+TARGET  = fluid2d
 
 SOURCES = $(wildcard *.cpp) ../../core/platform.cpp ../../core/shader.cpp ../../core/maths.cpp ../../core/mesh.cpp ../../core/aabbtree.cpp ../../core/tga.cpp
 HEADERS = $(wildcard *.h)

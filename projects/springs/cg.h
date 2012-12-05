@@ -112,7 +112,7 @@ std::vector<Vec2> CgSolve(const std::vector<NodeRow>& A, const std::vector<Vec2>
 	std::vector<Vec2> d = r;
 
 	float sigmaNew = CgDot(r, r); 
-	//const float sigma0 = sigmaNew;
+	const float sigma0 = sigmaNew;
 
 	assert(A.size() == A[0].size());
 	assert(x.size() == A.size());
@@ -122,7 +122,7 @@ std::vector<Vec2> CgSolve(const std::vector<NodeRow>& A, const std::vector<Vec2>
 	//CgDebug("b", b);
 	std::vector<Vec2> q;
 
-	while (i < imax)// && sigmaNew > e*e*sigma0)
+	while (i < imax && sigmaNew > e*e*sigma0)
 	{
 		q = CgMul(A, d);
 		
@@ -135,7 +135,7 @@ std::vector<Vec2> CgSolve(const std::vector<NodeRow>& A, const std::vector<Vec2>
 		r = CgSub(r, CgMul(a, q));
 
 		float sigmaOld = sigmaNew;
-		if (sigmaOld <= 0.0001f)
+		if (sigmaOld <= e)
 			return x;
 		sigmaNew = CgDot(r, r);
 
