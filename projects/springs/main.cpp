@@ -24,7 +24,7 @@ float gViewWidth = 5.0f;
 float gViewAspect = kHeight/float(kWidth);
 
 Vec2 gGravity(0.0f, -9.8f);
-float gStiffness = 10000.0f; 
+float gStiffness = 100000.0f; 
 float gDamping = 0.0f;
 const int gSubsteps = 1;
 
@@ -460,7 +460,7 @@ void GLUTMotionFunc(int x, int y)
 
 int main(int argc, char* argv[])
 {
-	_MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);		
+	//_MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);		
 		
 	// init gl
 	glutInit(&argc, argv);
