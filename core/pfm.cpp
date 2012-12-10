@@ -1,23 +1,30 @@
-/*
- *  Pfm.cpp
- *  Surfel
- *
- *  Created by Miles Macklin on 16/04/11.
- *  Copyright 2011 None. All rights reserved.
- *
- */
-
 #include "pfm.h"
+
 #include <cassert>
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
+
+namespace
+{
+	// RAII wrapper to handle file pointer clean up
+	struct FilePointer
+	{
+		FilePointer(FILE* ptr) : p(ptr) {}
+		~FilePointer() { fclose(p); }
+
+		operator FILE*() { return p; }
+
+		FILE* p;
+	};
+}
 
 bool PfmLoad(const char* filename, PfmImage& image)
 {
-	FILE* f = fopen(filename, "rb");
+	FilePointer f = fopen(filename, "rb");
 	if (!f)
 		return false;
-		
+	
 	const uint32_t kBufSize = 1024;
 	char buffer[kBufSize];
 	
@@ -53,3 +60,21 @@ bool PfmLoad(const char* filename, PfmImage& image)
 	
 	return true;
 }
+
+void PfmSave(const char* filename, const PfmImage& image)
+{
+	FILE* f = fopen(filename, "wb");
+	if (!f)
+		return;
+
+	fprintf(f, "PF\n");
+	fprintf(f, "%d %d\n", image.m_width, image.m_height);
+	fprintf(f, "%f\n", *std::max_element(image.m_data, image.m_data+(image.m_width*image.m_height)));
+
+	fwrite(image.m_data, image.m_width*image.m_height*sizeof(float), 1, f);
+}
+
+
+
+
+
