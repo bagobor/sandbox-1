@@ -97,11 +97,13 @@
     <ClCompile Include="pfm.cpp" />
     <ClCompile Include="platform.cpp" />
     <ClCompile Include="png.cpp" />
+    <ClCompile Include="sdf.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="skylight.cpp" />
     <ClCompile Include="tga.cpp" />
     <ClCompile Include="threadGroup.cpp" />
     <ClCompile Include="threading.cpp" />
+    <ClCompile Include="voxelize.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aabbtree.h" />
@@ -118,6 +120,7 @@
     <ClInclude Include="platform.h" />
     <ClInclude Include="png.h" />
     <ClInclude Include="point3.h" />
+    <ClInclude Include="sdf.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="skylight.h" />
     <ClInclude Include="tga.h" />
@@ -129,6 +132,7 @@
     <ClInclude Include="vec2.h" />
     <ClInclude Include="vec3.h" />
     <ClInclude Include="vec4.h" />
+    <ClInclude Include="voxelize.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

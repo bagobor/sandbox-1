@@ -50,7 +50,7 @@ bool PfmLoad(const char* filename, PfmImage& image)
 	fseek(f, dataStart, SEEK_SET);
 	
 	uint32_t dataSize = dataEnd-dataStart;
-	assert((dataSize&0x4) == 0);
+	assert((dataSize&0x3) == 0);
 	
 	// determine if the rest of the image is RGB or scalar
 	image.m_data = new float[dataSize/4];
