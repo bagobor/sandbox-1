@@ -8,4 +8,3 @@
 // distance is scaled by 1 / max(dimension)
 void MakeSDF(const uint32_t* input, uint32_t width, uint32_t height, float* output);
 void MakeSDF(const uint32_t* input, uint32_t width, uint32_t height, uint32_t depth, float* output);
-
