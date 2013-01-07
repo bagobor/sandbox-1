@@ -60,10 +60,6 @@ public:
 	}
 
 	T x,y,z;
-
-	static XVector3<float> s_pool[2048];
-	static int s_count;
-
 };
 
 typedef XVector3<float> Vec3;

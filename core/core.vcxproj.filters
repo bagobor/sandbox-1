@@ -16,9 +16,6 @@
     <ClCompile Include="Log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Maths.cpp">
-      <Filter>Source Files\Math</Filter>
-    </ClCompile>
     <ClCompile Include="Perlin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,6 +55,15 @@
     <ClCompile Include="aabbtree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="voxelize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="maths.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core.h">
@@ -65,9 +71,6 @@
     </ClInclude>
     <ClInclude Include="Log.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Maths.h">
-      <Filter>Source Files\Math</Filter>
     </ClInclude>
     <ClInclude Include="Perlin.h">
       <Filter>Source Files</Filter>
@@ -134,6 +137,15 @@
     </ClInclude>
     <ClInclude Include="mat33.h">
       <Filter>Source Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="voxelize.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdf.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="maths.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

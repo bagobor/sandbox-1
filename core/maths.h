@@ -13,7 +13,7 @@
 #define CUDA_CALLABLE
 #endif
 
-const float kPi = 3.1415926535897932384626433832795f;
+const float kPi = 3.141592653589f;
 const float k2Pi = 2.0f*kPi;
 const float kInvPi = 1.0f/kPi;
 const float kInv2Pi = 0.5f/kPi;
