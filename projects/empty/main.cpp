@@ -53,6 +53,7 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		{
 			break;
 		}
+		case 'q':
 		case 27:
 			exit(0);
 			break;
