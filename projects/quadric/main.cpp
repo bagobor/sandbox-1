@@ -170,11 +170,12 @@ void GLUTUpdate()
 	float radius = 1.0f;
 	float aspect = float(g_screenWidth)/g_screenHeight;
 
+	Point3 quadricPos = Point3(1.5f*radius, 0.0f, 0.0f);
+	Matrix44 T = TranslationMatrix(quadricPos)*RotationMatrix(0.0f*kPi/4.0f, Vec3(0.0f, 0.0f, 1.0f)); 
+	Matrix44 SInv = ScaleMatrix(Vec3(2.0f, 1.0f, 1.0f));
+
 	// quadric
-	Matrix44 TInv = Matrix44::kIdentity;
-	TInv.columns[0][0] = 1.0f;
-	TInv.columns[1][1] = 1.0f;
-	TInv.columns[3][0] = -radius; 
+	Matrix44 Q = SInv*AffineInverse(T);//Matrix44::kIdentity;
 
 	glUseProgram(g_solidShader);
 	glPushMatrix();
@@ -190,7 +191,7 @@ void GLUTUpdate()
 	glUniform1f( glGetUniformLocation(g_pointShader, "pointRadius"), radius);
 	glUniform3fv( glGetUniformLocation(g_pointShader, "invViewport"), 1, Vec3(1.0f/g_screenWidth, 1.0f/g_screenHeight, 1.0f));
 	glUniform3fv( glGetUniformLocation(g_pointShader, "invProjection"), 1, Vec3(aspect*viewHeight, viewHeight, 1.0f));
-	glUniformMatrix4fv( glGetUniformLocation(g_pointShader, "invQuadric"), 1, false, TInv);
+	glUniformMatrix4fv( glGetUniformLocation(g_pointShader, "invQuadric"), 1, false, Q);
 	
 	glEnable(GL_POINT_SPRITE);
 	glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
@@ -199,7 +200,7 @@ void GLUTUpdate()
 	glEnable(GL_DEPTH_TEST);		
 
 	glBegin(GL_POINTS);
-	glVertex3f(radius, 0.0f, 0.0f);
+	glVertex3fv(quadricPos);
 	glEnd();	
 
 	glUseProgram(0);
