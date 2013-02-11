@@ -1,15 +1,6 @@
-/*
- *  Radix.h
- *  Cloth
- *
- *  Created by Miles Macklin on 6/04/11.
- *  Copyright 2011 None. All rights reserved.
- *
- */
 #include "core.h"
 
-template <typename Iter>
-void radix_sort(Iter begin, Iter end, Iter auxBegin, Iter auxEnd)
+void radix_sort(uint32_t* begin, uint32_t* end, uint32_t* auxBegin, uint32_t* auxEnd)
 {
 	static uint32_t tables[2][1 << 16];
 	memset(tables, 0, sizeof(tables));
@@ -41,7 +32,7 @@ void radix_sort(Iter begin, Iter end, Iter auxBegin, Iter auxEnd)
 	}
 		
 	// pass 1 - sort by low 16 bits
-	for (Iter iter=begin; iter != end; ++iter)
+	for (uint32_t* iter=begin; iter != end; ++iter)
 	{
 		// lookup offset of input
 		const uint32_t x = *iter;
@@ -54,7 +45,7 @@ void radix_sort(Iter begin, Iter end, Iter auxBegin, Iter auxEnd)
 	}	
 		
 	// pass 2 - sort by high 16 bits
-	for (Iter iter=auxBegin; iter != auxEnd; ++iter)
+	for (uint32_t* iter=auxBegin; iter != auxEnd; ++iter)
 	{
 		// lookup offset of input
 		const uint32_t x = *iter;
