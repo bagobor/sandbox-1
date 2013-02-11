@@ -213,7 +213,7 @@ void MakeSDF(const uint32_t* img, uint32_t w, uint32_t h, uint32_t d, float* out
 				{
 					for (int x=xmin; x <= xmax; ++x)
 					{
-						if (c.i != x || c.j != y)
+						if ((c.i != x || c.j != y || c.k != z) && output[z*w*h + y*w + x] == FLT_MAX)
 						{
 							int dx = x-c.si;
 							int dy = y-c.sj;
@@ -221,6 +221,8 @@ void MakeSDF(const uint32_t* img, uint32_t w, uint32_t h, uint32_t d, float* out
 
 							// calculate distance to source coord
 							float d = sqrtf(float(dx*dx + dy*dy + dz*dz));
+
+							assert(d > 0.0f);
 
 							Coord3D newc = {x, y, z, d, c.si, c.sj, c.sk};
 
@@ -239,7 +241,7 @@ void MakeSDF(const uint32_t* img, uint32_t w, uint32_t h, uint32_t d, float* out
 		{
 			for (uint32_t x=0; x < w; ++x)
 			{
-				assert(output[y*w + x] < FLT_MAX);
+				assert(output[z*w*h + y*w + x] < FLT_MAX);
 
 				// flip sign for interior
 				output[z*w*h + y*w + x] *= (img[z*w*h + y*w + x]?-1.0f:1.0f)*scale;

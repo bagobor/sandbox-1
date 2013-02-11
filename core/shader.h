@@ -3,7 +3,8 @@
 #if _WIN32
 
 #include <external/glew/include/gl/glew.h>
-#include <external/glut/glut.h>
+//#include <external/glut/glut.h>
+#include <external/freeglut/include/GL/freeglut.h>
 
 #elif __APPLE__
 

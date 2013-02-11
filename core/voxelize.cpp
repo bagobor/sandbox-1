@@ -33,10 +33,12 @@ void Voxelize(const Mesh& mesh, uint32_t width, uint32_t height, uint32_t depth,
 					// calculate cell in which intersection occurred
 					const float zpos = rayStart.z + t*rayDir.z;
 					const float zhit = ceilf((zpos-minExtents.z)/delta.z);
-					const uint32_t zend = std::min(uint32_t(zhit), depth);
+					uint32_t zend = std::min(uint32_t(zhit), depth);
 
 					// must be true for termination
-					assert(zend > z);
+					assert(zend >= z);
+					if (zend == z && zend < depth-1)
+						zend++;
 
 					if (inside)
 					{

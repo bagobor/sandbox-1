@@ -11,7 +11,7 @@ namespace
 	struct FilePointer
 	{
 		FilePointer(FILE* ptr) : p(ptr) {}
-		~FilePointer() { fclose(p); }
+		~FilePointer() { if (p) fclose(p); }
 
 		operator FILE*() { return p; }
 
@@ -24,6 +24,8 @@ bool PfmLoad(const char* filename, PfmImage& image)
 	FilePointer f = fopen(filename, "rb");
 	if (!f)
 		return false;
+
+	memset(&image, 0, sizeof(PfmImage));
 	
 	const uint32_t kBufSize = 1024;
 	char buffer[kBufSize];
@@ -36,8 +38,9 @@ bool PfmLoad(const char* filename, PfmImage& image)
 	
 	if (!fgets(buffer, kBufSize, f))
 		return false;
-	
-	sscanf(buffer, "%d %d", &image.m_width, &image.m_height);
+
+	image.m_depth = 1;
+	int numComponents = sscanf(buffer, "%d %d %d", &image.m_width, &image.m_height, &image.m_depth);
 	
 	if (!fgets(buffer, kBufSize, f))
 		return false;
@@ -50,9 +53,10 @@ bool PfmLoad(const char* filename, PfmImage& image)
 	fseek(f, dataStart, SEEK_SET);
 	
 	uint32_t dataSize = dataEnd-dataStart;
+
+	// must be 4 byte aligned
 	assert((dataSize&0x3) == 0);
 	
-	// determine if the rest of the image is RGB or scalar
 	image.m_data = new float[dataSize/4];
 	
 	if (fread(image.m_data, dataSize, 1, f) != 1)
@@ -68,10 +72,14 @@ void PfmSave(const char* filename, const PfmImage& image)
 		return;
 
 	fprintf(f, "PF\n");
-	fprintf(f, "%d %d\n", image.m_width, image.m_height);
-	fprintf(f, "%f\n", *std::max_element(image.m_data, image.m_data+(image.m_width*image.m_height)));
+	if (image.m_depth > 1)
+		fprintf(f, "%d %d %d\n", image.m_width, image.m_height, image.m_depth);
+	else
+		fprintf(f, "%d %d\n", image.m_width, image.m_height);
 
-	fwrite(image.m_data, image.m_width*image.m_height*sizeof(float), 1, f);
+	fprintf(f, "%f\n", *std::max_element(image.m_data, image.m_data+(image.m_width*image.m_height*image.m_depth)));
+
+	fwrite(image.m_data, image.m_width*image.m_height*image.m_depth*sizeof(float), 1, f);
 }
 
 

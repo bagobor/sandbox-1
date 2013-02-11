@@ -27,14 +27,23 @@ struct TgaHeader
     // pixel data follows header  
 };
 
+namespace
+{
 
-bool TgaSave(const char* filename, const TgaImage& image)
+	void memwrite(void* src, uint32_t size, unsigned char*& buffer)
+	{
+		memcpy(buffer, src, size);
+		buffer += size;
+	}
+}
+
+bool TgaSave(const char* filename, const TgaImage& image, bool rle)
 {
 	TgaHeader header;
 
 	header.identsize = 0;
 	header.colourmaptype = 0;
-	header.imagetype = 2;
+	header.imagetype = rle?9:2;
 	header.colourmapstart = 0;
 	header.colourmaplength = 0;
 	header.colourmapbits = 0;
@@ -48,18 +57,21 @@ bool TgaSave(const char* filename, const TgaImage& image)
 	FILE* f = fopen(filename, "wb");
 	if (f)
 	{
-		fwrite(&header.identsize, 1, sizeof(header.identsize), f);
-		fwrite(&header.colourmaptype, 1, sizeof(header.colourmaptype), f);
-		fwrite(&header.imagetype, 1, sizeof(header.imagetype), f);
-		fwrite(&header.colourmapstart, 1, sizeof(header.colourmapstart), f);
-		fwrite(&header.colourmaplength, 1, sizeof(header.colourmaplength), f);
-		fwrite(&header.colourmapbits, 1, sizeof(header.colourmapbits), f);
-		fwrite(&header.xstart, 1, sizeof(header.xstart), f);
-		fwrite(&header.ystart, 1, sizeof(header.ystart), f);
-		fwrite(&header.width, 1, sizeof(header.width), f);
-		fwrite(&header.height, 1, sizeof(header.height), f);
-		fwrite(&header.bits, 1, sizeof(header.bits), f);
-		fwrite(&header.descriptor, 1, sizeof(header.descriptor), f);
+		unsigned char* data = (unsigned char*)new uint32_t[image.m_width*image.m_height + sizeof(header)];
+		unsigned char* writeptr = data;
+				
+		memwrite(&header.identsize, sizeof(header.identsize), writeptr);
+		memwrite(&header.colourmaptype, sizeof(header.colourmaptype), writeptr);
+		memwrite(&header.imagetype, sizeof(header.imagetype), writeptr);
+		memwrite(&header.colourmapstart, sizeof(header.colourmapstart), writeptr);
+		memwrite(&header.colourmaplength, sizeof(header.colourmaplength), writeptr);
+		memwrite(&header.colourmapbits, sizeof(header.colourmapbits), writeptr);
+		memwrite(&header.xstart, sizeof(header.xstart), writeptr);
+		memwrite(&header.ystart, sizeof(header.ystart), writeptr);
+		memwrite(&header.width, sizeof(header.width), writeptr);
+		memwrite(&header.height, sizeof(header.height), writeptr);
+		memwrite(&header.bits, sizeof(header.bits), writeptr);
+		memwrite(&header.descriptor, sizeof(header.descriptor), writeptr);
 
 		union texel
 		{
@@ -72,10 +84,13 @@ bool TgaSave(const char* filename, const TgaImage& image)
 		{
 			texel tmp = t[i];
 			swap(tmp.u8[0], tmp.u8[2]);
-			fwrite(&tmp.u32, 1, 4, f);
+			memwrite(&tmp.u32, 4, writeptr);
 		}
 			 
+		fwrite(data, writeptr-data, 1, f);
 		fclose(f); 
+
+		delete[] data;
 
 		return true;
 	}	
@@ -194,4 +209,9 @@ bool TgaLoad(const char* filename, TgaImage& image)
 	fclose(aTGAFile);
 	
 	return true;
+}
+
+void TgaFree(const TgaImage& image)
+{
+	delete[] image.m_data;
 }

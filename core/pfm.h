@@ -2,10 +2,14 @@
 
 struct PfmImage
 {
+	// set m_depth to 1 for standard pfm compatability, > 1 will act as a volume texture (non-standard)
 	uint32_t m_width;
 	uint32_t m_height;
-	float m_maxDepth;
+	uint32_t m_depth;
 
+	// optional
+	float m_maxDepth;
+	
 	float* m_data;
 };
 

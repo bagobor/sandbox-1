@@ -167,13 +167,13 @@ CUDA_CALLABLE T Normalize(const T& v)
 }
 
 template <typename T>
-CUDA_CALLABLE typename T::value_type LengthSq(const T v)
+CUDA_CALLABLE inline typename T::value_type LengthSq(const T v)
 {
 	return Dot(v,v);
 }
 
 template <typename T>
-CUDA_CALLABLE typename T::value_type Length(const T& v)
+CUDA_CALLABLE inline typename T::value_type Length(const T& v)
 {
 	typename T::value_type lSq = LengthSq(v);
 	if (lSq)
@@ -184,13 +184,13 @@ CUDA_CALLABLE typename T::value_type Length(const T& v)
 
 // this is mainly a helper function used by script
 template <typename T>
-CUDA_CALLABLE typename T::value_type Distance(const T& v1, const T& v2)
+CUDA_CALLABLE inline typename T::value_type Distance(const T& v1, const T& v2)
 {
 	return Length(v1-v2);
 }
 
 template <typename T>
-CUDA_CALLABLE T SafeNormalize(const T& v, const T& fallback=T())
+CUDA_CALLABLE inline T SafeNormalize(const T& v, const T& fallback=T())
 {
 	float l = LengthSq(v);
 	if (l > 0.0f)
@@ -331,6 +331,8 @@ inline Vec3 RandomUnitVector()
 
 	return Vec3(cosTheta*sinPhi,cosPhi,sinTheta*sinPhi);
 }
+
+inline Vec3 RandVec3() { return Vec3(Randf(-1.0f, 1.0f), Randf(-1.0f, 1.0f), Randf(-1.0f, 1.0f)); }
 
 inline Vec3 UniformSampleSphere()
 {

@@ -6,8 +6,6 @@
 
 struct TgaImage
 {
-	~TgaImage() { delete m_data; }
-
 	uint32_t SampleClamp(int x, int y) const
 	{
 		uint32_t ix = std::min(std::max(0, x), int(m_width-1));
@@ -23,5 +21,6 @@ struct TgaImage
 	uint32_t* m_data;
 };
 
-bool TgaSave(const char* filename, const TgaImage& image);
+bool TgaSave(const char* filename, const TgaImage& image, bool rle=false);
 bool TgaLoad(const char* filename, TgaImage& image);
+void TgaFree(const TgaImage& image);
