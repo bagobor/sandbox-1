@@ -1,7 +1,7 @@
 #include "core/aabbtree.h"
 #include "core/mesh.h"
 
-void Voxelize(const Mesh& mesh, uint32_t width, uint32_t height, uint32_t depth, uint32_t* volume)
+void Voxelize(const Mesh& mesh, uint32_t width, uint32_t height, uint32_t depth, uint32_t* volume, Vec3 minExtents, Vec3 maxExtents)
 {
 	memset(volume, 0, sizeof(uint32_t)*width*height*depth);
 
@@ -9,9 +9,6 @@ void Voxelize(const Mesh& mesh, uint32_t width, uint32_t height, uint32_t depth,
 	AABBTree tree(&mesh.m_positions[0], mesh.m_positions.size(), &mesh.m_indices[0], mesh.m_indices.size()/3); 
 
 	// parity count method, single pass
-	Vec3 minExtents, maxExtents;
-	mesh.GetBounds(minExtents, maxExtents);
-
 	const Vec3 extents(maxExtents-minExtents);
 	const Vec3 delta(extents.x/width, extents.y/height, extents.z/depth);
 	const Vec3 offset(0.5f/width, 0.5f/height, 0.5f/depth);
