@@ -49,7 +49,7 @@ void main()
 
     // calculate window-space point size
 	gl_Position = gl_ModelViewProjectionMatrix*vec4(gl_Vertex.xyz, 1.0);
-	gl_PointSize = (pointRadius/gl_Position.w)*pointScale + 4.0;
+	gl_PointSize = 400.0;//(pointRadius/gl_Position.w)*pointScale + 4.0;
 
 	gl_TexCoord[0] = gl_MultiTexCoord0;   
 }
@@ -193,15 +193,20 @@ void GLUTUpdate()
 	glUniform3fv( glGetUniformLocation(g_pointShader, "invProjection"), 1, Vec3(aspect*viewHeight, viewHeight, 1.0f));
 	glUniformMatrix4fv( glGetUniformLocation(g_pointShader, "invQuadric"), 1, false, Q);
 	
+	/*
 	glEnable(GL_POINT_SPRITE);
 	glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	glDepthMask(GL_TRUE);
-	glEnable(GL_DEPTH_TEST);		
+	glEnable(GL_DEPTH_TEST);
+	*/
 
-	glBegin(GL_POINTS);
-	glVertex3fv(quadricPos);
-	glEnd();	
+	
+	unsigned short quadIndices[4] = { 0, 1, 2, 3 };
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, sizeof(Vec3), &quadricPos);
+	glDrawElementsInstanced(GL_QUADS, 4, GL_UNSIGNED_SHORT, quadIndices, 1);
+	glDisableClientState(GL_VERTEX_ARRAY);
 
 	glUseProgram(0);
 	
