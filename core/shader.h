@@ -3,7 +3,8 @@
 #if _WIN32
 
 #include <external/glew/include/gl/glew.h>
-#include <external/glut/glut.h>
+//#include <external/glut/glut.h>
+#include <external/freeglut/include/GL/freeglut.h>
 
 #elif __APPLE__
 #define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED 

@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#if defined(_DEBUG) && defined(_WIN32)
+#if 0 //defined(_DEBUG) && defined(_WIN32)
 #define VEC4_VALIDATE() {	\
 	assert(_finite(x));\
 	assert(!_isnan(x));\
@@ -27,35 +27,35 @@ public:
 
 	typedef T value_type;
 
-	XVector4() : x(0), y(0), z(0), w(0) {}
-	XVector4(T a) : x(a), y(a), z(a), w(a) {}
-	XVector4(const T* p) : x(p[0]), y(p[1]), z(p[2]), w(p[3]) {}
-	XVector4(T x_, T y_, T z_, T w_) : x(x_), y(y_), z(z_), w(w_)
+	CUDA_CALLABLE XVector4() : x(0), y(0), z(0), w(0) {}
+	CUDA_CALLABLE XVector4(T a) : x(a), y(a), z(a), w(a) {}
+	CUDA_CALLABLE XVector4(const T* p) : x(p[0]), y(p[1]), z(p[2]), w(p[3]) {}
+	CUDA_CALLABLE XVector4(T x_, T y_, T z_, T w_) : x(x_), y(y_), z(z_), w(w_)
 	{
 		VEC4_VALIDATE();
 	}
 
-	operator T* () { return &x; }
-	operator const T* () const { return &x; };
+	CUDA_CALLABLE operator T* () { return &x; }
+	CUDA_CALLABLE operator const T* () const { return &x; };
 
-	void Set(T x_, T y_, T z_, T w_) { VEC4_VALIDATE(); x = x_; y = y_; z = z_; w = w_; }
+	CUDA_CALLABLE void Set(T x_, T y_, T z_, T w_) { VEC4_VALIDATE(); x = x_; y = y_; z = z_; w = w_; }
 
-	XVector4<T> operator * (T scale) const { XVector4<T> r(*this); r *= scale; VEC4_VALIDATE(); return r;}
-	XVector4<T> operator / (T scale) const { XVector4<T> r(*this); r /= scale; VEC4_VALIDATE(); return r; }
-	XVector4<T> operator + (const XVector4<T>& v) const { XVector4<T> r(*this); r += v; VEC4_VALIDATE(); return r; }
-	XVector4<T> operator - (const XVector4<T>& v) const { XVector4<T> r(*this); r -= v; VEC4_VALIDATE(); return r; }
-	XVector4<T> operator * (XVector4<T> scale) const { XVector4<T> r(*this); r *= scale; VEC4_VALIDATE(); return r; }
+	CUDA_CALLABLE XVector4<T> operator * (T scale) const { XVector4<T> r(*this); r *= scale; VEC4_VALIDATE(); return r;}
+	CUDA_CALLABLE XVector4<T> operator / (T scale) const { XVector4<T> r(*this); r /= scale; VEC4_VALIDATE(); return r; }
+	CUDA_CALLABLE XVector4<T> operator + (const XVector4<T>& v) const { XVector4<T> r(*this); r += v; VEC4_VALIDATE(); return r; }
+	CUDA_CALLABLE XVector4<T> operator - (const XVector4<T>& v) const { XVector4<T> r(*this); r -= v; VEC4_VALIDATE(); return r; }
+	CUDA_CALLABLE XVector4<T> operator * (XVector4<T> scale) const { XVector4<T> r(*this); r *= scale; VEC4_VALIDATE(); return r; }
 
-	XVector4<T>& operator *=(T scale) {x *= scale; y *= scale; z*= scale; w*= scale; VEC4_VALIDATE(); return *this;}
-	XVector4<T>& operator /=(T scale) {T s(1.0f/scale); x *= s; y *= s; z *= s; w *=s; VEC4_VALIDATE(); return *this;}
-	XVector4<T>& operator +=(const XVector4<T>& v) {x += v.x; y += v.y; z += v.z; w += v.w; VEC4_VALIDATE(); return *this;}
-	XVector4<T>& operator -=(const XVector4<T>& v) {x -= v.x; y -= v.y; z -= v.z; w -= v.w; VEC4_VALIDATE(); return *this;}
-	XVector4<T>& operator *=(const XVector4<T>& v) {x *= v.x; y *= v.y; z *= v.z; w *= v.w; VEC4_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector4<T>& operator *=(T scale) {x *= scale; y *= scale; z*= scale; w*= scale; VEC4_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector4<T>& operator /=(T scale) {T s(1.0f/scale); x *= s; y *= s; z *= s; w *=s; VEC4_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector4<T>& operator +=(const XVector4<T>& v) {x += v.x; y += v.y; z += v.z; w += v.w; VEC4_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector4<T>& operator -=(const XVector4<T>& v) {x -= v.x; y -= v.y; z -= v.z; w -= v.w; VEC4_VALIDATE(); return *this;}
+	CUDA_CALLABLE XVector4<T>& operator *=(const XVector4<T>& v) {x *= v.x; y *= v.y; z *= v.z; w *= v.w; VEC4_VALIDATE(); return *this;}
 
-	bool operator != (const XVector4<T>& v) const { return (x != v.x || y != v.y || z != v.z || w != v.w); }
+	CUDA_CALLABLE bool operator != (const XVector4<T>& v) const { return (x != v.x || y != v.y || z != v.z || w != v.w); }
 
 	// negate
-	XVector4<T> operator -() const { VEC4_VALIDATE(); return XVector4<T>(-x, -y, -z, -w); }
+	CUDA_CALLABLE XVector4<T> operator -() const { VEC4_VALIDATE(); return XVector4<T>(-x, -y, -z, -w); }
 
 	T x,y,z,w;
 };
@@ -65,7 +65,7 @@ typedef XVector4<float> Vec4;
 
 // lhs scalar scale
 template <typename T>
-XVector4<T> operator *(T lhs, const XVector4<T>& rhs)
+CUDA_CALLABLE XVector4<T> operator *(T lhs, const XVector4<T>& rhs)
 {
 	XVector4<T> r(rhs);
 	r *= lhs;
@@ -73,7 +73,7 @@ XVector4<T> operator *(T lhs, const XVector4<T>& rhs)
 }
 
 template <typename T>
-bool operator==(const XVector4<T>& lhs, const XVector4<T>& rhs)
+CUDA_CALLABLE bool operator==(const XVector4<T>& lhs, const XVector4<T>& rhs)
 {
 	return (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w);
 }

@@ -615,16 +615,19 @@ void AABBTree::TraceRecursive(uint32_t n, const Point3& start, const Vector3& di
     }
 }
 */
-bool AABBTree::TraceRaySlow(const Point3& start, const Vector3& dir, float& outT, Vector3* outNormal) const
+bool AABBTree::TraceRaySlow(const Point3& start, const Vector3& dir, float& outT, float& outU, float& outV, float& outW, float& faceSign, uint32_t& faceIndex) const
 {    
     const uint32_t numFaces = GetNumFaces();
 
-    float minT = FLT_MAX;
+    float minT, minU, minV, minW, minS;
+	minT = minU = minV = minW = minS = FLT_MAX;
+
     Vector3 minNormal(0.0f, 1.0f, 0.0f);
 
     Vector3 n(0.0f, 1.0f, 0.0f);
-    float t = 0.0f;
+    float t, u, v, w, s;
     bool hit = false;
+	uint32_t minIndex = 0;
 
     for (uint32_t i=0; i < numFaces; ++i)
     {
@@ -632,23 +635,28 @@ bool AABBTree::TraceRaySlow(const Point3& start, const Vector3& dir, float& outT
         const Point3& b = m_vertices[m_indices[i*3+1]];
         const Point3& c = m_vertices[m_indices[i*3+2]];
 
-        float u, v, w;
-        if (IntersectRayTri(start, dir, a, b, c, t, u, v, w, &n))
+        if (IntersectRayTriTwoSided(start, dir, a, b, c, t, u, v, w, s))
         {
             if (t < minT)
             {
                 minT = t;
+				minU = u;
+				minV = v;
+				minW = w;
+				minS = s;
                 minNormal = n;
+				minIndex = i;
                 hit = true;
             }
         }
     }
 
-    outT = t;
-    if (outNormal)
-    {
-        *outNormal = Normalize(minNormal);
-    }
+    outT = minT;
+	outU = minU;
+	outV = minV;
+	outW = minW;
+	faceSign = minS;	// not implemented
+	faceIndex = minIndex;
 
     return hit;
 }

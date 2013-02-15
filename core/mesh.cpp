@@ -146,7 +146,7 @@ Mesh* ImportMeshFromPly(const char* path)
     file.read(&nl, 1);
 	
 	// debug
-	printf ("numFaces: %d numVertices: %d format: %d numProperties: %d\n", numFaces, numVertices, format, numProperties);
+	printf ("Loaded mesh: %s numFaces: %d numVertices: %d format: %d numProperties: %d\n", path, numFaces, numVertices, format, numProperties);
 
     Mesh* mesh = new Mesh;
 

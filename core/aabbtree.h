@@ -14,7 +14,7 @@ public:
 
     AABBTree(const Point3* vertices, uint32_t numVerts, const uint32_t* indices, uint32_t numFaces);
 
-    bool TraceRaySlow(const Point3& start, const Vector3& dir, float& outT, Vector3* outNormal) const;
+	bool TraceRaySlow(const Point3& start, const Vector3& dir, float& outT, float& u, float& v, float& w, float& faceSign, uint32_t& faceIndex) const;
     bool TraceRay(const Point3& start, const Vector3& dir, float& outT, float& u, float& v, float& w, float& faceSign, uint32_t& faceIndex) const;
 
     void DebugDraw();
