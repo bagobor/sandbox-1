@@ -38,20 +38,134 @@ void main()
 //--------------------------------------------------------
 // Point shaders
 //
-const char *vertexPointShader = STRINGIFY(
+const char *vertexPointShader = "#version 120\n"STRINGIFY(
 
-uniform float pointRadius;  // point size in world space
-uniform float pointScale;   // scale to calculate size in pixels
+uniform mat4 Quadric;
+
+float Sign(float x) { return x < 0 ? -1.0: 1.0; }
+
+bool solveQuadratic(float a, float b, float c, out float minT, out float maxT)
+{
+	if (a == 0.0 && b == 0.0)
+	{
+		minT = maxT = 0.0;
+		return false;
+	}
+
+	float discriminant = b*b - 4.0*a*c;
+
+	if (discriminant < 0.0)
+	{
+		return false;
+	}
+
+	float t = -0.5*(b + Sign(b)*sqrt(discriminant));
+	minT = t / a;
+	maxT = c / t;
+
+	if (minT > maxT)
+	{
+		float tmp = minT;
+		minT = maxT;
+		maxT = tmp;
+	}
+
+	return true;
+}
+
+float DotInvW(vec4 a, vec4 b) {	return a.x*b.x + a.y*b.y + a.z*b.z - a.w*b.w; }
 
 void main()
 {
-	vec4 eyePos = gl_ModelViewMatrix*vec4(gl_Vertex.xyz, 1.0);
+	/*
+	// transforms a normal to parameter space
+	mat4 invClip = transpose(gl_ModelViewProjectionMatrix*Quadric);
 
-    // calculate window-space point size
-	gl_Position = gl_ModelViewProjectionMatrix*vec4(gl_Vertex.xyz, 1.0);
-	gl_PointSize = 400.0;//(pointRadius/gl_Position.w)*pointScale + 4.0;
+	// solve for the horizontal bounds in homogenous clip space
+	float a1 = dotInvW(invClip[3], invClip[3]);
+	float b1 = -2.0*dotInvW(invClip[0], invClip[3]);
+	float c1 = dotInvW(invClip[0], invClip[0]); 
 
-	gl_TexCoord[0] = gl_MultiTexCoord0;   
+	float xmin;
+	float xmax;
+ 	if (!solveQuadratic(a1, b1, c1, xmin, xmax))
+	{
+		gl_TexCoord[0] = vec4(-0.1, 0.1, -0.1, 0.1);
+		return;
+	}
+
+	// solve for the vertical bounds in homogenous clip space
+	float a2 = dotInvW(invClip[3], invClip[3]);
+	float b2 = -2.0*dotInvW(invClip[1], invClip[3]);
+	float c2 = dotInvW(invClip[1], invClip[1]);
+
+	float ymin;
+	float ymax;
+ 	if (!solveQuadratic(a2, b2, c2, ymin, ymax))
+	{
+		gl_TexCoord[0] = vec4(-0.1, 0.1, -0.1, 0.1);
+		return;
+	}
+
+	gl_Position = gl_Vertex;
+	gl_TexCoord[0] = vec4(xmin, xmax, ymin, ymax);
+	*/
+	// transform a normal to parameter space
+	mat4 invClip = transpose(gl_ModelViewProjectionMatrix*Quadric);
+
+	// solve for the right hand bounds in homogenous clip space
+	float a1 = DotInvW(invClip[3], invClip[3]);
+	float b1 = -2.0f*DotInvW(invClip[0], invClip[3]);
+	float c1 = DotInvW(invClip[0], invClip[0]);
+
+	float xmin;
+	float xmax;
+ 	solveQuadratic(a1, b1, c1, xmin, xmax);	
+
+	// solve for the right hand bounds in homogenous clip space
+	float a2 = DotInvW(invClip[3], invClip[3]);
+	float b2 = -2.0f*DotInvW(invClip[1], invClip[3]);
+	float c2 = DotInvW(invClip[1], invClip[1]); 
+
+	float ymin;
+	float ymax;
+ 	solveQuadratic(a2, b2, c2, ymin, ymax);
+
+	gl_Position = gl_Vertex;
+	gl_TexCoord[0] = vec4(xmin, xmax, ymin, ymax);
+}
+);
+
+const char* geometryPointShader = 
+"#version 120\n"
+"#extension GL_EXT_geometry_shader4 : enable\n"
+STRINGIFY(
+void main()
+{
+	vec3 pos = gl_PositionIn[0].xyz;
+	vec4 bounds = gl_TexCoordIn[0][0];
+	vec4 color = gl_TexCoordIn[0][1];
+
+	float xmin = bounds.x;
+	float xmax = bounds.y;
+	float ymin = bounds.z;
+	float ymax = bounds.w;
+
+	gl_Position = vec4(xmin, ymax, 0.0, 1.0);
+	gl_TexCoord[0] = color;
+	EmitVertex();
+
+	gl_Position = vec4(xmin, ymin, 0.0, 1.0);
+	gl_TexCoord[0] = color;
+	EmitVertex();
+
+	gl_Position = vec4(xmax, ymax, 0.0, 1.0);
+	gl_TexCoord[0] = color;
+	EmitVertex();
+
+	gl_Position = vec4(xmax, ymin, 0.0, 1.0);
+	gl_TexCoord[0] = color;
+	EmitVertex();
 }
 );
 
@@ -61,6 +175,8 @@ const char *fragmentPointShader = STRINGIFY(
 uniform vec3 invViewport;
 uniform vec3 invProjection;
 uniform mat4 invQuadric;
+
+float Sign(float x) { return x < 0 ? -1.0: 1.0; }
 
 bool solveQuadratic(float a, float b, float c, out float minT, out float maxT)
 {
@@ -77,7 +193,7 @@ bool solveQuadratic(float a, float b, float c, out float minT, out float maxT)
 		return false;
 	}
 
-	float t = -0.5*(b + sign(b)*sqrt(discriminant));
+	float t = -0.5*(b + Sign(b)*sqrt(discriminant));
 	minT = t / a;
 	maxT = c / t;
 
@@ -95,25 +211,24 @@ float sqr(float x) { return x*x; }
 
 void main()
 {
-	
 	vec4 ndcPos = vec4(gl_FragCoord.xy*invViewport.xy*vec2(2.0, 2.0) - vec2(1.0, 1.0), -1.0, 1.0);
-	vec4 dir = gl_ProjectionMatrixInverse*ndcPos; //vec4(clipPos*invProjection, 0.0); 
+	vec4 viewDir = gl_ProjectionMatrixInverse*ndcPos; //vec4(clipPos*invProjection, 0.0); 
 
 	// ray to parameter space
-	dir = invQuadric*gl_ModelViewMatrixInverse*vec4(dir.xyz, 0.0);
+	vec4 dir = invQuadric*gl_ModelViewMatrixInverse*vec4(viewDir.xyz, 0.0);
 	vec4 origin = (invQuadric*gl_ModelViewMatrixInverse)[3];
 
 	// set up quadratric equation
 	float a = sqr(dir.x) + sqr(dir.y) + sqr(dir.z);// - sqr(dir.w);
 	float b = dir.x*origin.x + dir.y*origin.y + dir.z*origin.z - dir.w*origin.w;
-	float c = sqr(origin.x) + sqr(origin.y) + sqr(origin.z) - sqr(origin.w); 	
+	float c = sqr(origin.x) + sqr(origin.y) + sqr(origin.z) - sqr(origin.w);
 
 	float minT;
 	float maxT;
-	
+
 	if (solveQuadratic(a, 2.0*b, c, minT, maxT))
 	{
-		vec3 hitPos = dir.xyz*minT;
+		vec3 hitPos = viewDir.xyz*minT;
 		vec3 dx = dFdx(hitPos);
 		vec3 dy = dFdy(hitPos);
 
@@ -142,10 +257,19 @@ void main()
 
 );
 
+// dot product with negative w
+float DotInvW(const Vec4& a, const Vec4& b)
+{
+	return a.x*b.x + a.y*b.y + a.z*b.z - a.w*b.w;
+}
 
 void Init()
 {
-	g_pointShader = CompileProgram(vertexPointShader, fragmentPointShader);
+	int maxVerts;
+	glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES_EXT, &maxVerts);
+	printf("%d\n", maxVerts);
+		
+	g_pointShader = CompileProgram(vertexPointShader, fragmentPointShader, geometryPointShader);
 	g_solidShader = CompileProgram(vertexShader, fragmentShader);
 }
 
@@ -164,22 +288,27 @@ void GLUTUpdate()
 	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	
-	gluLookAt(0.0f, 0.0f, 10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+	gluLookAt(sinf(GetSeconds())*5.0f, cosf(GetSeconds())*5.0f, 10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
 	float radius = 1.0f;
 	float aspect = float(g_screenWidth)/g_screenHeight;
 
-	Point3 quadricPos = Point3(1.5f*radius, 0.0f, 0.0f);
-	Matrix44 T = TranslationMatrix(quadricPos)*RotationMatrix(0.0f*kPi/4.0f, Vec3(0.0f, 0.0f, 1.0f)); 
-	Matrix44 SInv = ScaleMatrix(Vec3(2.0f, 1.0f, 1.0f));
+	Point3 quadricPos = Point3(1.f*radius, 0.0f, 0.0f);
+	Vec3 quadricScale = Vec3(1.0f, 1.0f, 1.0f);
 
-	// quadric
-	Matrix44 Q = SInv*AffineInverse(T);//Matrix44::kIdentity;
+	Matrix44 T = TranslationMatrix(quadricPos)*RotationMatrix(2.0f*kPi/4.0f, Vec3(0.0f, 0.0f, 1.0f)); 
+	Matrix44 S = ScaleMatrix(quadricScale);
+
+	Matrix44 TInv = AffineInverse(T);
+	Matrix44 SInv = ScaleMatrix(Vec3(1.0f/quadricScale.x, 1.0f/quadricScale.y, 1.0f/quadricScale.z));
+
+	// world space to parameter space
+	Matrix44 Q = T*S;
+	Matrix44 QInv = SInv*TInv;
 
 	glUseProgram(g_solidShader);
 	glPushMatrix();
-	glTranslatef(-radius, 0.0f, 0.0f);	
+	glTranslatef(-radius, 0.0f, 0.0f);
 	glScalef(1.0, 1.0f, 1.0);
 	glutSolidSphere(radius, 20, 20);
 	glPopMatrix();
@@ -191,22 +320,62 @@ void GLUTUpdate()
 	glUniform1f( glGetUniformLocation(g_pointShader, "pointRadius"), radius);
 	glUniform3fv( glGetUniformLocation(g_pointShader, "invViewport"), 1, Vec3(1.0f/g_screenWidth, 1.0f/g_screenHeight, 1.0f));
 	glUniform3fv( glGetUniformLocation(g_pointShader, "invProjection"), 1, Vec3(aspect*viewHeight, viewHeight, 1.0f));
-	glUniformMatrix4fv( glGetUniformLocation(g_pointShader, "invQuadric"), 1, false, Q);
+	glUniformMatrix4fv( glGetUniformLocation(g_pointShader, "Quadric"), 1, false, Q);
+	glUniformMatrix4fv( glGetUniformLocation(g_pointShader, "invQuadric"), 1, false, QInv);
+
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);		
+	glDisable(GL_CULL_FACE);
 	
-	/*
 	glEnable(GL_POINT_SPRITE);
 	glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-	glDepthMask(GL_TRUE);
-	glEnable(GL_DEPTH_TEST);
-	*/
-
+	glBegin(GL_POINTS);
+	glVertex3fv(quadricPos);
+	glEnd();
 	
-	unsigned short quadIndices[4] = { 0, 1, 2, 3 };
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, sizeof(Vec3), &quadricPos);
-	glDrawElementsInstanced(GL_QUADS, 4, GL_UNSIGNED_SHORT, quadIndices, 1);
-	glDisableClientState(GL_VERTEX_ARRAY);
+	/*
+
+	// build billboard
+	Matrix44 view, projection;
+	glGetFloatv(GL_MODELVIEW_MATRIX, (float*)&view);
+	glGetFloatv(GL_PROJECTION_MATRIX, (float*)&projection);
+
+	// transform a normal to parameter space
+	Matrix44 invClip = Transpose(projection*view*Q);
+
+	// solve for the right hand bounds in homogenous clip space
+	float a1 = DotInvW(invClip.columns[3], invClip.columns[3]);
+	float b1 = -2.0f*DotInvW(invClip.columns[0], invClip.columns[3]);
+	float c1 = DotInvW(invClip.columns[0], invClip.columns[0]); 
+
+	float xmin, xmax;
+ 	SolveQuadratic(a1, b1, c1, xmin, xmax);	
+
+	// solve for the right hand bounds in homogenous clip space
+	float a2 = DotInvW(invClip.columns[3], invClip.columns[3]);
+	float b2 = -2.0f*DotInvW(invClip.columns[1], invClip.columns[3]);
+	float c2 = DotInvW(invClip.columns[1], invClip.columns[1]); 
+
+	float ymin, ymax;
+ 	SolveQuadratic(a2, b2, c2, ymin, ymax);	
+
+	Vec4 quadVertices[4] = 
+	{
+	   	Vec4(xmin, ymax, 0.0f, 1.0f),
+	   	Vec4(xmin, ymin, 0.0f, 1.0f),
+	   	Vec4(xmax, ymin, 0.0f, 1.0f),
+	   	Vec4(xmax, ymax, 0.0f, 1.0f)
+	};
+
+	glBegin(GL_QUADS);
+	glVertex3fv(quadVertices[0]);
+	glVertex3fv(quadVertices[1]);
+	glVertex3fv(quadVertices[2]);
+	glVertex3fv(quadVertices[3]);
+	glEnd();	
+		*/
+
 
 	glUseProgram(0);
 	

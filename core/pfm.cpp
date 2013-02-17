@@ -40,7 +40,6 @@ bool PfmLoad(const char* filename, PfmImage& image)
 		return false;
 
 	image.m_depth = 1;
-	int numComponents = sscanf(buffer, "%d %d %d", &image.m_width, &image.m_height, &image.m_depth);
 	
 	if (!fgets(buffer, kBufSize, f))
 		return false;

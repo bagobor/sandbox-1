@@ -125,24 +125,46 @@ GLuint CompileProgramFromFile(const char *vertexPath, const char *fragmentPath)
 	return CompileProgram(vsource.c_str(), fsource.c_str());
 }
 
-GLuint CompileProgram(const char *vsource, const char *fsource)
+GLuint CompileProgram(const char *vsource, const char *fsource, const char* gsource)
 {
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-	glShaderSource(vertexShader, 1, &vsource, 0);
-	glShaderSource(fragmentShader, 1, &fsource, 0);
-	
-	glCompileShader(vertexShader);
-	GlslPrintShaderLog(vertexShader);
-	
-	glCompileShader(fragmentShader);
-	GlslPrintShaderLog(fragmentShader);
+	GLuint vertexShader = -1;
+	GLuint geometryShader = -1; 
+	GLuint fragmentShader = -1; 
 
 	GLuint program = glCreateProgram();
 
-	glAttachShader(program, vertexShader);
-	glAttachShader(program, fragmentShader);
+	if (vsource)
+	{
+		vertexShader = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(vertexShader, 1, &vsource, 0);
+		glCompileShader(vertexShader);
+		GlslPrintShaderLog(vertexShader);
+		glAttachShader(program, vertexShader);
+	}
+
+	if (fsource)
+	{
+		fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(fragmentShader, 1, &fsource, 0);
+		glCompileShader(fragmentShader);
+		GlslPrintShaderLog(fragmentShader);
+		glAttachShader(program, fragmentShader);
+	}
+
+	if (gsource)
+	{
+		geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+		glShaderSource(geometryShader, 1, &gsource, 0);
+		glCompileShader(geometryShader);
+		GlslPrintShaderLog(geometryShader);
+
+		// hack, force billboard gs mode
+		glAttachShader(program, geometryShader);
+		glProgramParameteriEXT ( program, GL_GEOMETRY_VERTICES_OUT_EXT, 4 ) ; 
+		glProgramParameteriEXT ( program, GL_GEOMETRY_INPUT_TYPE_EXT, GL_POINTS ) ; 
+		glProgramParameteriEXT ( program, GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP ) ; 
+	}
 
 	glLinkProgram(program);
 
