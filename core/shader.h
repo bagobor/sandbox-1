@@ -32,6 +32,6 @@ GLuint CompileProgramFromFile(const char *vertexPath, const char *fragmentPath);
 GLuint CompileProgram(const char *vsource=NULL, const char *fsource=NULL, const char* gsource=NULL);
 GLuint CompileProgram(const char *vsource, const char* csource, const char* esource, const char* fsource);
 
-void DrawPlane(const Vec4& p);
+void DrawPlane(const Vec4& p, bool color=true);
 void DrawString(int x, int y, const char* s, ...);
 void DrawFrustum(const Matrix44& projToWorld);

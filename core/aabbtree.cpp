@@ -130,6 +130,9 @@ void AABBTree::Build()
 		Bounds top;
         CalculateFaceBounds(&i, 1, top.m_min, top.m_max);
 		
+		m_faces.push_back(i);
+		m_faceBounds.push_back(top);
+		/*
 		stack.push_back(top);
 
 		while (!stack.empty())
@@ -166,6 +169,7 @@ void AABBTree::Build()
 				stack.push_back(right);
 			}
 		}
+		*/
     }
 
 	m_nodes.reserve(uint32_t(numFaces*1.5f));
@@ -345,7 +349,7 @@ struct StackEntry
 
 #define TRACE_STATS 0
 
-
+/*
 bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, float& outU, float& outV, float& outW, float& outSign, uint32_t& outIndex) const
 {
 #if _WIN32
@@ -466,7 +470,8 @@ filth:
 
     return (outT != FLT_MAX);
 }
-/*
+*/
+
 bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, float& u, float& v, float& w, float& faceSign, uint32_t& faceIndex) const
 {   
     s_traceDepth = 0;
@@ -478,7 +483,7 @@ bool AABBTree::TraceRay(const Point3& start, const Vector3& dir, float& outT, fl
 
     return (outT != FLT_MAX);
 }
-*/
+
 
 void AABBTree::TraceRecursive(uint32_t nodeIndex, const Point3& start, const Vector3& dir, float& outT, float& outU, float& outV, float& outW, float& faceSign, uint32_t& faceIndex) const
 {
@@ -655,7 +660,7 @@ bool AABBTree::TraceRaySlow(const Point3& start, const Vector3& dir, float& outT
 	outU = minU;
 	outV = minV;
 	outW = minW;
-	faceSign = minS;	// not implemented
+	faceSign = minS;
 	faceIndex = minIndex;
 
     return hit;

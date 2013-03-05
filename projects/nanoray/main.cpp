@@ -281,7 +281,8 @@ void Init()
 	//Material* checker = new MatteMaterial(new CheckerboardTexture(0.1f*edgeLength.x, Colour(0.2f, 0.2f, 0.2f), Colour(0.5f, 0.5f, 0.5f)));
 
 
-    Mesh* mesh = ImportMeshFromObj("../../data/happy.obj");
+    //Mesh* mesh = ImportMeshFromObj("../../data/happy.obj");
+	Mesh* mesh = ImportMeshFromPly("../../data/thearena.ply");
     //Mesh* mesh = ImportMeshFromPly("models/bunny/reconstruction/bun_zipper_res4.ply");
     //Mesh* mesh = ImportMeshFromPly("models/happy_recon/happy_vrip_res3.ply");
     //Mesh* mesh = ImportMeshFromPly("models/dragon/xyzrgb_dragon.ply"); yoffset = 22.1f;

@@ -70,6 +70,11 @@ CUDA_CALLABLE inline float Trace(const Matrix33& a)
 	return a(0,0)+a(1,1)+a(2,2);
 }
 
+CUDA_CALLABLE inline Matrix33 Outer(const Vec3& a, const Vec3& b)
+{
+	return Matrix33(a*b.x, a*b.y, a*b.z);
+}
+
 CUDA_CALLABLE inline Matrix33 operator*(float s, const Matrix33& a) { return Multiply(s, a); }
 CUDA_CALLABLE inline Matrix33 operator*(const Matrix33& a, float s) { return Multiply(s, a); }
 CUDA_CALLABLE inline Matrix33 operator*(const Matrix33& a, const Matrix33& b) { return Multiply(a, b); }
@@ -77,5 +82,6 @@ CUDA_CALLABLE inline Matrix33 operator+(const Matrix33& a, const Matrix33& b) { 
 CUDA_CALLABLE inline Matrix33 operator-(const Matrix33& a, const Matrix33& b) { return Add(a, -1.0f*b); }
 CUDA_CALLABLE inline Matrix33& operator+=(Matrix33& a, const Matrix33& b) { a = a+b; return a; }
 CUDA_CALLABLE inline Matrix33& operator-=(Matrix33& a, const Matrix33& b) { a = a-b; return a; }
+CUDA_CALLABLE inline Matrix33& operator*=(Matrix33& a, float s) { a.cols[0]*=s; a.cols[1]*=s; a.cols[2]*=s;  return a; }
 
 

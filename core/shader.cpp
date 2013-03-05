@@ -128,9 +128,9 @@ GLuint CompileProgramFromFile(const char *vertexPath, const char *fragmentPath)
 GLuint CompileProgram(const char *vsource, const char *fsource, const char* gsource)
 {
 
-	GLuint vertexShader = -1;
-	GLuint geometryShader = -1; 
-	GLuint fragmentShader = -1; 
+	GLuint vertexShader = GLuint(-1);
+	GLuint geometryShader = GLuint(-1); 
+	GLuint fragmentShader = GLuint(-1); 
 
 	GLuint program = glCreateProgram();
 
@@ -243,7 +243,7 @@ GLuint CompileProgram(const char *vsource, const char* csource, const char* esou
 
 #endif
 
-void DrawPlane(const Vec4& p)
+void DrawPlane(const Vec4& p, bool color)
 {
 	Vec3 u, v;
 	BasisFromVector(Vec3(p.x, p.y, p.z), &u, &v);
@@ -253,7 +253,9 @@ void DrawPlane(const Vec4& p)
 	const float kSize = 100.f;
 
 	glBegin(GL_QUADS);
-	glColor3fv(p*0.5f + Vec4(0.5f, 0.5f, 0.5f, 0.5f));
+	
+	if (color)
+		glColor3fv(p*0.5f + Vec4(0.5f, 0.5f, 0.5f, 0.5f));
 
 	glNormal3f(p.x, p.y, p.z);
 	glVertex3fv(c + u*kSize + v*kSize);

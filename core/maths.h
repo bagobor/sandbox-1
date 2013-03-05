@@ -661,7 +661,7 @@ inline float VectorToAngle(const Vec2& v)
 	return atan2f(v.y, v.x);
 }
 
-inline float SmoothStep(float a, float b, float t)
+CUDA_CALLABLE inline float SmoothStep(float a, float b, float t)
 {
 	t = Clamp(t-a / (b-a), 0.0f, 1.0f);
 	return t*t*(3.0f-2.0f*t);
